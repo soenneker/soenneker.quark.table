@@ -154,7 +154,7 @@
                 }
                 @for (int p = StartPage; p <= EndPage; p++)
                 {
-                    var pageNumber = p;          // 👈 capture by value
+                    int pageNumber = p;          // 👈 capture by value
                     <button class="quark-table-pagination-btn @(pageNumber == _currentPage ? "active" : string.Empty)"
                             @onclick="@(() => HandleGoToPage(pageNumber))">
                         @pageNumber
