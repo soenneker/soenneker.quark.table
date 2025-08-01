@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using Bogus
 @using Microsoft.Extensions.Logging
+@using Soenneker.DataTables.Dtos.ServerResponse
+@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Utils.AutoBogus
 @using Soenneker.Quark.Table.Demo.Services
@@ -317,45 +319,28 @@
         users = userFaker.Generate(75);
     }
 
-    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
     {
-        return await EmployeeService.GetEmployees(request);
+        return await EmployeeService.GetEmployees(serverSideRequest);
     }
 
-    private async Task<QuarkTableResponse> HandleServerSideRequestProducts(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequestProducts(DataTableServerSideRequest serverSideRequest)
     {
-        LogEvent("INFO", $"Products server-side request: Start={request.Start}, Length={request.Length}, Search='{request.Search?.Value}'");
+        LogEvent("INFO", $"Products server-side request: Start={serverSideRequest.Start}, Length={serverSideRequest.Length}, Search='{serverSideRequest.Search?.Value}'");
 
         IEnumerable<Product> data = products.AsEnumerable();
 
         // Apply search
-        if (!string.IsNullOrEmpty(request.Search?.Value))
+        if (!string.IsNullOrEmpty(serverSideRequest.Search?.Value))
         {
-            string searchTerm = request.Search.Value.ToLower();
+            string searchTerm = serverSideRequest.Search.Value.ToLower();
             data = data.Where(p => 
                 p.Name.ToLower().Contains(searchTerm) ||
                 p.Category.ToLower().Contains(searchTerm));
         }
 
-        // Apply sorting
-        if (request.Order?.Any() == true)
-        {
-            foreach (QuarkTableOrder order in request.Order)
-            {
-                data = order.Column?.ToLower() switch
-                {
-                    "name" => order.Direction == "asc" ? data.OrderBy(p => p.Name) : data.OrderByDescending(p => p.Name),
-                    "category" => order.Direction == "asc" ? data.OrderBy(p => p.Category) : data.OrderByDescending(p => p.Category),
-                    "price" => order.Direction == "asc" ? data.OrderBy(p => p.Price) : data.OrderByDescending(p => p.Price),
-                    "stock" => order.Direction == "asc" ? data.OrderBy(p => p.Stock) : data.OrderByDescending(p => p.Stock),
-                    "rating" => order.Direction == "asc" ? data.OrderBy(p => p.Rating) : data.OrderByDescending(p => p.Rating),
-                    _ => data
-                };
-            }
-        }
-
         int totalRecords = data.Count();
-        List<Product> pagedData = data.Skip(request.Start).Take(request.Length).ToList();
+        List<Product> pagedData = data.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
 
         // Convert to table format
         var tableData = new List<List<string>>
@@ -380,12 +365,12 @@
             ]);
         }
 
-        return QuarkTableResponse.Success(request.Draw, totalRecords, totalRecords, tableData);
+        return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
     }
 
-    private async Task<QuarkTableResponse> HandleServerSideRequestWithDelay(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequestWithDelay(DataTableServerSideRequest serverSideRequest)
     {
-        LogEvent("INFO", $"Delayed server-side request: Start={request.Start}, Length={request.Length}");
+        LogEvent("INFO", $"Delayed server-side request: Start={serverSideRequest.Start}, Length={serverSideRequest.Length}");
 
         // Simulate network delay
         await Task.Delay(1000);
@@ -393,34 +378,17 @@
         IEnumerable<User> data = users.AsEnumerable();
 
         // Apply search
-        if (!string.IsNullOrEmpty(request.Search?.Value))
+        if (!string.IsNullOrEmpty(serverSideRequest.Search?.Value))
         {
-            string searchTerm = request.Search.Value.ToLower();
+            string searchTerm = serverSideRequest.Search.Value.ToLower();
             data = data.Where(u => 
                 u.Username.ToLower().Contains(searchTerm) ||
                 u.Email.ToLower().Contains(searchTerm) ||
                 u.Role.ToLower().Contains(searchTerm));
         }
 
-        // Apply sorting
-        if (request.Order?.Any() == true)
-        {
-            foreach (QuarkTableOrder order in request.Order)
-            {
-                data = order.Column?.ToLower() switch
-                {
-                    "username" => order.Direction == "asc" ? data.OrderBy(u => u.Username) : data.OrderByDescending(u => u.Username),
-                    "email" => order.Direction == "asc" ? data.OrderBy(u => u.Email) : data.OrderByDescending(u => u.Email),
-                    "role" => order.Direction == "asc" ? data.OrderBy(u => u.Role) : data.OrderByDescending(u => u.Role),
-                    "lastlogin" => order.Direction == "asc" ? data.OrderBy(u => u.LastLogin) : data.OrderByDescending(u => u.LastLogin),
-                    "status" => order.Direction == "asc" ? data.OrderBy(u => u.Status) : data.OrderByDescending(u => u.Status),
-                    _ => data
-                };
-            }
-        }
-
         int totalRecords = data.Count();
-        List<User> pagedData = data.Skip(request.Start).Take(request.Length).ToList();
+        List<User> pagedData = data.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
 
         // Convert to table format
         var tableData = new List<List<string>>
@@ -445,7 +413,7 @@
             ]);
         }
 
-        return QuarkTableResponse.Success(request.Draw, totalRecords, totalRecords, tableData);
+        return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
     }
 
     private async Task HandleSearch(string searchTerm)

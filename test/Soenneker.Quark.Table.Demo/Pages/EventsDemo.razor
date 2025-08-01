@@ -1,5 +1,7 @@
 @page "/events"
 @using Microsoft.Extensions.Logging
+@using Soenneker.DataTables.Dtos.ServerResponse
+@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 
@@ -159,10 +161,10 @@
         LogEvent("LIFECYCLE", "Page initialized", "Component ready");
     }
 
-    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
     {
-        LogEvent("INFO", $"Server-side request", $"Start: {request.Start}, Length: {request.Length}, Search: '{request.Search?.Value}'");
-        return await EmployeeService.GetEmployees(request);
+        LogEvent("INFO", $"Server-side request", $"Start: {serverSideRequest.Start}, Length: {serverSideRequest.Length}, Search: '{serverSideRequest.Search?.Value}'");
+        return await EmployeeService.GetEmployees(serverSideRequest);
     }
 
     private async Task HandleSearch(string searchTerm)

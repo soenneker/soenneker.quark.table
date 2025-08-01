@@ -1,5 +1,7 @@
 @page "/pagination-debug"
 @using Microsoft.Extensions.Logging
+@using Soenneker.DataTables.Dtos.ServerResponse
+@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 
@@ -85,11 +87,11 @@
         // EmployeeService is automatically initialized
     }
 
-    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
     {
         Logger.LogInformation("DEBUG: Request - Start={Start}, Length={Length}, Page={Page}", 
-            request.Start, request.Length, (request.Start / request.Length) + 1);
-        return await EmployeeService.GetEmployees(request);
+            serverSideRequest.Start, serverSideRequest.Length, (serverSideRequest.Start / serverSideRequest.Length) + 1);
+        return await EmployeeService.GetEmployees(serverSideRequest);
     }
 
     private async Task HandleSearch(string searchTerm)

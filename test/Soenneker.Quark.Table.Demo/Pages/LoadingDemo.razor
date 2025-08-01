@@ -1,5 +1,7 @@
 @page "/loading"
 @using Microsoft.Extensions.Logging
+@using Soenneker.DataTables.Dtos.ServerResponse
+@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Demo.Services
 
 @inject ILogger<LoadingDemo> Logger
@@ -207,15 +209,15 @@
         // EmployeeService is automatically initialized
     }
 
-    private async Task<QuarkTableResponse> HandleServerSideRequestWithDelay(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequestWithDelay(DataTableServerSideRequest serverSideRequest)
     {
-        Logger.LogInformation("Delayed server-side request: Start={Start}, Length={Length}, Search='{Search}'", request.Start, request.Length, request.Search?.Value);
+        Logger.LogInformation("Delayed server-side request: Start={Start}, Length={Length}, Search='{Search}'", serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.Search?.Value);
 
         // Simulate network delay (1-3 seconds)
         int delayMs = Random.Shared.Next(1000, 3000);
         await Task.Delay(delayMs);
 
-        return await EmployeeService.GetEmployees(request);
+        return await EmployeeService.GetEmployees(serverSideRequest);
     }
 
     private async Task HandleSearch(string searchTerm)

@@ -1,5 +1,7 @@
 @page "/comprehensive"
 @using Microsoft.Extensions.Logging
+@using Soenneker.DataTables.Dtos.ServerResponse
+@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 
@@ -298,24 +300,22 @@
     
     private string GetSearchPlaceholder() => $"Search {GetDataSourceDisplayName()}...";
     
-    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
     {
         dataLoadCount++;
-        LogEvent("DATA", "Server-side request", $"Page: {request.Start / request.Length + 1}, Size: {request.Length}, Search: '{request.Search?.Value}'");
+        LogEvent("DATA", "Server-side request", $"Page: {serverSideRequest.Start / serverSideRequest.Length + 1}, Size: {serverSideRequest.Length}, Search: '{serverSideRequest.Search?.Value}'");
         
-        return await EmployeeService.GetEmployees(request);
+        return await EmployeeService.GetEmployees(serverSideRequest);
     }
-    
-
     
     private int GetTotalRecords() => EmployeeService.GetTotalCount();
     
-    private int GetFilteredRecords(QuarkTableRequest request)
+    private int GetFilteredRecords(DataTableServerSideRequest serverSideRequest)
     {
-        if (string.IsNullOrEmpty(request.Search?.Value))
+        if (string.IsNullOrEmpty(serverSideRequest.Search?.Value))
             return GetTotalRecords();
             
-        string searchTerm = request.Search.Value.ToLower();
+        string searchTerm = serverSideRequest.Search.Value.ToLower();
         return EmployeeService.GetAllEmployees().Count(e => 
             e.Name.ToLower().Contains(searchTerm) ||
             e.Department.ToLower().Contains(searchTerm) ||

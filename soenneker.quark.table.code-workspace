@@ -5,6 +5,30 @@
 		},
 		{
 			"path": "../../Blazor/soenneker.blazor.datatables"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.attributes.column"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.attributes.orderable"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.attributes.searchable"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.dtos.column"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.dtos.serverresponse"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.dtos.serversiderequest"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.extensions.serversiderequest"
+		},
+		{
+			"path": "../../DataTables/soenneker.datatables.extensions.types"
 		}
 	],
 	"settings": {}

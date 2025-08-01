@@ -1,5 +1,7 @@
 @page "/configuration"
 @using Microsoft.Extensions.Logging
+@using Soenneker.DataTables.Dtos.ServerResponse
+@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 
@@ -249,9 +251,9 @@
         // EmployeeService is automatically initialized
     }
 
-    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
     {
-        return await EmployeeService.GetEmployees(request);
+        return await EmployeeService.GetEmployees(serverSideRequest);
     }
 
     private async Task HandleSearch(string searchTerm)

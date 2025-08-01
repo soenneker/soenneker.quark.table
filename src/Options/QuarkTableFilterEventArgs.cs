@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Soenneker.Quark.Table.Dtos;
+using Soenneker.DataTables.Dtos.ServerSideRequest;
 
 namespace Soenneker.Quark.Table.Options;
 
@@ -26,5 +26,5 @@ public sealed class QuarkTableFilterEventArgs
     /// <summary>
     /// Gets or sets the current list of orders
     /// </summary>
-    public List<QuarkTableOrder>? Orders { get; set; }
+    public List<DataTableOrderRequest>? Orders { get; set; }
 } 

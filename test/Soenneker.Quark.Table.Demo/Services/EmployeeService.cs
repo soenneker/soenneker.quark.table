@@ -1,11 +1,12 @@
+using Bogus;
+using Microsoft.Extensions.Logging;
+using Soenneker.DataTables.Dtos.ServerResponse;
+using Soenneker.DataTables.Dtos.ServerSideRequest;
+using Soenneker.Quark.Table.Demo.Dtos;
+using Soenneker.Utils.AutoBogus;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Bogus;
-using Microsoft.Extensions.Logging;
-using Soenneker.Quark.Table.Demo.Dtos;
-using Soenneker.Quark.Table.Dtos;
-using Soenneker.Utils.AutoBogus;
 
 namespace Soenneker.Quark.Table.Demo.Services;
 
@@ -32,17 +33,17 @@ public class EmployeeService
         _logger.LogInformation("EmployeeService initialized with {Count} employee records", _employees.Count);
     }
 
-    public async Task<QuarkTableResponse> GetEmployees(QuarkTableRequest request)
+    public async Task<DataTableServerResponse> GetEmployees(DataTableServerSideRequest serverSideRequest)
     {
         _logger.LogDebug("Server-side request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", 
-            request.Start, request.Length, request.Search?.Value, request.ContinuationToken ?? "null");
+            serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.Search?.Value, serverSideRequest.ContinuationToken ?? "null");
 
         IEnumerable<Employee> filteredData = _employees.AsEnumerable();
 
         // Apply search
-        if (!string.IsNullOrEmpty(request.Search?.Value))
+        if (!string.IsNullOrEmpty(serverSideRequest.Search?.Value))
         {
-            string searchTerm = request.Search.Value.ToLower();
+            string searchTerm = serverSideRequest.Search.Value.ToLower();
             filteredData = filteredData.Where(e => 
                 e.Name.ToLower().Contains(searchTerm) ||
                 e.Department.ToLower().Contains(searchTerm) ||
@@ -50,41 +51,41 @@ public class EmployeeService
                 e.Status.ToLower().Contains(searchTerm));
         }
 
-        // Apply sorting - using the actual column names from the table data
-        if (request.Order?.Any() == true)
+        // Apply sorting
+        if (serverSideRequest.Order != null && serverSideRequest.Order.Count > 0)
         {
-            foreach (QuarkTableOrder order in request.Order)
+            _logger.LogDebug("Applying sorting: {OrderCount} orders", serverSideRequest.Order.Count);
+            
+            IOrderedEnumerable<Employee>? orderedData = null;
+            
+            foreach (var order in serverSideRequest.Order)
             {
-                filteredData = order.Column?.ToLower() switch
+                _logger.LogDebug("Sorting column {Column} in direction {Direction}", order.Column, order.Dir);
+                
+                if (orderedData == null)
                 {
-                    "name" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Name) : 
-                        filteredData.OrderByDescending(e => e.Name),
-                    "department" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Department) : 
-                        filteredData.OrderByDescending(e => e.Department),
-                    "email" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Email) : 
-                        filteredData.OrderByDescending(e => e.Email),
-                    "salary" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Salary) : 
-                        filteredData.OrderByDescending(e => e.Salary),
-                    "hiredate" or "hire date" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.HireDate) : 
-                        filteredData.OrderByDescending(e => e.HireDate),
-                    "status" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Status) : 
-                        filteredData.OrderByDescending(e => e.Status),
-                    "id" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Id) : 
-                        filteredData.OrderByDescending(e => e.Id),
-                    _ => filteredData
-                };
+                    // First sort
+                    orderedData = order.Dir.ToLower() == "asc" 
+                        ? filteredData.OrderBy(e => GetEmployeeProperty(e, order.Column))
+                        : filteredData.OrderByDescending(e => GetEmployeeProperty(e, order.Column));
+                }
+                else
+                {
+                    // Additional sorts
+                    orderedData = order.Dir.ToLower() == "asc" 
+                        ? orderedData.ThenBy(e => GetEmployeeProperty(e, order.Column))
+                        : orderedData.ThenByDescending(e => GetEmployeeProperty(e, order.Column));
+                }
+            }
+            
+            if (orderedData != null)
+            {
+                filteredData = orderedData;
             }
         }
 
         int totalRecords = filteredData.Count();
-        IEnumerable<Employee> pagedData = filteredData.Skip(request.Start).Take(request.Length);
+        IEnumerable<Employee> pagedData = filteredData.Skip(serverSideRequest.Start).Take(serverSideRequest.Length);
 
         var tableData = new List<List<string>>();
 
@@ -112,17 +113,17 @@ public class EmployeeService
             ]);
         }
 
-        return QuarkTableResponse.Success(request.Draw, totalRecords, totalRecords, tableData);
+        return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
     }
 
-    public async Task<List<Employee>> GetFilteredEmployees(QuarkTableRequest request)
+    public async Task<List<Employee>> GetFilteredEmployees(DataTableServerSideRequest serverSideRequest)
     {
         IEnumerable<Employee> filteredData = _employees.AsEnumerable();
 
         // Apply search
-        if (!string.IsNullOrEmpty(request.Search?.Value))
+        if (!string.IsNullOrEmpty(serverSideRequest.Search?.Value))
         {
-            string searchTerm = request.Search.Value.ToLower();
+            string searchTerm = serverSideRequest.Search.Value.ToLower();
             filteredData = filteredData.Where(e => 
                 e.Name.ToLower().Contains(searchTerm) ||
                 e.Department.ToLower().Contains(searchTerm) ||
@@ -130,40 +131,40 @@ public class EmployeeService
                 e.Status.ToLower().Contains(searchTerm));
         }
 
-        // Apply sorting - using the actual column names from the table data
-        if (request.Order?.Any() == true)
+        // Apply sorting
+        if (serverSideRequest.Order != null && serverSideRequest.Order.Count > 0)
         {
-            foreach (QuarkTableOrder order in request.Order)
+            _logger.LogDebug("Applying sorting to filtered employees: {OrderCount} orders", serverSideRequest.Order.Count);
+            
+            IOrderedEnumerable<Employee>? orderedData = null;
+            
+            foreach (var order in serverSideRequest.Order)
             {
-                filteredData = order.Column?.ToLower() switch
+                _logger.LogDebug("Sorting column {Column} in direction {Direction}", order.Column, order.Dir);
+                
+                if (orderedData == null)
                 {
-                    "name" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Name) : 
-                        filteredData.OrderByDescending(e => e.Name),
-                    "department" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Department) : 
-                        filteredData.OrderByDescending(e => e.Department),
-                    "email" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Email) : 
-                        filteredData.OrderByDescending(e => e.Email),
-                    "salary" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Salary) : 
-                        filteredData.OrderByDescending(e => e.Salary),
-                    "hiredate" or "hire date" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.HireDate) : 
-                        filteredData.OrderByDescending(e => e.HireDate),
-                    "status" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Status) : 
-                        filteredData.OrderByDescending(e => e.Status),
-                    "id" => order.Direction == "asc" ? 
-                        filteredData.OrderBy(e => e.Id) : 
-                        filteredData.OrderByDescending(e => e.Id),
-                    _ => filteredData
-                };
+                    // First sort
+                    orderedData = order.Dir.ToLower() == "asc" 
+                        ? filteredData.OrderBy(e => GetEmployeeProperty(e, order.Column))
+                        : filteredData.OrderByDescending(e => GetEmployeeProperty(e, order.Column));
+                }
+                else
+                {
+                    // Additional sorts
+                    orderedData = order.Dir.ToLower() == "asc" 
+                        ? orderedData.ThenBy(e => GetEmployeeProperty(e, order.Column))
+                        : orderedData.ThenByDescending(e => GetEmployeeProperty(e, order.Column));
+                }
+            }
+            
+            if (orderedData != null)
+            {
+                filteredData = orderedData;
             }
         }
 
-        return filteredData.Skip(request.Start).Take(request.Length).ToList();
+        return filteredData.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
     }
 
     public int GetTotalCount()
@@ -174,5 +175,20 @@ public class EmployeeService
     public List<Employee> GetAllEmployees()
     {
         return _employees.ToList();
+    }
+
+    private static object GetEmployeeProperty(Employee employee, int columnIndex)
+    {
+        return columnIndex switch
+        {
+            0 => employee.Name,
+            1 => employee.Department,
+            2 => employee.Email,
+            3 => employee.Salary,
+            4 => employee.HireDate,
+            5 => employee.Status,
+            6 => employee.Id,
+            _ => employee.Name // Default to name for unknown columns
+        };
     }
 } 

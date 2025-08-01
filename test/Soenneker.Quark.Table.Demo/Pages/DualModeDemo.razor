@@ -1,5 +1,7 @@
 @page "/dual-mode"
 @using Microsoft.Extensions.Logging
+@using Soenneker.DataTables.Dtos.ServerResponse
+@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Demo.Dtos
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
@@ -114,12 +116,36 @@
                             <ManualHeader>
                                 <thead>
                                     <tr>
-                                        <th data-priority="1">Name</th>
-                                        <th>Department</th>
-                                        <th>Email</th>
-                                        <th>Salary</th>
-                                        <th>Hire Date</th>
-                                        <th>Id</th>
+                                        <th @onclick="() => manualTable?.SortColumnByIndex(0)" 
+                                            class="quark-table-sortable @(manualTable?.GetSortClassByIndex(0))"
+                                            style="cursor:pointer;">
+                                            Name @(manualTable?.GetSortIndicatorByIndex(0))
+                                        </th>
+                                        <th @onclick="() => manualTable?.SortColumnByIndex(1)" 
+                                            class="quark-table-sortable @(manualTable?.GetSortClassByIndex(1))"
+                                            style="cursor:pointer;">
+                                            Department @(manualTable?.GetSortIndicatorByIndex(1))
+                                        </th>
+                                        <th @onclick="() => manualTable?.SortColumnByIndex(2)" 
+                                            class="quark-table-sortable @(manualTable?.GetSortClassByIndex(2))"
+                                            style="cursor:pointer;">
+                                            Email @(manualTable?.GetSortIndicatorByIndex(2))
+                                        </th>
+                                        <th @onclick="() => manualTable?.SortColumnByIndex(3)" 
+                                            class="quark-table-sortable @(manualTable?.GetSortClassByIndex(3))"
+                                            style="cursor:pointer;">
+                                            Salary @(manualTable?.GetSortIndicatorByIndex(3))
+                                        </th>
+                                        <th @onclick="() => manualTable?.SortColumnByIndex(4)" 
+                                            class="quark-table-sortable @(manualTable?.GetSortClassByIndex(4))"
+                                            style="cursor:pointer;">
+                                            Hire Date @(manualTable?.GetSortIndicatorByIndex(4))
+                                        </th>
+                                        <th @onclick="() => manualTable?.SortColumnByIndex(5)" 
+                                            class="quark-table-sortable @(manualTable?.GetSortClassByIndex(5))"
+                                            style="cursor:pointer;">
+                                            Id @(manualTable?.GetSortIndicatorByIndex(5))
+                                        </th>
                                     </tr>
                                 </thead>
                             </ManualHeader>
@@ -251,19 +277,19 @@
     }
 
     // Server-Side Mode Handlers
-    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
     {
-        LogEvent("DATA", "Server-side request", $"Page: {request.Start / request.Length + 1}, Size: {request.Length}, Search: '{request.Search?.Value}'");
-        return await EmployeeService.GetEmployees(request);
+        LogEvent("DATA", "Server-side request", $"Page: {serverSideRequest.Start / serverSideRequest.Length + 1}, Size: {serverSideRequest.Length}, Search: '{serverSideRequest.Search?.Value}'");
+        return await EmployeeService.GetEmployees(serverSideRequest);
     }
 
     // Manual Server Mode Handlers
-    private async Task HandleManualRequest(QuarkTableRequest request)
+    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
     {
-        LogEvent("DATA", "Manual request", $"Page: {request.Start / request.Length + 1}, Size: {request.Length}, Search: '{request.Search?.Value}'");
+        LogEvent("DATA", "Manual request", $"Page: {serverSideRequest.Start / serverSideRequest.Length + 1}, Size: {serverSideRequest.Length}, Search: '{serverSideRequest.Search?.Value}'");
         
         // Update current page data for manual rendering
-        currentPageEmployees = await EmployeeService.GetFilteredEmployees(request);
+        currentPageEmployees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
         
         // Trigger re-render
         StateHasChanged();
