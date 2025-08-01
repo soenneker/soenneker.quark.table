@@ -1,0 +1,126 @@
+@page "/basic"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Quark.Table.Demo.Services
+
+@inject ILogger<BasicDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>Basic Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Basic Demo</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-4 mb-4">Basic QuarkTable Demo</h1>
+            <p class="lead mb-4">A simple demonstration of QuarkTable with basic features including search, sorting, and pagination.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Employee Directory</h3>
+                    <p class="text-muted mb-0">Basic table with server-side processing, search, and sorting</p>
+                </div>
+                <div class="card-body">
+                    <QuarkTable @ref="basicTable" 
+                                OnServerSideRequest="HandleServerSideRequest"
+                                OnSearch="HandleSearch"
+                                OnOrder="HandleOrder"
+                                OnInitialize="HandleInitialize"
+                                ShowSearch="true"
+                                SearchPlaceholder="Search employees..."
+                                Options="basicTableOptions">
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Highlights -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-search fa-2x text-primary mb-3"></i>
+                    <h5>Search</h5>
+                    <p class="text-muted">Real-time search across all columns with debounced input</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-sort fa-2x text-success mb-3"></i>
+                    <h5>Sorting</h5>
+                    <p class="text-muted">Click column headers to sort data in ascending or descending order</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-list-ol fa-2x text-info mb-3"></i>
+                    <h5>Pagination</h5>
+                    <p class="text-muted">Navigate through pages and adjust the number of entries per page</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private QuarkTable? basicTable;
+
+    private QuarkTableOptions basicTableOptions = new()
+    {
+        DefaultPageSize = 10,
+        ShowSearch = true,
+        ShowPagination = true,
+        ShowPageSizeSelector = true,
+        Sortable = true,
+        ServerSide = true,
+        ShowInfo = true,
+        SearchPosition = SearchPosition.End
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // EmployeeService is automatically initialized
+    }
+
+    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    {
+        return await EmployeeService.GetEmployees(request);
+    }
+
+    private async Task HandleSearch(string searchTerm)
+    {
+        Logger.LogInformation("Search performed: {SearchTerm}", searchTerm);
+    }
+
+    private async Task HandleOrder(QuarkTableOrderEventArgs args)
+    {
+        Logger.LogInformation("Column '{Column}' sorted {Direction}", args.Column, args.Direction);
+    }
+
+    private async Task HandleInitialize()
+    {
+        Logger.LogInformation("Basic table initialized");
+    }
+
+    private async Task HandleDestroy()
+    {
+        Logger.LogInformation("Basic table destroyed");
+    }
+
+
+} 

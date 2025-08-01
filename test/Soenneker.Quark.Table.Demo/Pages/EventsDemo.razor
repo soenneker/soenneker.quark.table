@@ -1,0 +1,235 @@
+@page "/events"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Quark.Table.Demo.Services
+
+@inject ILogger<EventsDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>Events Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Events Demo</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-4 mb-4">Events Demo</h1>
+            <p class="lead mb-4">Demonstrating event handling and real-time logging in QuarkTable.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Interactive Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-table text-primary"></i> Interactive Table with Event Logging</h3>
+                    <p class="text-muted mb-0">All table interactions are logged in real-time</p>
+                </div>
+                <div class="card-body">
+                    <QuarkTable @ref="interactiveTable" 
+                                OnServerSideRequest="HandleServerSideRequest"
+                                OnSearch="HandleSearch"
+                                OnOrder="HandleOrder"
+                                OnInitialize="HandleInitialize"
+                                ShowSearch="true"
+                                SearchPlaceholder="Search employees..."
+                                Options="interactiveTableOptions">
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Event Log -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3><i class="fas fa-list-alt text-success"></i> Event Log</h3>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="ClearEventLog">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="event-log" style="max-height: 600px; overflow-y: auto;">
+                        @if (eventLog.Count == 0)
+                        {
+                            <div class="text-center text-muted">
+                                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                <p>No events yet. Interact with the table to see events here.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (LogEntry logEntry in eventLog)
+                            {
+                                <div class="log-entry @logEntry.Type.ToLower()">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <small class="text-muted">@logEntry.Timestamp.ToString("HH:mm:ss.fff")</small>
+                                            <span class="badge bg-@GetBadgeColor(logEntry.Type) me-2">@logEntry.Type</span>
+                                            <span>@logEntry.Message</span>
+                                        </div>
+                                        <small class="text-muted">@logEntry.Details</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-bar text-info"></i> Event Statistics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-search fa-2x mb-2"></i>
+                                    <h4>@eventLog.Count(e => e.Type == "SEARCH")</h4>
+                                    <p class="mb-0">Search Events</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-sort fa-2x mb-2"></i>
+                                    <h4>@eventLog.Count(e => e.Type == "SORT")</h4>
+                                    <p class="mb-0">Sort Events</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-list-ol fa-2x mb-2"></i>
+                                    <h4>@eventLog.Count(e => e.Type == "PAGINATION")</h4>
+                                    <p class="mb-0">Pagination Events</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cog fa-2x mb-2"></i>
+                                    <h4>@eventLog.Count(e => e.Type == "LIFECYCLE")</h4>
+                                    <p class="mb-0">Lifecycle Events</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private QuarkTable? interactiveTable;
+
+    private List<LogEntry> eventLog = [];
+
+    private QuarkTableOptions interactiveTableOptions = new()
+    {
+        DefaultPageSize = 8,
+        ShowSearch = true,
+        ShowPagination = true,
+        ShowPageSizeSelector = true,
+        Sortable = true,
+        ServerSide = true,
+        ShowInfo = true,
+        SearchPosition = SearchPosition.End
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LogEvent("LIFECYCLE", "Page initialized", "Component ready");
+    }
+
+    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    {
+        LogEvent("INFO", $"Server-side request", $"Start: {request.Start}, Length: {request.Length}, Search: '{request.Search?.Value}'");
+        return await EmployeeService.GetEmployees(request);
+    }
+
+    private async Task HandleSearch(string searchTerm)
+    {
+        LogEvent("SEARCH", $"Search performed", $"Term: '{searchTerm}'");
+    }
+
+    private async Task HandleOrder(QuarkTableOrderEventArgs args)
+    {
+        LogEvent("SORT", $"Column sorted", $"Column: '{args.Column}', Direction: {args.Direction}");
+    }
+
+    private async Task HandleInitialize()
+    {
+        LogEvent("LIFECYCLE", "Table initialized", "Component ready for interaction");
+    }
+
+    private async Task HandleDestroy()
+    {
+        LogEvent("LIFECYCLE", "Table destroyed", "Component cleanup");
+    }
+
+    private void LogEvent(string type, string message, string details = "")
+    {
+        eventLog.Insert(0, new LogEntry
+        {
+            Type = type,
+            Message = message,
+            Details = details,
+            Timestamp = DateTime.Now
+        });
+
+        // Keep only the last 100 entries
+        if (eventLog.Count > 100)
+        {
+            eventLog.RemoveRange(100, eventLog.Count - 100);
+        }
+
+        StateHasChanged();
+    }
+
+    private void ClearEventLog()
+    {
+        eventLog.Clear();
+        StateHasChanged();
+    }
+
+    private string GetBadgeColor(string type)
+    {
+        return type.ToLower() switch
+        {
+            "search" => "success",
+            "sort" => "warning",
+            "pagination" => "info",
+            "lifecycle" => "danger",
+            "info" => "primary",
+            _ => "secondary"
+        };
+    }
+
+
+
+    public class LogEntry
+    {
+        public string Type { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string Details { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+} 

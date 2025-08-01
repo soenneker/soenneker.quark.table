@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../Blazor/soenneker.blazor.datatables"
+		}
+	],
+	"settings": {}
+}

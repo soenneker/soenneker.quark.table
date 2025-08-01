@@ -1,0 +1,529 @@
+@using System.Threading
+@using Microsoft.Extensions.Logging
+@using Soenneker.Extensions.Task
+@using Soenneker.Quark.Table.Options
+@using Soenneker.Quark.Table.Dtos
+@using Soenneker.Quark.Table.Abstract
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Utils.Debounce
+
+@inherits ComponentBase
+@implements IQuarkTable
+
+<div class="quark-table-wrapper" style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")" >
+
+    <div class="quark-table-controls @GetSearchPositionClass()" >
+        @if (Options.ShowPageSizeSelector)
+        {
+            <div class="quark-table-page-size" >
+                <label>Show:</label>
+                <select value="@_pageSize" @onchange="OnPageSizeChangedHandler">
+                    @for (var i = 0; i < Options.PageSizeOptions.Length; i++)
+                    {
+                        int size = Options.PageSizeOptions[i];
+                        <option value="@size" >@size</option>
+                    }
+                </select>
+                <span>entries per page</span>
+            </div>
+        }
+
+        @if (Options.ShowSearch)
+        {
+            <div class="quark-table-search" >
+                <label>Search:</label>
+                <input type="text"
+                       value="@SearchTerm"
+                       @oninput="OnSearchInputHandler"
+                       placeholder="@Options.SearchPlaceholder"
+                       class="quark-table-search-input" />
+            </div>
+        }
+    </div>
+
+    <div class="quark-table-container" >
+        @if (_columns.Count == 0 && !_isLoading && !ManualMode)
+        {
+            <div class="text-center p-4" >
+                <p>Loading table...</p>
+            </div>
+        }
+        else
+        {
+            <table id="@ElementId" class="quark-table" >
+                @if (ManualMode && ManualHeader != null)
+                {
+                    @ManualHeader
+                }
+                else
+                {
+                    <thead>
+                        <tr>
+                            @for (var c = 0; c < _columns.Count; c++)
+                            {
+                                string col = _columns[c];
+                                <th @onclick="() => HandleColumnSort(col)"
+                                    class="quark-table-sortable @(GetSortClass(col))"
+                                    style="cursor:pointer;" >
+                                    @col @GetSortIndicator(col)
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                }
+                <tbody style="position:relative;" >
+                    @if (LoadingIndicator != null && _isLoading)
+                    {
+                        <tr>
+                            <td colspan="@(_columns.Count > 0 ? _columns.Count : 1)" style="padding:0;border:none;" >
+                                <div class="quark-table-loading-indicator" style="display:flex;" >
+                                    @LoadingIndicator
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (ManualMode && ManualBody != null)
+                    {
+                        @ManualBody
+                    }
+                    else
+                    {
+                        @for (var r = 0; r < _rows.Count; r++)
+                        {
+                            List<string> row = _rows[r];
+                            <tr @key="r" >
+                                @for (var j = 0; j < row.Count; j++)
+                                {
+                                    <td>@row[j]</td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    @if (Options.ShowPagination && _totalPages > 1)
+    {
+        <div class="quark-table-pagination" >
+            @if (Options.ShowInfo)
+            {
+                <div class="quark-table-info" >Showing @StartRecord to @EndRecord of @_totalRecords entries</div>
+            }
+            <div class="quark-table-pagination-controls" >
+                <button class="quark-table-pagination-btn" @onclick="HandleFirstPage" disabled="@(_currentPage == 1)" title="First" >«</button>
+                <button class="quark-table-pagination-btn" @onclick="HandlePreviousPage" disabled="@(_currentPage == 1)" title="Previous" >‹</button>
+
+                @for (int p = StartPage; p <= EndPage; p++)
+                {
+                    <button class="quark-table-pagination-btn @(p == _currentPage ? "active" : string.Empty)" @onclick="() => HandleGoToPage(p)" >@p</button>
+                }
+
+                <button class="quark-table-pagination-btn" @onclick="HandleNextPage" disabled="@(_currentPage == _totalPages)" title="Next" >›</button>
+                <button class="quark-table-pagination-btn" @onclick="HandleLastPage" disabled="@(_currentPage == _totalPages)" title="Last" >»</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    [Inject]
+    private IQuarkTableInterop QuarkTableInterop { get; set; } = null!;
+
+    [Inject]
+    private ILogger<QuarkTable> Logger { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnInitialize { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSearch { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPageSizeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnGoToPage { get; set; }
+
+    [Parameter]
+    public EventCallback<QuarkTableOrderEventArgs> OnOrder { get; set; }
+
+    [Parameter]
+    public Func<QuarkTableRequest, Task<QuarkTableResponse>>? OnServerSideRequest { get; set; }
+
+    [Parameter]
+    public QuarkTableOptions Options { get; set; } = new();
+
+    [Parameter]
+    public RenderFragment? LoadingIndicator { get; set; }
+
+    [Parameter]
+    public bool Visible { get; set; } = true;
+
+    [Parameter]
+    public bool ShowSearch { get; set; } = true;
+
+    [Parameter]
+    public bool ShowPagination { get; set; } = true;
+
+    [Parameter]
+    public bool ShowPageSizeSelector { get; set; } = true;
+
+    [Parameter]
+    public int[] PageSizeOptions { get; set; } = [10, 25, 50, 100];
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "Search...";
+
+    [Parameter]
+    public int SearchDebounceMs { get; set; } = 300;
+
+    [Parameter]
+    public int MaxPageButtons { get; set; } = 5;
+
+    [Parameter]
+    public bool ManualMode { get; set; }
+
+    [Parameter]
+    public RenderFragment? ManualHeader { get; set; }
+
+    [Parameter]
+    public RenderFragment? ManualBody { get; set; }
+
+    [Parameter]
+    public object? DirectData { get; set; }
+
+    [Parameter]
+    public int TotalRecords { get; set; }
+
+    [Parameter]
+    public EventCallback<QuarkTableRequest> OnManualRequest { get; set; }
+
+    public readonly string ElementId = $"quark-table-{Guid.NewGuid():N}";
+
+    private readonly Debouncer _debouncer = new();
+    private readonly List<string> _columns = [];
+    private readonly List<QuarkTableOrder> _currentOrders = [];
+    private readonly List<List<string>> _rows = [];
+
+    private string _searchTerm = string.Empty;
+    private string? _continuationToken;
+
+    private int _currentPage = 1;
+    private int _pageSize;
+    private int _totalRecords;
+    private int _totalPages;
+
+    private bool _dataChanged;
+    private bool _isLoading;
+
+    public string SearchTerm => _searchTerm;
+
+    private int StartRecord => (_currentPage - 1) * _pageSize + 1;
+    private int EndRecord => Math.Min(_currentPage * _pageSize, _totalRecords);
+    private int StartPage => Math.Max(1, _currentPage - Options.MaxPageButtons / 2);
+    private int EndPage => Math.Min(_totalPages, _currentPage + Options.MaxPageButtons / 2);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _pageSize = Options.DefaultPageSize;
+        await QuarkTableInterop.Initialize();
+
+        if (ManualMode)
+        {
+            _totalRecords = TotalRecords;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+        }
+        else if (OnServerSideRequest != null)
+        {
+            await LoadData();
+        }
+        else if (DirectData != null)
+        {
+            UpdateTableData(DirectData);
+            _totalRecords = _rows.Count;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+        }
+
+        if (OnInitialize.HasDelegate)
+            await OnInitialize.InvokeAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (DirectData != null && !ManualMode)
+        {
+            UpdateTableData(DirectData);
+            _totalRecords = _rows.Count;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+            _dataChanged = true;
+        }
+        
+        await base.OnParametersSetAsync();
+    }
+
+    private Task OnSearchInputHandler(ChangeEventArgs e)
+    {
+        _searchTerm = e.Value?.ToString() ?? string.Empty;
+
+        _debouncer.Debounce(Options.SearchDebounceMs, async ct =>
+        {
+            _currentPage = 1;
+            if (ManualMode)
+            {
+                await HandleManualRequest(ct);
+            }
+            else
+            {
+                await LoadData(ct).NoSync();
+            }
+
+            if (OnSearch.HasDelegate)
+                await OnSearch.InvokeAsync(_searchTerm);
+        });
+
+        return Task.CompletedTask;
+    }
+
+    private async Task OnPageSizeChangedHandler(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int size) && size != _pageSize)
+        {
+            _pageSize = size;
+            _currentPage = 1;
+            if (ManualMode)
+            {
+                await HandleManualRequest();
+            }
+            else
+            {
+                await LoadData();
+            }
+            if (OnPageSizeChanged.HasDelegate) await OnPageSizeChanged.InvokeAsync(_pageSize);
+        }
+    }
+
+    private async Task HandleFirstPage()
+    {
+        if (_currentPage == 1) return;
+        _currentPage = 1;
+        if (ManualMode)
+        {
+            await HandleManualRequest();
+        }
+        else
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task HandlePreviousPage()
+    {
+        if (_currentPage == 1) return;
+        _currentPage--;
+        if (ManualMode)
+        {
+            await HandleManualRequest();
+        }
+        else
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task HandleNextPage()
+    {
+        if (_currentPage == _totalPages) return;
+        _currentPage++;
+        if (ManualMode)
+        {
+            await HandleManualRequest();
+        }
+        else
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task HandleLastPage()
+    {
+        if (_currentPage == _totalPages) return;
+        _currentPage = _totalPages;
+        if (ManualMode)
+        {
+            await HandleManualRequest();
+        }
+        else
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task HandleGoToPage(int page)
+    {
+        if (page == _currentPage || page < 1 || page > _totalPages) return;
+        _currentPage = page;
+        if (ManualMode)
+        {
+            await HandleManualRequest();
+        }
+        else
+        {
+            await LoadData();
+        }
+        if (OnGoToPage.HasDelegate) await OnGoToPage.InvokeAsync(page);
+    }
+
+    private async Task HandleColumnSort(string col)
+    {
+        if (!Options.Sortable) return;
+        QuarkTableOrder? existing = _currentOrders.FirstOrDefault(o => o.Column == col);
+        string? next = existing?.Direction == "asc" ? "desc" : existing?.Direction == "desc" ? null : "asc";
+        _currentOrders.RemoveAll(o => o.Column == col);
+        if (next != null) _currentOrders.Add(new QuarkTableOrder {Column = col, Direction = next});
+        _currentPage = 1;
+        if (ManualMode)
+        {
+            await HandleManualRequest();
+        }
+        else
+        {
+            await LoadData();
+        }
+        if (OnOrder.HasDelegate)
+        {
+            var args = new QuarkTableOrderEventArgs {Column = col, Direction = next ?? string.Empty, Orders = _currentOrders};
+            await OnOrder.InvokeAsync(args);
+        }
+    }
+
+    /*************** Data ***************/
+    private async Task LoadData(CancellationToken cancellationToken = default)
+    {
+        if (OnServerSideRequest == null) return;
+        
+        _isLoading = true;
+        _dataChanged = true;
+        await InvokeAsync(StateHasChanged).NoSync();
+        
+        try
+        {
+            var request = new QuarkTableRequest
+            {
+                Start = (_currentPage - 1) * _pageSize,
+                Length = _pageSize,
+                Search = new QuarkTableSearch {Value = _searchTerm},
+                Order = _currentOrders,
+                ContinuationToken = _continuationToken
+            };
+            QuarkTableResponse resp = await OnServerSideRequest.Invoke(request);
+            _totalRecords = resp.TotalRecords;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+            _continuationToken = resp.ContinuationToken;
+
+            UpdateTableData(resp.Data);
+            _dataChanged = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "LoadData error: {Message}", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+            _dataChanged = true;
+            await InvokeAsync(StateHasChanged).NoSync();
+        }
+    }
+
+    private async Task HandleManualRequest(CancellationToken cancellationToken = default)
+    {
+        if (!OnManualRequest.HasDelegate) return;
+        
+        _isLoading = true;
+        _dataChanged = true;
+        await InvokeAsync(StateHasChanged).NoSync();
+        
+        try
+        {
+            var request = new QuarkTableRequest
+            {
+                Start = (_currentPage - 1) * _pageSize,
+                Length = _pageSize,
+                Search = new QuarkTableSearch {Value = _searchTerm},
+                Order = _currentOrders,
+                ContinuationToken = _continuationToken
+            };
+            await OnManualRequest.InvokeAsync(request);
+            _dataChanged = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "HandleManualRequest error: {Message}", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+            _dataChanged = true;
+            await InvokeAsync(StateHasChanged).NoSync();
+        }
+    }
+
+    private void UpdateTableData(object? data)
+    {
+        _columns.Clear();
+        _rows.Clear();
+        switch (data)
+        {
+            case List<List<string>> list when list.Count > 0:
+                _columns.AddRange(list[0]);
+                _rows.AddRange(list.Skip(1));
+                break;
+            case List<Dictionary<string, object>> dict when dict.Count > 0:
+                _columns.AddRange(dict[0].Keys.Select(k => k.ToString()));
+                foreach (Dictionary<string, object> row in dict)
+                {
+                    _rows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
+                }
+
+                break;
+        }
+    }
+
+    private string GetSortClass(string col)
+    {
+        QuarkTableOrder? o = _currentOrders.FirstOrDefault(x => x.Column == col);
+        return o?.Direction switch {"asc" => "quark-table-sorted-asc", "desc" => "quark-table-sorted-desc", _ => string.Empty};
+    }
+
+    private RenderFragment GetSortIndicator(string col) => builder =>
+    {
+        QuarkTableOrder? o = _currentOrders.FirstOrDefault(x => x.Column == col);
+        builder.AddContent(0, o?.Direction switch {"asc" => " ↑", "desc" => " ↓", _ => " ↕"});
+    };
+
+    private string GetSearchPositionClass()
+    {
+        switch (Options.SearchPosition)
+        {
+            case SearchPosition.StartValue: return "search-start";
+            case SearchPosition.CenterValue: return "search-center";
+            default: return "search-end";
+        }
+    }
+
+    protected override bool ShouldRender()
+    {
+        bool s = _dataChanged;
+        _dataChanged = false;
+        return s;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _debouncer.DisposeAsync();
+    }
+
+}

@@ -1,0 +1,329 @@
+@page "/dual-mode"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Demo.Dtos
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Quark.Table.Demo.Services
+
+@inject ILogger<DualModeDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>Dual Mode Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dual Mode Demo</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-4 mb-4">Dual Mode QuarkTable Demo</h1>
+            <p class="lead mb-4">Demonstration of both server-side mode and manual server mode with declarative HTML structure.</p>
+        </div>
+    </div>
+
+    <!-- Mode Selection -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-toggle-on text-primary"></i> Mode Selection</h3>
+                    <p class="text-muted mb-0">Choose between server-side mode and manual server mode</p>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="mode" id="serverMode" checked="@useServerMode" @onchange="@(e => useServerMode = true)">
+                        <label class="btn btn-outline-primary" for="serverMode">
+                            <i class="fas fa-server"></i> Server-Side Mode
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="mode" id="manualMode" checked="@(!useServerMode)" @onchange="@(e => useServerMode = false)">
+                        <label class="btn btn-outline-success" for="manualMode">
+                            <i class="fas fa-code"></i> Manual Server Mode
+                        </label>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Server-Side Mode:</strong> Data-driven with automatic rendering
+                            <br>
+                            <strong>Manual Server Mode:</strong> Declarative HTML with server events
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Server-Side Mode Demo -->
+    @if (useServerMode)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-server text-primary"></i> Server-Side Mode</h3>
+                        <p class="text-muted mb-0">Data-driven table with automatic rendering</p>
+                    </div>
+                    <div class="card-body">
+                        <QuarkTable @ref="serverSideTable" 
+                                    OnServerSideRequest="HandleServerSideRequest"
+                                    OnSearch="HandleSearch"
+                                    OnOrder="HandleOrder"
+                                    OnInitialize="HandleInitialize"
+                                    ShowSearch="true"
+                                    SearchPlaceholder="Search employees..."
+                                    Options="serverSideOptions">
+                            <LoadingIndicator>
+                                <div class="text-center p-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </LoadingIndicator>
+                        </QuarkTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Manual Server Mode Demo -->
+    @if (!useServerMode)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-code text-success"></i> Manual Server Mode</h3>
+                        <p class="text-muted mb-0">Declarative HTML with server events</p>
+                    </div>
+                    <div class="card-body">
+                        <QuarkTable @ref="manualTable" 
+                                    ManualMode="true"
+                                    TotalRecords="@EmployeeService.GetTotalCount()"
+                                    OnManualRequest="HandleManualRequest"
+                                    OnSearch="HandleSearch"
+                                    OnOrder="HandleOrder"
+                                    OnInitialize="HandleInitialize"
+                                    ShowSearch="true"
+                                    SearchPlaceholder="Search employees..."
+                                    Options="manualOptions">
+                            <ManualHeader>
+                                    <tr>
+                                        <th data-priority="1">Name</th>
+                                        <th>Department</th>
+                                        <th>Email</th>
+                                        <th>Salary</th>
+                                        <th>Hire Date</th>
+                                        <th>Id</th>
+                                    </tr>
+                            </ManualHeader>
+                            <ManualBody>
+                                    @foreach (Employee employee in currentPageEmployees)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <a href="@($"/employees/{employee.Id}")" class="text-decoration-none">
+                                                    @employee.Name
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@employee.Department</span>
+                                            </td>
+                                            <td>
+                                                <a href="mailto:@employee.Email" class="text-decoration-none">
+                                                    @employee.Email
+                                                </a>
+                                            </td>
+                                            <td>
+                                                @employee.Salary.ToString("C")
+                                            </td>
+                                            <td>
+                                                @employee.HireDate.ToString("MMM dd, yyyy")
+                                            </td>
+                                            <td>
+                                                @employee.Id
+                                            </td>
+                                        </tr>
+                                    }
+                            </ManualBody>
+                            <LoadingIndicator>
+                                <div class="text-center p-3">
+                                    <div class="spinner-border text-success" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </LoadingIndicator>
+                        </QuarkTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Event Log -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3><i class="fas fa-list-alt text-info"></i> Event Log</h3>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="ClearEventLog">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="event-log" style="max-height: 300px; overflow-y: auto;">
+                        @if (eventLog.Count == 0)
+                        {
+                            <div class="text-center text-muted">
+                                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                <p>No events yet. Interact with the table to see events here.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (LogEntry logEntry in eventLog.TakeLast(20))
+                            {
+                                <div class="log-entry @logEntry.Type.ToLower() mb-2 p-2 border-start border-@GetBadgeColor(logEntry.Type)">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <small class="text-muted">@logEntry.Timestamp.ToString("HH:mm:ss.fff")</small>
+                                            <span class="badge bg-@GetBadgeColor(logEntry.Type) me-2">@logEntry.Type</span>
+                                            <span>@logEntry.Message</span>
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(logEntry.Details))
+                                    {
+                                        <small class="text-muted d-block mt-1">@logEntry.Details</small>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private QuarkTable? serverSideTable;
+    private QuarkTable? manualTable;
+    private readonly List<LogEntry> eventLog = [];
+    private bool useServerMode = true;
+    
+    // Data
+    private List<Employee> currentPageEmployees = [];
+    
+    // Options
+    private QuarkTableOptions serverSideOptions = new()
+    {
+        DefaultPageSize = 10,
+        ShowSearch = true,
+        ShowPagination = true,
+        ShowPageSizeSelector = true,
+        Sortable = true,
+        ServerSide = true,
+        ShowInfo = true,
+        SearchPosition = SearchPosition.End
+    };
+    
+    private QuarkTableOptions manualOptions = new()
+    {
+        DefaultPageSize = 10,
+        ShowSearch = true,
+        ShowPagination = true,
+        ShowPageSizeSelector = true,
+        Sortable = true,
+        ServerSide = false,
+        ShowInfo = true,
+        SearchPosition = SearchPosition.End
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LogEvent("INFO", "Dual mode demo initialized", $"Using {EmployeeService.GetTotalCount()} employee records");
+    }
+
+    // Server-Side Mode Handlers
+    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    {
+        LogEvent("DATA", "Server-side request", $"Page: {request.Start / request.Length + 1}, Size: {request.Length}, Search: '{request.Search?.Value}'");
+        return await EmployeeService.GetEmployees(request);
+    }
+
+    // Manual Server Mode Handlers
+    private async Task HandleManualRequest(QuarkTableRequest request)
+    {
+        LogEvent("DATA", "Manual request", $"Page: {request.Start / request.Length + 1}, Size: {request.Length}, Search: '{request.Search?.Value}'");
+        
+        // Update current page data for manual rendering
+        currentPageEmployees = await EmployeeService.GetFilteredEmployees(request);
+        
+        // Trigger re-render
+        StateHasChanged();
+    }
+
+    // Common Event Handlers
+    private async Task HandleSearch(string searchTerm)
+    {
+        LogEvent("SEARCH", "Search performed", $"Term: '{searchTerm}'");
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleOrder(QuarkTableOrderEventArgs args)
+    {
+        LogEvent("SORT", "Column sorted", $"Column: {args.Column}, Direction: {args.Direction}");
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleInitialize()
+    {
+        LogEvent("INIT", "Table initialized", $"Mode: {(useServerMode ? "Server-Side" : "Manual")}");
+        await Task.CompletedTask;
+    }
+
+    // Utility Methods
+    private void ClearEventLog()
+    {
+        eventLog.Clear();
+        LogEvent("ACTION", "Event log cleared", "All events reset");
+    }
+
+    private void LogEvent(string type, string message, string details = "")
+    {
+        eventLog.Add(new LogEntry
+        {
+            Type = type,
+            Message = message,
+            Details = details,
+            Timestamp = DateTime.Now
+        });
+        
+        StateHasChanged();
+    }
+
+    private string GetBadgeColor(string type) => type.ToUpper() switch
+    {
+        "INFO" => "info",
+        "SEARCH" => "primary",
+        "SORT" => "success",
+        "DATA" => "secondary",
+        "ACTION" => "danger",
+        "INIT" => "success",
+        _ => "secondary"
+    };
+
+
+
+    public class LogEntry
+    {
+        public string Type { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Details { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+    }
+} 
