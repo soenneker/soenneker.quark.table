@@ -35,13 +35,13 @@
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Data Source</label>
-                            <select class="form-select" @bind="selectedDataSource" @bind:event="onchange">
+                            <select class="form-select" @bind="selectedDataSource" @bind:event="onchange" @bind:after="OnDataSourceChanged">
                                 <option value="employees">Employees</option>
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Page Size</label>
-                            <select class="form-select" @bind="pageSize" @bind:event="onchange">
+                            <select class="form-select" @bind="pageSize" @bind:event="onchange" @bind:after="OnPageSizeChanged">
                                 <option value="5">5 per page</option>
                                 <option value="10">10 per page</option>
                                 <option value="25">25 per page</option>
@@ -50,7 +50,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Search Position</label>
-                            <select class="form-select" @bind="searchPosition" @bind:event="onchange">
+                            <select class="form-select" @bind="searchPosition" @bind:event="onchange" @bind:after="OnSearchPositionChanged">
                                 <option value="@SearchPosition.StartValue">Start</option>
                                 <option value="@SearchPosition.CenterValue">Center</option>
                                 <option value="@SearchPosition.EndValue">End</option>
@@ -58,7 +58,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Max Page Buttons</label>
-                            <select class="form-select" @bind="maxPageButtons" @bind:event="onchange">
+                            <select class="form-select" @bind="maxPageButtons" @bind:event="onchange" @bind:after="OnMaxPageButtonsChanged">
                                 <option value="3">3 buttons</option>
                                 <option value="5">5 buttons</option>
                                 <option value="7">7 buttons</option>
@@ -69,7 +69,7 @@
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="showSearch" id="showSearch">
+                                <input class="form-check-input" type="checkbox" @bind="showSearch" @bind:after="OnShowSearchChanged" id="showSearch">
                                 <label class="form-check-label" for="showSearch">
                                     Show Search
                                 </label>
@@ -77,7 +77,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="showPagination" id="showPagination">
+                                <input class="form-check-input" type="checkbox" @bind="showPagination" @bind:after="OnShowPaginationChanged" id="showPagination">
                                 <label class="form-check-label" for="showPagination">
                                     Show Pagination
                                 </label>
@@ -85,7 +85,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="showPageSizeSelector" id="showPageSizeSelector">
+                                <input class="form-check-input" type="checkbox" @bind="showPageSizeSelector" @bind:after="OnShowPageSizeSelectorChanged" id="showPageSizeSelector">
                                 <label class="form-check-label" for="showPageSizeSelector">
                                     Show Page Size Selector
                                 </label>
@@ -93,7 +93,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="sortable" id="sortable">
+                                <input class="form-check-input" type="checkbox" @bind="sortable" @bind:after="OnSortableChanged" id="sortable">
                                 <label class="form-check-label" for="sortable">
                                     Enable Sorting
                                 </label>
@@ -132,7 +132,7 @@
                                 OnPageSizeChanged="HandlePageSizeChanged"
                                 OnGoToPage="HandleGoToPage"
                                 ShowSearch="@showSearch"
-                                                                    SearchPlaceholder="@($"Search {GetDataSourceDisplayName()}...")"
+                                SearchPlaceholder="@($"Search {GetDataSourceDisplayName()}...")"
                                 Options="tableOptions">
                         <LoadingIndicator>
                             <div class="text-center p-4">
@@ -308,8 +308,6 @@
     
 
     
-
-    
     private int GetTotalRecords() => EmployeeService.GetTotalCount();
     
     private int GetFilteredRecords(QuarkTableRequest request)
@@ -369,19 +367,43 @@
     private async Task OnPageSizeChanged()
     {
         LogEvent("CONFIG", "Page size changed", $"New size: {pageSize}");
-        await Task.CompletedTask;
+        StateHasChanged();
     }
     
     private async Task OnSearchPositionChanged()
     {
         LogEvent("CONFIG", "Search position changed", $"New position: {searchPosition}");
-        await Task.CompletedTask;
+        StateHasChanged();
     }
     
     private async Task OnMaxPageButtonsChanged()
     {
         LogEvent("CONFIG", "Max page buttons changed", $"New max: {maxPageButtons}");
-        await Task.CompletedTask;
+        StateHasChanged();
+    }
+    
+    private async Task OnShowSearchChanged()
+    {
+        LogEvent("CONFIG", "Show search changed", $"New value: {showSearch}");
+        StateHasChanged();
+    }
+    
+    private async Task OnShowPaginationChanged()
+    {
+        LogEvent("CONFIG", "Show pagination changed", $"New value: {showPagination}");
+        StateHasChanged();
+    }
+    
+    private async Task OnShowPageSizeSelectorChanged()
+    {
+        LogEvent("CONFIG", "Show page size selector changed", $"New value: {showPageSizeSelector}");
+        StateHasChanged();
+    }
+    
+    private async Task OnSortableChanged()
+    {
+        LogEvent("CONFIG", "Sortable changed", $"New value: {sortable}");
+        StateHasChanged();
     }
     
     // Utility methods

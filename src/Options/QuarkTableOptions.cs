@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Soenneker.Quark.Table.Enums;
 
@@ -79,4 +81,73 @@ public sealed class QuarkTableOptions
     /// </summary>
     [JsonPropertyName("showInfo")]
     public bool ShowInfo { get; set; } = true;
+
+    /// <summary>
+    /// Creates a deep copy of the current options
+    /// </summary>
+    /// <returns>A new QuarkTableOptions instance with the same values</returns>
+    public QuarkTableOptions Clone()
+    {
+        return new QuarkTableOptions
+        {
+            Sortable = this.Sortable,
+            DefaultPageSize = this.DefaultPageSize,
+            PageSizeOptions = this.PageSizeOptions.Clone() as int[] ?? this.PageSizeOptions,
+            ShowPageSizeSelector = this.ShowPageSizeSelector,
+            ShowSearch = this.ShowSearch,
+            SearchPlaceholder = this.SearchPlaceholder,
+            SearchDebounceMs = this.SearchDebounceMs,
+            SearchPosition = this.SearchPosition,
+            ShowPagination = this.ShowPagination,
+            MaxPageButtons = this.MaxPageButtons,
+            ServerSide = this.ServerSide,
+            ShowInfo = this.ShowInfo
+        };
+    }
+
+    /// <summary>
+    /// Determines if this options instance equals another
+    /// </summary>
+    /// <param name="obj">The options to compare with</param>
+    /// <returns>True if the options are equal, false otherwise</returns>
+    public override bool Equals(object? obj)
+    {
+        if (obj is not QuarkTableOptions other)
+            return false;
+
+        return Sortable == other.Sortable &&
+               DefaultPageSize == other.DefaultPageSize &&
+               ShowPageSizeSelector == other.ShowPageSizeSelector &&
+               ShowSearch == other.ShowSearch &&
+               SearchPlaceholder == other.SearchPlaceholder &&
+               SearchDebounceMs == other.SearchDebounceMs &&
+               SearchPosition == other.SearchPosition &&
+               ShowPagination == other.ShowPagination &&
+               MaxPageButtons == other.MaxPageButtons &&
+               ServerSide == other.ServerSide &&
+               ShowInfo == other.ShowInfo &&
+               PageSizeOptions.SequenceEqual(other.PageSizeOptions);
+    }
+
+    /// <summary>
+    /// Gets the hash code for this options instance
+    /// </summary>
+    /// <returns>The hash code</returns>
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Sortable);
+        hash.Add(DefaultPageSize);
+        hash.Add(ShowPageSizeSelector);
+        hash.Add(ShowSearch);
+        hash.Add(SearchPlaceholder);
+        hash.Add(SearchDebounceMs);
+        hash.Add(SearchPosition);
+        hash.Add(ShowPagination);
+        hash.Add(MaxPageButtons);
+        hash.Add(ServerSide);
+        hash.Add(ShowInfo);
+        hash.Add(PageSizeOptions);
+        return hash.ToHashCode();
+    }
 } 

@@ -62,6 +62,18 @@
                                 ShowSearch="true"
                                 SearchPlaceholder="Search employees..."
                                 Options="customLoadingOptions" >
+                        <ManualHeader>
+                            <thead>
+                                <tr>
+                                    <th data-priority="1">Name</th>
+                                    <th>Department</th>
+                                    <th>Email</th>
+                                    <th>Salary</th>
+                                    <th>Hire Date</th>
+                                    <th>Id</th>
+                                </tr>
+                            </thead>
+                        </ManualHeader>
                         <LoadingIndicator>
                             <div class="custom-loading-overlay" >
                                 <div class="custom-loading-content" >
@@ -215,7 +227,6 @@
     {
         Logger.LogInformation("Column '{Column}' sorted {Direction}", args.Column, args.Direction);
     }
-
 
 
 }

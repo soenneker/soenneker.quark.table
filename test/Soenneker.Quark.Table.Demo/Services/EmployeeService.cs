@@ -35,8 +35,8 @@ public class EmployeeService
 
     public async Task<QuarkTableResponse> GetEmployees(QuarkTableRequest request)
     {
-        _logger.LogDebug("Server-side request: Start={Start}, Length={Length}, Search='{Search}'", 
-            request.Start, request.Length, request.Search?.Value);
+        _logger.LogDebug("Server-side request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", 
+            request.Start, request.Length, request.Search?.Value, request.ContinuationToken ?? "null");
 
         IEnumerable<Employee> filteredData = _employees.AsEnumerable();
 
@@ -51,7 +51,7 @@ public class EmployeeService
                 e.Status.ToLower().Contains(searchTerm));
         }
 
-        // Apply sorting
+        // Apply sorting - using the actual column names from the table data
         if (request.Order?.Any() == true)
         {
             foreach (QuarkTableOrder order in request.Order)
@@ -70,7 +70,7 @@ public class EmployeeService
                     "salary" => order.Direction == "asc" ? 
                         filteredData.OrderBy(e => e.Salary) : 
                         filteredData.OrderByDescending(e => e.Salary),
-                    "hiredate" => order.Direction == "asc" ? 
+                    "hiredate" or "hire date" => order.Direction == "asc" ? 
                         filteredData.OrderBy(e => e.HireDate) : 
                         filteredData.OrderByDescending(e => e.HireDate),
                     "status" => order.Direction == "asc" ? 
@@ -88,6 +88,17 @@ public class EmployeeService
         IEnumerable<Employee> pagedData = filteredData.Skip(request.Start).Take(request.Length);
 
         var tableData = new List<List<string>>();
+
+        // Add headers as the first row
+        tableData.Add([
+            "Name",
+            "Department", 
+            "Email",
+            "Salary",
+            "Hire Date",
+            "Status",
+            "Id"
+        ]);
 
         foreach (Employee employee in pagedData)
         {
@@ -120,7 +131,7 @@ public class EmployeeService
                 e.Status.ToLower().Contains(searchTerm));
         }
 
-        // Apply sorting
+        // Apply sorting - using the actual column names from the table data
         if (request.Order?.Any() == true)
         {
             foreach (QuarkTableOrder order in request.Order)
@@ -139,7 +150,7 @@ public class EmployeeService
                     "salary" => order.Direction == "asc" ? 
                         filteredData.OrderBy(e => e.Salary) : 
                         filteredData.OrderByDescending(e => e.Salary),
-                    "hiredate" => order.Direction == "asc" ? 
+                    "hiredate" or "hire date" => order.Direction == "asc" ? 
                         filteredData.OrderBy(e => e.HireDate) : 
                         filteredData.OrderByDescending(e => e.HireDate),
                     "status" => order.Direction == "asc" ? 

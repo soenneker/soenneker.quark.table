@@ -112,6 +112,7 @@
                                     SearchPlaceholder="Search employees..."
                                     Options="manualOptions">
                             <ManualHeader>
+                                <thead>
                                     <tr>
                                         <th data-priority="1">Name</th>
                                         <th>Department</th>
@@ -120,6 +121,7 @@
                                         <th>Hire Date</th>
                                         <th>Id</th>
                                     </tr>
+                                </thead>
                             </ManualHeader>
                             <ManualBody>
                                     @foreach (Employee employee in currentPageEmployees)

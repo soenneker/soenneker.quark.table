@@ -21,7 +21,7 @@
                     @for (var i = 0; i < Options.PageSizeOptions.Length; i++)
                     {
                         int size = Options.PageSizeOptions[i];
-                        <option value="@size" >@size</option>
+                        <option value="@size" selected="@(size == _pageSize)">@size</option>
                     }
                 </select>
                 <span>entries per page</span>
@@ -55,7 +55,7 @@
                 {
                     @ManualHeader
                 }
-                else
+                else if (_columns.Count > 0)
                 {
                     <thead>
                         <tr>
@@ -71,13 +71,47 @@
                         </tr>
                     </thead>
                 }
+                else if (_isLoading)
+                {
+                    <thead>
+                        <tr>
+                            <th style="width: 100%;">
+                                @if (LoadingIndicator != null)
+                                {
+                                    @LoadingIndicator
+                                }
+                                else
+                                {
+                                    <div class="text-center p-2">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span class="ms-2">Loading...</span>
+                                    </div>
+                                }
+                            </th>
+                        </tr>
+                    </thead>
+                }
                 <tbody style="position:relative;" >
-                    @if (LoadingIndicator != null && _isLoading)
+                    @if (_isLoading)
                     {
                         <tr>
                             <td colspan="@(_columns.Count > 0 ? _columns.Count : 1)" style="padding:0;border:none;" >
                                 <div class="quark-table-loading-indicator" style="display:flex;" >
-                                    @LoadingIndicator
+                                    @if (LoadingIndicator != null)
+                                    {
+                                        @LoadingIndicator
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center p-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <div class="mt-2">Loading...</div>
+                                        </div>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -115,9 +149,16 @@
                 <button class="quark-table-pagination-btn" @onclick="HandleFirstPage" disabled="@(_currentPage == 1)" title="First" >«</button>
                 <button class="quark-table-pagination-btn" @onclick="HandlePreviousPage" disabled="@(_currentPage == 1)" title="Previous" >‹</button>
 
+                @{
+                    Logger.LogDebug("Rendering pagination buttons: StartPage={StartPage}, EndPage={EndPage}, CurrentPage={CurrentPage}, TotalPages={TotalPages}", StartPage, EndPage, _currentPage, _totalPages);
+                }
                 @for (int p = StartPage; p <= EndPage; p++)
                 {
-                    <button class="quark-table-pagination-btn @(p == _currentPage ? "active" : string.Empty)" @onclick="() => HandleGoToPage(p)" >@p</button>
+                    var pageNumber = p;          // 👈 capture by value
+                    <button class="quark-table-pagination-btn @(pageNumber == _currentPage ? "active" : string.Empty)"
+                            @onclick="@(() => HandleGoToPage(pageNumber))">
+                        @pageNumber
+                    </button>
                 }
 
                 <button class="quark-table-pagination-btn" @onclick="HandleNextPage" disabled="@(_currentPage == _totalPages)" title="Next" >›</button>
@@ -203,6 +244,11 @@
 
     public readonly string ElementId = $"quark-table-{Guid.NewGuid():N}";
 
+    // Debug properties
+    public int CurrentPage => _currentPage;
+    public int PageSize => _pageSize;
+    public int TotalPages => _totalPages;
+
     private readonly Debouncer _debouncer = new();
     private readonly List<string> _columns = [];
     private readonly List<QuarkTableOrder> _currentOrders = [];
@@ -218,13 +264,42 @@
 
     private bool _dataChanged;
     private bool _isLoading;
+    private bool _initialized;
+    private QuarkTableOptions? _previousOptions;
 
     public string SearchTerm => _searchTerm;
 
     private int StartRecord => (_currentPage - 1) * _pageSize + 1;
     private int EndRecord => Math.Min(_currentPage * _pageSize, _totalRecords);
-    private int StartPage => Math.Max(1, _currentPage - Options.MaxPageButtons / 2);
-    private int EndPage => Math.Min(_totalPages, _currentPage + Options.MaxPageButtons / 2);
+    public int StartPage
+    {
+        get
+        {
+            // Ensure we have valid values
+            if (_totalPages <= 0) return 1;
+            if (_currentPage <= 0) return 1;
+            
+            // Simple pagination: show a window around the current page
+            int halfButtons = Options.MaxPageButtons / 2;
+            int start = _currentPage - halfButtons;
+            
+            // Ensure we don't go below page 1
+            start = Math.Max(1, start);
+            
+            // If we're near the end, adjust to show the last MaxPageButtons pages
+            if (start + Options.MaxPageButtons - 1 > _totalPages)
+            {
+                start = Math.Max(1, _totalPages - Options.MaxPageButtons + 1);
+            }
+            
+            // Ensure we don't exceed total pages
+            if (start > _totalPages) start = _totalPages;
+            
+            return start;
+        }
+    }
+    
+    public int EndPage => Math.Min(_totalPages, StartPage + Options.MaxPageButtons - 1);
 
     protected override async Task OnInitializedAsync()
     {
@@ -235,6 +310,11 @@
         {
             _totalRecords = TotalRecords;
             _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+            // Load initial data for manual mode
+            if (OnManualRequest.HasDelegate)
+            {
+                await HandleManualRequest();
+            }
         }
         else if (OnServerSideRequest != null)
         {
@@ -247,12 +327,33 @@
             _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
         }
 
+        _initialized = true;
         if (OnInitialize.HasDelegate)
             await OnInitialize.InvokeAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        // Check if options have changed and trigger reload if needed
+        if (_initialized && _previousOptions != null && !Options.Equals(_previousOptions))
+        {
+            _pageSize = Options.DefaultPageSize;
+            _currentPage = 1;
+            // Clear continuation token when options change
+            _continuationToken = null;
+            if (ManualMode)
+            {
+                if (OnManualRequest.HasDelegate)
+                {
+                    await HandleManualRequest();
+                }
+            }
+            else if (OnServerSideRequest != null)
+            {
+                await LoadData();
+            }
+        }
+        
         if (DirectData != null && !ManualMode)
         {
             UpdateTableData(DirectData);
@@ -261,6 +362,7 @@
             _dataChanged = true;
         }
         
+        _previousOptions = Options.Clone();
         await base.OnParametersSetAsync();
     }
 
@@ -271,6 +373,8 @@
         _debouncer.Debounce(Options.SearchDebounceMs, async ct =>
         {
             _currentPage = 1;
+            // Clear continuation token when searching
+            _continuationToken = null;
             if (ManualMode)
             {
                 await HandleManualRequest(ct);
@@ -293,6 +397,8 @@
         {
             _pageSize = size;
             _currentPage = 1;
+            // Clear continuation token when changing page size
+            _continuationToken = null;
             if (ManualMode)
             {
                 await HandleManualRequest();
@@ -309,6 +415,8 @@
     {
         if (_currentPage == 1) return;
         _currentPage = 1;
+        // Clear continuation token when going to first page
+        _continuationToken = null;
         if (ManualMode)
         {
             await HandleManualRequest();
@@ -323,6 +431,8 @@
     {
         if (_currentPage == 1) return;
         _currentPage--;
+        // Clear continuation token when navigating backwards
+        _continuationToken = null;
         if (ManualMode)
         {
             await HandleManualRequest();
@@ -361,10 +471,38 @@
         }
     }
 
-    private async Task HandleGoToPage(int page)
+    public async Task HandleGoToPage(int page)
     {
-        if (page == _currentPage || page < 1 || page > _totalPages) return;
+        Logger.LogDebug("HandleGoToPage called: requested page={Page}, current page={CurrentPage}, total pages={TotalPages}, StartPage={StartPage}, EndPage={EndPage}", 
+            page, _currentPage, _totalPages, StartPage, EndPage);
+            
+        // Validate the page number
+        if (page < 1)
+        {
+            Logger.LogWarning("HandleGoToPage: Invalid page number {Page} - must be >= 1", page);
+            return;
+        }
+        
+        if (page > _totalPages)
+        {
+            Logger.LogWarning("HandleGoToPage: Invalid page number {Page} - must be <= {TotalPages}", page, _totalPages);
+            return;
+        }
+        
+        if (page == _currentPage)
+        {
+            Logger.LogDebug("HandleGoToPage: Already on page {Page}, no action needed", page);
+            return;
+        }
+        
+        Logger.LogDebug("HandleGoToPage: setting current page from {OldPage} to {NewPage}", _currentPage, page);
         _currentPage = page;
+        // Clear continuation token when navigating to a specific page
+        _continuationToken = null;
+        
+        Logger.LogDebug("HandleGoToPage: set current page to {Page}, cleared continuation token. After setting: _currentPage={CurrentPage}, StartPage={StartPage}, EndPage={EndPage}", 
+            _currentPage, _currentPage, StartPage, EndPage);
+        
         if (ManualMode)
         {
             await HandleManualRequest();
@@ -379,11 +517,21 @@
     private async Task HandleColumnSort(string col)
     {
         if (!Options.Sortable) return;
+        
+        Logger.LogDebug("Sorting column: {Column}", col);
+        
         QuarkTableOrder? existing = _currentOrders.FirstOrDefault(o => o.Column == col);
         string? next = existing?.Direction == "asc" ? "desc" : existing?.Direction == "desc" ? null : "asc";
+        
         _currentOrders.RemoveAll(o => o.Column == col);
-        if (next != null) _currentOrders.Add(new QuarkTableOrder {Column = col, Direction = next});
+        if (next != null) 
+        {
+            _currentOrders.Add(new QuarkTableOrder {Column = col, Direction = next});
+        }
+        
         _currentPage = 1;
+        // Clear continuation token when sorting
+        _continuationToken = null;
         if (ManualMode)
         {
             await HandleManualRequest();
@@ -392,9 +540,15 @@
         {
             await LoadData();
         }
+        
         if (OnOrder.HasDelegate)
         {
-            var args = new QuarkTableOrderEventArgs {Column = col, Direction = next ?? string.Empty, Orders = _currentOrders};
+            var args = new QuarkTableOrderEventArgs 
+            {
+                Column = col, 
+                Direction = next ?? string.Empty, 
+                Orders = _currentOrders.ToList()
+            };
             await OnOrder.InvokeAsync(args);
         }
     }
@@ -418,10 +572,25 @@
                 Order = _currentOrders,
                 ContinuationToken = _continuationToken
             };
+            
+
+            
+            Logger.LogDebug("LoadData: _currentPage={CurrentPage}, _pageSize={PageSize}, calculated Start={Start}, Length={Length}, TotalPages={TotalPages}", 
+                _currentPage, _pageSize, request.Start, request.Length, _totalPages);
+                
             QuarkTableResponse resp = await OnServerSideRequest.Invoke(request);
             _totalRecords = resp.TotalRecords;
             _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-            _continuationToken = resp.ContinuationToken;
+            Logger.LogDebug("Calculated total pages: {TotalRecords} / {PageSize} = {TotalPages}", 
+                _totalRecords, _pageSize, _totalPages);
+            // Only set continuation token if the server supports it (not null or empty)
+            _continuationToken = !string.IsNullOrEmpty(resp.ContinuationToken) ? resp.ContinuationToken : null;
+            
+            Logger.LogDebug("Response: TotalRecords={TotalRecords}, TotalPages={TotalPages}, PageSize={PageSize}", 
+                _totalRecords, _totalPages, _pageSize);
+            
+            Logger.LogDebug("Received response: ContinuationToken={Token}", 
+                resp.ContinuationToken ?? "null");
 
             UpdateTableData(resp.Data);
             _dataChanged = true;
@@ -490,6 +659,8 @@
 
                 break;
         }
+        
+        Logger.LogDebug("Updated table data: {ColumnCount} columns, {RowCount} rows", _columns.Count, _rows.Count);
     }
 
     private string GetSortClass(string col)

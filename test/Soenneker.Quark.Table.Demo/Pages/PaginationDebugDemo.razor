@@ -1,0 +1,178 @@
+@page "/pagination-debug"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Quark.Table.Demo.Services
+
+@inject ILogger<PaginationDebugDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>Pagination Debug Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Pagination Debug Demo</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-4 mb-4">Pagination Debug Demo</h1>
+            <p class="lead mb-4">Debugging pagination issues</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Employee Directory - Debug Mode</h3>
+                    <p class="text-muted mb-0">Testing pagination with debug output</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <strong>Debug Info:</strong> 
+                        <br/>Current Page: @(debugTable?.CurrentPage ?? 0)
+                        <br/>Page Size: @(debugTable?.PageSize ?? 0)
+                        <br/>Total Pages: @(debugTable?.TotalPages ?? 0)
+                        <br/>Start Page: @(debugTable?.StartPage ?? 0)
+                        <br/>End Page: @(debugTable?.EndPage ?? 0)
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-primary" @onclick="TestPage1">Test Page 1</button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestPage2">Test Page 2</button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestPage3">Test Page 3</button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestPage4">Test Page 4</button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestPage5">Test Page 5</button>
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-warning" @onclick="DebugPaginationState">Debug Pagination State</button>
+                    </div>
+                    <QuarkTable @ref="debugTable" 
+                                OnServerSideRequest="HandleServerSideRequest"
+                                OnSearch="HandleSearch"
+                                OnOrder="HandleOrder"
+                                OnInitialize="HandleInitialize"
+                                ShowSearch="true"
+                                SearchPlaceholder="Search employees..."
+                                Options="debugTableOptions">
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private QuarkTable? debugTable;
+
+    private QuarkTableOptions debugTableOptions = new()
+    {
+        DefaultPageSize = 5, // Smaller page size for easier testing
+        ShowSearch = true,
+        ShowPagination = true,
+        ShowPageSizeSelector = true,
+        Sortable = true,
+        ServerSide = true,
+        ShowInfo = true,
+        SearchPosition = SearchPosition.End,
+        MaxPageButtons = 5
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // EmployeeService is automatically initialized
+    }
+
+    private async Task<QuarkTableResponse> HandleServerSideRequest(QuarkTableRequest request)
+    {
+        Logger.LogInformation("DEBUG: Request - Start={Start}, Length={Length}, Page={Page}", 
+            request.Start, request.Length, (request.Start / request.Length) + 1);
+        return await EmployeeService.GetEmployees(request);
+    }
+
+    private async Task HandleSearch(string searchTerm)
+    {
+        Logger.LogInformation("Search performed: {SearchTerm}", searchTerm);
+    }
+
+    private async Task HandleOrder(QuarkTableOrderEventArgs args)
+    {
+        Logger.LogInformation("Column '{Column}' sorted {Direction}", args.Column, args.Direction);
+    }
+
+    private async Task HandleInitialize()
+    {
+        Logger.LogInformation("Debug table initialized");
+    }
+
+    private async Task TestPage1()
+    {
+        if (debugTable != null)
+        {
+            Logger.LogInformation("Testing page 1");
+            await debugTable.HandleGoToPage(1);
+        }
+    }
+
+    private async Task TestPage2()
+    {
+        if (debugTable != null)
+        {
+            Logger.LogInformation("Testing page 2");
+            await debugTable.HandleGoToPage(2);
+        }
+    }
+
+    private async Task TestPage3()
+    {
+        if (debugTable != null)
+        {
+            Logger.LogInformation("Testing page 3");
+            await debugTable.HandleGoToPage(3);
+        }
+    }
+
+    private async Task TestPage4()
+    {
+        if (debugTable != null)
+        {
+            Logger.LogInformation("Testing page 4");
+            await debugTable.HandleGoToPage(4);
+        }
+    }
+
+    private async Task TestPage5()
+    {
+        if (debugTable != null)
+        {
+            Logger.LogInformation("Testing page 5");
+            await debugTable.HandleGoToPage(5);
+        }
+    }
+
+    private async Task SetCurrentPage(int page)
+    {
+        if (debugTable != null)
+        {
+            Logger.LogInformation("Setting current page to {Page}", page);
+            // This will help us test if the issue is with the page setting or the button rendering
+            await debugTable.HandleGoToPage(page);
+        }
+    }
+
+    private async Task DebugPaginationState()
+    {
+        if (debugTable != null)
+        {
+            Logger.LogInformation("=== PAGINATION STATE DEBUG ===");
+            Logger.LogInformation("Current Page: {CurrentPage}", debugTable.CurrentPage);
+            Logger.LogInformation("Page Size: {PageSize}", debugTable.PageSize);
+            Logger.LogInformation("Total Pages: {TotalPages}", debugTable.TotalPages);
+            Logger.LogInformation("Start Page: {StartPage}", debugTable.StartPage);
+            Logger.LogInformation("End Page: {EndPage}", debugTable.EndPage);
+            Logger.LogInformation("=== END DEBUG ===");
+        }
+    }
+} 
