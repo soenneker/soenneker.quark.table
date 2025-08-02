@@ -4,6 +4,7 @@ using Soenneker.DataTables.Dtos.ServerResponse;
 using Soenneker.DataTables.Dtos.ServerSideRequest;
 using Soenneker.Quark.Table.Demo.Dtos;
 using Soenneker.Utils.AutoBogus;
+using Soenneker.Utils.Delay;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -58,7 +59,7 @@ public class EmployeeService
             
             IOrderedEnumerable<Employee>? orderedData = null;
             
-            foreach (var order in serverSideRequest.Order)
+            foreach (DataTableOrderRequest order in serverSideRequest.Order)
             {
                 _logger.LogDebug("Sorting column {Column} in direction {Direction}", order.Column, order.Dir);
                 
@@ -113,6 +114,8 @@ public class EmployeeService
             ]);
         }
 
+        await DelayUtil.Delay(5000, _logger);
+
         return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
     }
 
@@ -138,7 +141,7 @@ public class EmployeeService
             
             IOrderedEnumerable<Employee>? orderedData = null;
             
-            foreach (var order in serverSideRequest.Order)
+            foreach (DataTableOrderRequest order in serverSideRequest.Order)
             {
                 _logger.LogDebug("Sorting column {Column} in direction {Direction}", order.Column, order.Dir);
                 

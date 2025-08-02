@@ -1,4 +1,5 @@
 @using System.Threading
+@using System.Reflection
 @using Microsoft.Extensions.Logging
 @using Soenneker.DataTables.Dtos.ServerResponse
 @using Soenneker.DataTables.Dtos.ServerSideRequest
@@ -242,6 +243,18 @@
     [Parameter]
     public EventCallback<DataTableServerSideRequest> OnManualRequest { get; set; }
 
+    [Parameter]
+    public List<string>? Headers { get; set; }
+
+    [Parameter]
+    public DataTableServerResponse? ServerResponse { get; set; }
+
+    [Parameter]
+    public List<object>? ObjectData { get; set; }
+
+    [Parameter]
+    public List<string>? ObjectDataProperties { get; set; }
+
     public readonly string ElementId = $"quark-table-{Guid.NewGuid():N}";
 
     // Debug properties
@@ -321,6 +334,18 @@
         {
             await LoadData();
         }
+        else if (ServerResponse != null)
+        {
+            UpdateTableData(ServerResponse);
+            _totalRecords = ServerResponse.TotalRecords;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+        }
+        else if (ObjectData != null)
+        {
+            UpdateTableData(ObjectData);
+            _totalRecords = _rows.Count;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+        }
         else if (DirectData != null)
         {
             UpdateTableData(DirectData);
@@ -355,7 +380,22 @@
             }
         }
 
-        if (DirectData != null && !ManualMode)
+        // Handle different data sources
+        if (ServerResponse != null && !ManualMode)
+        {
+            UpdateTableData(ServerResponse);
+            _totalRecords = ServerResponse.TotalRecords;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+            _dataChanged = true;
+        }
+        else if (ObjectData != null && !ManualMode)
+        {
+            UpdateTableData(ObjectData);
+            _totalRecords = _rows.Count;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+            _dataChanged = true;
+        }
+        else if (DirectData != null && !ManualMode)
         {
             UpdateTableData(DirectData);
             _totalRecords = _rows.Count;
@@ -380,9 +420,14 @@
             {
                 await HandleManualRequest(ct);
             }
-            else
+            else if (OnServerSideRequest != null)
             {
                 await LoadData(ct).NoSync();
+            }
+            else
+            {
+                // Client-side search - reload data with new search term
+                ReloadClientSideData();
             }
 
             if (OnSearch.HasDelegate)
@@ -400,15 +445,19 @@
             _currentPage = 1;
             // Clear continuation token when changing page size
             _continuationToken = null;
-            if (ManualMode)
-            {
-                await HandleManualRequest();
-            }
-            else
-            {
-                await LoadData();
-            }
-            if (OnPageSizeChanged.HasDelegate) await OnPageSizeChanged.InvokeAsync(_pageSize);
+                    if (ManualMode)
+        {
+            await HandleManualRequest();
+        }
+        else if (OnServerSideRequest != null)
+        {
+            await LoadData();
+        }
+        else
+        {
+            ReloadClientSideData();
+        }
+        if (OnPageSizeChanged.HasDelegate) await OnPageSizeChanged.InvokeAsync(_pageSize);
         }
     }
 
@@ -422,9 +471,13 @@
         {
             await HandleManualRequest();
         }
-        else
+        else if (OnServerSideRequest != null)
         {
             await LoadData();
+        }
+        else
+        {
+            ReloadClientSideData();
         }
     }
 
@@ -438,9 +491,13 @@
         {
             await HandleManualRequest();
         }
-        else
+        else if (OnServerSideRequest != null)
         {
             await LoadData();
+        }
+        else
+        {
+            ReloadClientSideData();
         }
     }
 
@@ -452,9 +509,13 @@
         {
             await HandleManualRequest();
         }
-        else
+        else if (OnServerSideRequest != null)
         {
             await LoadData();
+        }
+        else
+        {
+            ReloadClientSideData();
         }
     }
 
@@ -466,9 +527,13 @@
         {
             await HandleManualRequest();
         }
-        else
+        else if (OnServerSideRequest != null)
         {
             await LoadData();
+        }
+        else
+        {
+            ReloadClientSideData();
         }
     }
 
@@ -508,9 +573,13 @@
         {
             await HandleManualRequest();
         }
-        else
+        else if (OnServerSideRequest != null)
         {
             await LoadData();
+        }
+        else
+        {
+            ReloadClientSideData();
         }
         if (OnGoToPage.HasDelegate) await OnGoToPage.InvokeAsync(page);
     }
@@ -548,16 +617,25 @@
             });
         }
 
-        _currentPage = 1;
+        // For server-side processing, reset to page 1 when sorting
+        // For client-side processing, maintain current page
+        if (OnServerSideRequest != null || ManualMode)
+        {
+            _currentPage = 1;
+        }
         // Clear continuation token when sorting
         _continuationToken = null;
         if (ManualMode)
         {
             await HandleManualRequest();
         }
-        else
+        else if (OnServerSideRequest != null)
         {
             await LoadData();
+        }
+        else
+        {
+            ReloadClientSideData();
         }
 
         if (OnOrder.HasDelegate)
@@ -665,16 +743,44 @@
         
         switch (data)
         {
+            case DataTableServerResponse response:
+                UpdateTableDataFromServerResponse(response);
+                break;
+            case List<object> objectList when objectList.Count > 0:
+                UpdateTableDataFromObjects(objectList);
+                break;
             case List<List<string>> list when list.Count > 0:
-                _columns.AddRange(list[0]);
-                _rows.AddRange(list.Skip(1));
+                // If Headers are provided, use them; otherwise use first row as headers
+                if (Headers != null && Headers.Count > 0)
+                {
+                    _columns.AddRange(Headers);
+                    ApplyClientSidePagination(list);
+                }
+                else
+                {
+                    _columns.AddRange(list[0]);
+                    ApplyClientSidePagination(list.Skip(1).ToList());
+                }
                 break;
             case List<Dictionary<string, object>> dict when dict.Count > 0:
-                _columns.AddRange(dict[0].Keys.Select(k => k.ToString()));
-                foreach (Dictionary<string, object> row in dict)
+                var dictRows = new List<List<string>>();
+                if (Headers != null && Headers.Count > 0)
                 {
-                    _rows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
+                    _columns.AddRange(Headers);
+                    foreach (Dictionary<string, object> row in dict)
+                    {
+                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
+                    }
                 }
+                else
+                {
+                    _columns.AddRange(dict[0].Keys.Select(k => k.ToString()));
+                    foreach (Dictionary<string, object> row in dict)
+                    {
+                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
+                    }
+                }
+                ApplyClientSidePagination(dictRows);
                 break;
         }
 
@@ -685,6 +791,228 @@
         }
 
         Logger.LogDebug("Updated table data: {ColumnCount} columns, {RowCount} rows", _columns.Count, _rows.Count);
+    }
+
+    private void UpdateTableDataFromServerResponse(DataTableServerResponse response)
+    {
+        if (response.Data == null) return;
+
+        switch (response.Data)
+        {
+            case List<List<string>> list when list.Count > 0:
+                if (Headers != null && Headers.Count > 0)
+                {
+                    _columns.AddRange(Headers);
+                    ApplyClientSidePagination(list);
+                }
+                else
+                {
+                    _columns.AddRange(list[0]);
+                    ApplyClientSidePagination(list.Skip(1).ToList());
+                }
+                break;
+            case List<Dictionary<string, object>> dict when dict.Count > 0:
+                var dictRows = new List<List<string>>();
+                if (Headers != null && Headers.Count > 0)
+                {
+                    _columns.AddRange(Headers);
+                    foreach (Dictionary<string, object> row in dict)
+                    {
+                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
+                    }
+                }
+                else
+                {
+                    _columns.AddRange(dict[0].Keys.Select(k => k.ToString()));
+                    foreach (Dictionary<string, object> row in dict)
+                    {
+                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
+                    }
+                }
+                ApplyClientSidePagination(dictRows);
+                break;
+            case List<object> objectList when objectList.Count > 0:
+                UpdateTableDataFromObjects(objectList);
+                break;
+        }
+    }
+
+    private void UpdateTableDataFromObjects(List<object> objects)
+    {
+        if (objects.Count == 0) return;
+
+        object firstObject = objects[0];
+        List<string> properties = ObjectDataProperties ?? GetObjectProperties(firstObject);
+
+        if (Headers != null && Headers.Count > 0)
+        {
+            _columns.AddRange(Headers);
+        }
+        else
+        {
+            _columns.AddRange(properties);
+        }
+
+        // Store all data for client-side pagination
+        var allRows = new List<List<string>>();
+        foreach (object obj in objects)
+        {
+            var row = new List<string>();
+            foreach (string property in properties)
+            {
+                object? value = GetPropertyValue(obj, property);
+                row.Add(value?.ToString() ?? string.Empty);
+            }
+            allRows.Add(row);
+        }
+
+        // Apply client-side pagination
+        ApplyClientSidePagination(allRows);
+    }
+
+    private List<string> GetObjectProperties(object obj)
+    {
+        var properties = new List<string>();
+        Type type = obj.GetType();
+        
+        foreach (PropertyInfo property in type.GetProperties())
+        {
+            properties.Add(property.Name);
+        }
+        
+        return properties;
+    }
+
+    private object? GetPropertyValue(object obj, string propertyName)
+    {
+        Type type = obj.GetType();
+        PropertyInfo? property = type.GetProperty(propertyName);
+        return property?.GetValue(obj);
+    }
+
+    private void ApplyClientSidePagination(List<List<string>> allRows)
+    {
+        // Apply search filter if needed
+        var filteredRows = allRows;
+        if (!string.IsNullOrEmpty(_searchTerm))
+        {
+            filteredRows = allRows.Where(row => 
+                row.Any(cell => cell.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+
+        // Update total records count (before sorting)
+        _totalRecords = filteredRows.Count;
+        _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+
+        // Ensure current page is valid
+        if (_currentPage > _totalPages && _totalPages > 0)
+        {
+            _currentPage = _totalPages;
+        }
+        else if (_currentPage < 1)
+        {
+            _currentPage = 1;
+        }
+
+        // Apply sorting to the ENTIRE filtered dataset (not just current page)
+        if (_currentOrders.Count > 0)
+        {
+            filteredRows = ApplyClientSideSorting(filteredRows);
+        }
+
+        // Get the current page of data from the sorted dataset
+        int startIndex = (_currentPage - 1) * _pageSize;
+        _rows.Clear();
+        _rows.AddRange(filteredRows.Skip(startIndex).Take(_pageSize));
+    }
+
+    private List<List<string>> ApplyClientSideSorting(List<List<string>> rows)
+    {
+        var sortedRows = rows.ToList();
+
+        foreach (var order in _currentOrders.OrderBy(o => o.Column))
+        {
+            int columnIndex = order.Column;
+            if (columnIndex >= 0 && columnIndex < _columns.Count)
+            {
+                sortedRows = order.Dir switch
+                {
+                    "asc" => sortedRows.OrderBy(row => 
+                        GetSortableValue(row, columnIndex)).ToList(),
+                    "desc" => sortedRows.OrderByDescending(row => 
+                        GetSortableValue(row, columnIndex)).ToList(),
+                    _ => sortedRows
+                };
+            }
+        }
+
+        return sortedRows;
+    }
+
+    private IComparable GetSortableValue(List<string> row, int columnIndex)
+    {
+        if (columnIndex >= row.Count)
+            return string.Empty;
+
+        string value = row[columnIndex];
+        
+        // Try to parse as decimal (for currency, numbers, etc.)
+        if (decimal.TryParse(value.Replace("$", "").Replace(",", ""), out decimal decimalValue))
+        {
+            return decimalValue;
+        }
+        
+        // Try to parse as date
+        if (DateTime.TryParse(value, out DateTime dateValue))
+        {
+            return dateValue;
+        }
+        
+        // Default to string comparison
+        return value;
+    }
+
+    private void ReloadClientSideData()
+    {
+        // Store current data source for reloading
+        if (ServerResponse?.Data is List<List<string>> serverData)
+        {
+            if (Headers != null && Headers.Count > 0)
+            {
+                _columns.Clear();
+                _columns.AddRange(Headers);
+                ApplyClientSidePagination(serverData);
+            }
+            else
+            {
+                _columns.Clear();
+                _columns.AddRange(serverData[0]);
+                ApplyClientSidePagination(serverData.Skip(1).ToList());
+            }
+        }
+        else if (ObjectData != null)
+        {
+            UpdateTableDataFromObjects(ObjectData.Cast<object>().ToList());
+        }
+        else if (DirectData is List<List<string>> directData)
+        {
+            if (Headers != null && Headers.Count > 0)
+            {
+                _columns.Clear();
+                _columns.AddRange(Headers);
+                ApplyClientSidePagination(directData);
+            }
+            else
+            {
+                _columns.Clear();
+                _columns.AddRange(directData[0]);
+                ApplyClientSidePagination(directData.Skip(1).ToList());
+            }
+        }
+        
+        _dataChanged = true;
+        StateHasChanged();
     }
 
     private string GetSortClass(string col)
