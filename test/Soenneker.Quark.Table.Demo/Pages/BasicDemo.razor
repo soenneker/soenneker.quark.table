@@ -1,78 +1,72 @@
 @page "/basic"
 @using Microsoft.Extensions.Logging
-@using Soenneker.DataTables.Dtos.ServerResponse
-@using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
+@using Soenneker.Quark.Table.Demo.Dtos
 
 @inject ILogger<BasicDemo> Logger
 @inject EmployeeService EmployeeService
 
 <PageTitle>Basic Demo - QuarkTable</PageTitle>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Basic Demo</li>
-                </ol>
-            </nav>
-            
-            <h1 class="display-4 mb-4">Basic QuarkTable Demo</h1>
-            <p class="lead mb-4">A simple demonstration of QuarkTable with basic features including search, sorting, and pagination.</p>
+<div class="container-fluid" >
+    <div class="row" >
+        <div class="col-12" >
+            <h3>Basic QuarkTable Demo</h3>
+            <p class="text-muted mb-4" >A simple demonstration of QuarkTable with basic features including search, sorting, and pagination. The search is now integrated directly above the table headers.</p>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Employee Directory</h3>
-                    <p class="text-muted mb-0">Basic table with server-side processing, search, and sorting</p>
-                </div>
-                <div class="card-body">
-                    <QuarkTable @ref="basicTable" 
-                                OnServerSideRequest="HandleServerSideRequest"
-                                OnSearch="HandleSearch"
+    <div class="row" >
+        <div class="col-12" >
+            <div class="card" >
+                <div class="card-body" >
+                    <QuarkTable @ref="basicTable"
+                                OnManualRequest="HandleManualRequest"
                                 OnOrder="HandleOrder"
                                 OnInitialize="HandleInitialize"
-                                ShowSearch="true"
-                                SearchPlaceholder="Search employees..."
-                                Options="basicTableOptions">
-                    </QuarkTable>
-                </div>
-            </div>
-        </div>
-    </div>
+                                Options="basicTableOptions"
+                                TotalRecords="@totalRecords" >
 
-    <!-- Feature Highlights -->
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-search fa-2x text-primary mb-3"></i>
-                    <h5>Search</h5>
-                    <p class="text-muted">Real-time search across all columns with debounced input</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-sort fa-2x text-success mb-3"></i>
-                    <h5>Sorting</h5>
-                    <p class="text-muted">Click column headers to sort data in ascending or descending order</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-list-ol fa-2x text-info mb-3"></i>
-                    <h5>Pagination</h5>
-                    <p class="text-muted">Navigate through pages and adjust the number of entries per page</p>
+                        <QuarkTableSearch></QuarkTableSearch>
+
+                        <QuarkTableElement>
+                            <QuarkThead>
+                                <QuarkTr>
+                                    <QuarkTh ColumnIndex="0" ColumnName="Name" Sortable="true" >Name</QuarkTh>
+                                    <QuarkTh ColumnIndex="1" ColumnName="Department" Sortable="true" >Department</QuarkTh>
+                                    <QuarkTh ColumnIndex="2" ColumnName="Email" Sortable="true" >Email</QuarkTh>
+                                    <QuarkTh ColumnIndex="3" ColumnName="Salary" Sortable="true" >Salary</QuarkTh>
+                                    <QuarkTh ColumnIndex="4" ColumnName="HireDate" Sortable="true" >Hire Date</QuarkTh>
+                                    <QuarkTh ColumnIndex="5" ColumnName="Status" Sortable="true" >Status</QuarkTh>
+                                </QuarkTr>
+                            </QuarkThead>
+
+                            <QuarkTbody>
+                                @if (currentEmployees is {Count: > 0})
+                                {
+                                    @foreach (Employee employee in currentEmployees)
+                                    {
+                                        <QuarkTr Key="@employee.Id" >
+                                            <QuarkTd>@employee.Name</QuarkTd>
+                                            <QuarkTd>@employee.Department</QuarkTd>
+                                            <QuarkTd>@employee.Email</QuarkTd>
+                                            <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                            <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
+                                            <QuarkTd>@employee.Status</QuarkTd>
+                                        </QuarkTr>
+                                    }
+                                }
+                                else
+                                {
+                                    <QuarkTr>
+                                        <QuarkTd colspan="6" class="text-center" >No data available</QuarkTd>
+                                    </QuarkTr>
+                                }
+                            </QuarkTbody>
+                        </QuarkTableElement>
+                        <QuarkTablePagination />
+                    </QuarkTable>
                 </div>
             </div>
         </div>
@@ -81,27 +75,54 @@
 
 @code {
     private QuarkTable? basicTable;
+    private List<Employee> currentEmployees = new();
 
     private QuarkTableOptions basicTableOptions = new()
     {
         DefaultPageSize = 10,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
         Sortable = true,
-        ServerSide = true,
-        ShowInfo = true,
         SearchPosition = SearchPosition.End
     };
 
+    private int totalRecords; // Start with 0 and update when data is loaded
+
     protected override async Task OnInitializedAsync()
     {
-        // EmployeeService is automatically initialized
+        // Initialize total records from the service
+        totalRecords = EmployeeService.GetTotalCount();
+        Logger.LogInformation("BasicDemo: OnInitializedAsync - Initialized with {TotalRecords} total records", totalRecords);
+
+        // Test the service directly
+        List<Employee> testEmployees = EmployeeService.GetAllEmployees();
+        Logger.LogInformation("BasicDemo: OnInitializedAsync - EmployeeService.GetAllEmployees() returned {Count} employees", testEmployees.Count);
     }
 
-    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
+    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
     {
-        return await EmployeeService.GetEmployees(serverSideRequest);
+        Logger.LogInformation("BasicDemo: HandleManualRequest called: basicTable is {IsNull}, Request: Start={Start}, Length={Length}", basicTable == null ? "null" : "not null", serverSideRequest.Start, serverSideRequest.Length);
+
+        try
+        {
+            // Get filtered employees using the service
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
+
+            Logger.LogInformation("BasicDemo: EmployeeService returned {Count} employees", employees.Count);
+
+            // Update the current employees list
+            currentEmployees = employees;
+
+            // Update the total records count
+            totalRecords = EmployeeService.GetTotalCount();
+
+            // Trigger UI update
+            StateHasChanged();
+
+            Logger.LogInformation("BasicDemo: Updated currentEmployees with {Count} records, totalRecords={TotalRecords}", currentEmployees.Count, totalRecords);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "BasicDemo: Error handling manual request: {Message}", ex.Message);
+        }
     }
 
     private async Task HandleSearch(string searchTerm)
@@ -124,5 +145,4 @@
         Logger.LogInformation("Basic table destroyed");
     }
 
-
-} 
+}

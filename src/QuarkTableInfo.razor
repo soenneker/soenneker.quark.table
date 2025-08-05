@@ -1,0 +1,22 @@
+@inherits ComponentBase
+
+<div class="quark-table-info">
+    @StartRecord-@EndRecord of @TotalRecords
+</div>
+
+@code {
+    [Parameter]
+    public int CurrentPage { get; set; } = 1;
+
+    [Parameter]
+    public int TotalPages { get; set; } = 1;
+
+    [Parameter]
+    public int TotalRecords { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    private int StartRecord => (CurrentPage - 1) * PageSize + 1;
+    private int EndRecord => Math.Min(CurrentPage * PageSize, TotalRecords);
+} 

@@ -114,7 +114,7 @@ public class EmployeeService
             ]);
         }
 
-        await DelayUtil.Delay(5000, _logger);
+        await DelayUtil.Delay(500, _logger);
 
         return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
     }

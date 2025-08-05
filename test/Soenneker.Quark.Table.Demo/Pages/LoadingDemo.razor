@@ -1,234 +1,135 @@
-@page "/loading"
-@using Microsoft.Extensions.Logging
-@using Soenneker.DataTables.Dtos.ServerResponse
-@using Soenneker.DataTables.Dtos.ServerSideRequest
-@using Soenneker.Quark.Table.Demo.Services
+@page "/loading-demo"
 
-@inject ILogger<LoadingDemo> Logger
-@inject EmployeeService EmployeeService
+<h3>Loading Behavior Demo</h3>
 
-<PageTitle>Loading Demo - QuarkTable</PageTitle>
+<p>This demo showcases the improved loading behavior. The table content stays visible while a loading overlay appears, preventing the jarring flickering effect.</p>
 
-<div class="container-fluid" >
-    <div class="row" >
-        <div class="col-12" >
-            <nav aria-label="breadcrumb" >
-                <ol class="breadcrumb" >
-                    <li class="breadcrumb-item" >
-                        <a href="/" >Home</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page" >Loading Demo</li>
-                </ol>
-            </nav>
-
-            <h1 class="display-4 mb-4" >Loading Demo</h1>
-            <p class="lead mb-4" >Demonstrating loading indicators and delayed server-side processing in QuarkTable.</p>
-        </div>
-    </div>
-
-    <!-- Default Loading Indicator -->
-    <div class="row mb-5" >
-        <div class="col-12" >
-            <div class="card" >
-                <div class="card-header" >
-                    <h3><i class="fas fa-spinner fa-spin text-primary" ></i> Default Loading Indicator</h3>
-                    <p class="text-muted mb-0" >Uses the built-in loading indicator with simulated network delay</p>
-                </div>
-                <div class="card-body" >
-                    <QuarkTable @ref="defaultLoadingTable"
-                                OnServerSideRequest="HandleServerSideRequestWithDelay"
-                                OnSearch="HandleSearch"
-                                OnOrder="HandleOrder"
-                                ShowSearch="true"
-                                SearchPlaceholder="Search employees..."
-                                Options="defaultLoadingOptions" >
-                    </QuarkTable>
-                </div>
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Employee Directory</h4>
+                <p class="text-muted mb-0">Try searching, sorting, or changing pages to see the smooth loading overlay</p>
             </div>
-        </div>
-    </div>
-
-    <!-- Custom Loading Indicator -->
-    <div class="row mb-5" >
-        <div class="col-12" >
-            <div class="card" >
-                <div class="card-header" >
-                    <h3><i class="fas fa-cog fa-spin text-success" ></i> Custom Loading Indicator</h3>
-                    <p class="text-muted mb-0" >Custom loading indicator with enhanced styling</p>
-                </div>
-                <div class="card-body" >
-                    <QuarkTable @ref="customLoadingTable"
-                                OnServerSideRequest="HandleServerSideRequestWithDelay"
-                                OnSearch="HandleSearch"
-                                OnOrder="HandleOrder"
-                                ShowSearch="true"
-                                SearchPlaceholder="Search employees..."
-                                Options="customLoadingOptions" >
-                        <ManualHeader>
-                            <thead>
-                                <tr>
-                                    <th data-priority="1">Name</th>
-                                    <th>Department</th>
-                                    <th>Email</th>
-                                    <th>Salary</th>
-                                    <th>Hire Date</th>
-                                    <th>Id</th>
-                                </tr>
-                            </thead>
-                        </ManualHeader>
-                        <LoadingIndicator>
-                            <div class="custom-loading-overlay" >
-                                <div class="custom-loading-content" >
-                                    <div class="spinner-border text-primary" role="status" >
-                                        <span class="visually-hidden" >Loading...</span>
-                                    </div>
-                                    <div class="mt-3" >
-                                        <h6 class="text-primary" >Loading Data...</h6>
-                                        <p class="text-muted small" >Please wait while we fetch your data</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </LoadingIndicator>
-                    </QuarkTable>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- No Loading Indicator -->
-    <div class="row mb-5" >
-        <div class="col-12" >
-            <div class="card" >
-                <div class="card-header" >
-                    <h3><i class="fas fa-eye-slash text-warning" ></i> No Loading Indicator</h3>
-                    <p class="text-muted mb-0" >Table without loading indicator (may appear unresponsive during delays)</p>
-                </div>
-                <div class="card-body" >
-                    <QuarkTable @ref="noLoadingTable"
-                                OnServerSideRequest="HandleServerSideRequestWithDelay"
-                                OnSearch="HandleSearch"
-                                OnOrder="HandleOrder"
-                                ShowSearch="true"
-                                SearchPlaceholder="Search employees..."
-                                Options="noLoadingOptions" >
-                    </QuarkTable>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Configuration -->
-    <div class="row" >
-        <div class="col-12" >
-            <div class="card" >
-                <div class="card-header" >
-                    <h3>Loading Configuration Options</h3>
-                </div>
-                <div class="card-body" >
-                    <div class="row" >
-                        <div class="col-md-6" >
-                            <h5>Loading Indicator Types</h5>
-                            <ul class="list-unstyled" >
-                                <li><i class="fas fa-check text-success" ></i> <strong>Default:</strong> Built-in spinner with overlay</li>
-                                <li><i class="fas fa-check text-success" ></i> <strong>Custom:</strong> User-defined loading content</li>
-                                <li><i class="fas fa-check text-success" ></i> <strong>None:</strong> No loading indicator</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6" >
-                            <h5>Best Practices</h5>
-                            <ul class="list-unstyled" >
-                                <li><i class="fas fa-info-circle text-info" ></i> Always show loading for server-side requests</li>
-                                <li><i class="fas fa-info-circle text-info" ></i> Use custom indicators for branded experiences</li>
-                                <li><i class="fas fa-info-circle text-info" ></i> Consider user feedback during delays</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <div class="card-body">
+                <QuarkTable @ref="tableRef" 
+                            TotalRecords="100">
+                    
+                    <QuarkTableElement>
+                        <QuarkThead>
+                            <QuarkTr>
+                                <QuarkTh ColumnIndex="0" ColumnName="Name" Sortable="true">Name</QuarkTh>
+                                <QuarkTh ColumnIndex="1" ColumnName="Email" Sortable="true">Email</QuarkTh>
+                                <QuarkTh ColumnIndex="2" ColumnName="Age" Sortable="true">Age</QuarkTh>
+                                <QuarkTh ColumnIndex="3" ColumnName="Department" Sortable="false">Department</QuarkTh>
+                                <QuarkTh ColumnIndex="4" ColumnName="Salary" Sortable="true">Salary</QuarkTh>
+                            </QuarkTr>
+                        </QuarkThead>
+                        
+                        <QuarkTbody>
+                            @if (tableData != null)
+                            {
+                                @foreach (List<string> row in tableData)
+                                {
+                                    <QuarkTr Key="@row[0]">
+                                        <QuarkTd>@row[0]</QuarkTd>
+                                        <QuarkTd>@row[1]</QuarkTd>
+                                        <QuarkTd>@row[2]</QuarkTd>
+                                        <QuarkTd>@row[3]</QuarkTd>
+                                        <QuarkTd>@row[4]</QuarkTd>
+                                    </QuarkTr>
+                                }
+                            }
+                        </QuarkTbody>
+                    </QuarkTableElement>
+                </QuarkTable>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Custom Loading Indicator Template -->
-@if (customLoadingIndicator != null)
-{
-    <div id="custom-loading-indicator" style="display:none" >
-        <div class="custom-loading-overlay" >
-            <div class="custom-loading-content" >
-                <div class="spinner-border text-primary" role="status" >
-                    <span class="visually-hidden" >Loading...</span>
-                </div>
-                <div class="mt-3" >
-                    <h6 class="text-primary" >Loading Data...</h6>
-                    <p class="text-muted small" >Please wait while we fetch your data</p>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
-    private QuarkTable? defaultLoadingTable;
-    private QuarkTable? customLoadingTable;
-    private QuarkTable? noLoadingTable;
-    private RenderFragment? customLoadingIndicator;
+    private QuarkTable? tableRef;
+    private List<Employee> employees = new();
+    private List<List<string>>? tableData;
 
-
-    private QuarkTableOptions defaultLoadingOptions = new()
+    protected override void OnInitialized()
     {
-        DefaultPageSize = 8,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true,
-        ServerSide = true
-    };
-
-    private QuarkTableOptions customLoadingOptions = new()
-    {
-        DefaultPageSize = 8,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true,
-        ServerSide = true
-    };
-
-    private QuarkTableOptions noLoadingOptions = new()
-    {
-        DefaultPageSize = 8,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true,
-        ServerSide = true
-    };
-
-    protected override async Task OnInitializedAsync()
-    {
-        // EmployeeService is automatically initialized
+        // Sample employee data
+        employees = new List<Employee>
+        {
+            new Employee { Id = 1, Name = "John Doe", Email = "john@example.com", Age = 30, Department = "Engineering", Salary = 75000 },
+            new Employee { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Age = 25, Department = "Marketing", Salary = 65000 },
+            new Employee { Id = 3, Name = "Bob Johnson", Email = "bob@example.com", Age = 35, Department = "Sales", Salary = 80000 },
+            new Employee { Id = 4, Name = "Alice Brown", Email = "alice@example.com", Age = 28, Department = "Engineering", Salary = 70000 },
+            new Employee { Id = 5, Name = "Charlie Wilson", Email = "charlie@example.com", Age = 32, Department = "HR", Salary = 60000 },
+            new Employee { Id = 6, Name = "Diana Prince", Email = "diana@example.com", Age = 29, Department = "Engineering", Salary = 85000 },
+            new Employee { Id = 7, Name = "Eve Adams", Email = "eve@example.com", Age = 27, Department = "Marketing", Salary = 62000 },
+            new Employee { Id = 8, Name = "Frank Miller", Email = "frank@example.com", Age = 33, Department = "Sales", Salary = 72000 },
+            new Employee { Id = 9, Name = "Grace Lee", Email = "grace@example.com", Age = 31, Department = "HR", Salary = 58000 },
+            new Employee { Id = 10, Name = "Henry Davis", Email = "henry@example.com", Age = 26, Department = "Engineering", Salary = 68000 },
+            new Employee { Id = 11, Name = "Ivy Chen", Email = "ivy@example.com", Age = 34, Department = "Engineering", Salary = 90000 },
+            new Employee { Id = 12, Name = "Jack Wilson", Email = "jack@example.com", Age = 31, Department = "Marketing", Salary = 68000 },
+            new Employee { Id = 13, Name = "Kate Martinez", Email = "kate@example.com", Age = 29, Department = "Sales", Salary = 75000 },
+            new Employee { Id = 14, Name = "Liam O'Connor", Email = "liam@example.com", Age = 27, Department = "Engineering", Salary = 72000 },
+            new Employee { Id = 15, Name = "Maya Patel", Email = "maya@example.com", Age = 33, Department = "HR", Salary = 65000 }
+        };
     }
 
-    private async Task<DataTableServerResponse> HandleServerSideRequestWithDelay(DataTableServerSideRequest serverSideRequest)
+    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest request)
     {
-        Logger.LogInformation("Delayed server-side request: Start={Start}, Length={Length}, Search='{Search}'", serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.Search?.Value);
+        // Simulate server-side processing with a longer delay to showcase the loading
+        await Task.Delay(800);
 
-        // Simulate network delay (1-3 seconds)
-        int delayMs = Random.Shared.Next(1000, 3000);
-        await Task.Delay(delayMs);
+        IQueryable<Employee> filteredEmployees = employees.AsQueryable();
 
-        return await EmployeeService.GetEmployees(serverSideRequest);
+        // Apply search
+        if (!string.IsNullOrEmpty(request.Search?.Value))
+        {
+            string searchTerm = request.Search.Value.ToLower();
+            filteredEmployees = filteredEmployees.Where(p => 
+                p.Name.ToLower().Contains(searchTerm) ||
+                p.Email.ToLower().Contains(searchTerm) ||
+                p.Department.ToLower().Contains(searchTerm));
+        }
+
+        // Apply sorting
+        if (request.Order?.Any() == true)
+        {
+            foreach (DataTableOrderRequest order in request.Order)
+            {
+                filteredEmployees = order.Column switch
+                {
+                    0 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Name) : filteredEmployees.OrderByDescending(p => p.Name),
+                    1 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Email) : filteredEmployees.OrderByDescending(p => p.Email),
+                    2 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Age) : filteredEmployees.OrderByDescending(p => p.Age),
+                    3 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Department) : filteredEmployees.OrderByDescending(p => p.Department),
+                    4 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Salary) : filteredEmployees.OrderByDescending(p => p.Salary),
+                    _ => filteredEmployees
+                };
+            }
+        }
+
+        int totalRecords = filteredEmployees.Count();
+        List<Employee> pagedEmployees = filteredEmployees.Skip(request.Start).Take(request.Length).ToList();
+
+        tableData = pagedEmployees.Select(p => new List<string> { p.Name, p.Email, p.Age.ToString(), p.Department, p.Salary.ToString("C") }).ToList();
+
+        return new DataTableServerResponse
+        {
+            Data = tableData,
+            TotalRecords = totalRecords,
+            ContinuationToken = null
+        };
     }
 
-    private async Task HandleSearch(string searchTerm)
+    public class Employee
     {
-        Logger.LogInformation("Search performed: {SearchTerm}", searchTerm);
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public int Age { get; set; }
+        public string Department { get; set; } = string.Empty;
+        public int Salary { get; set; }
     }
-
-    private async Task HandleOrder(QuarkTableOrderEventArgs args)
-    {
-        Logger.LogInformation("Column '{Column}' sorted {Direction}", args.Column, args.Direction);
-    }
-
-
-}
+} 

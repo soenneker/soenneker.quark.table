@@ -1,0 +1,13 @@
+@inherits ComponentBase
+
+<tbody style="@Style">
+    @ChildContent
+</tbody>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
+} 

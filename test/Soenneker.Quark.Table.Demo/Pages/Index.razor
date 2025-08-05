@@ -1,226 +1,77 @@
 ﻿@page "/"
-@using Bogus
 @using Microsoft.Extensions.Logging
-@using Soenneker.DataTables.Dtos.ServerResponse
-@using Soenneker.DataTables.Dtos.ServerSideRequest
-@using Soenneker.Quark.Table.Enums
-@using Soenneker.Utils.AutoBogus
-@using Soenneker.Quark.Table.Demo.Services
 
 @inject ILogger<Index> Logger
-@inject EmployeeService EmployeeService
 
-<PageTitle>QuarkTable Demo</PageTitle>
+<PageTitle>QuarkTable - Modern Blazor Data Tables</PageTitle>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="display-4 mb-4">QuarkTable Demo</h1>
-            <p class="lead mb-4">A comprehensive demonstration of the QuarkTable component with all its features.</p>
-        </div>
-    </div>
-
-    <!-- Demo Navigation -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-th-large"></i> Demo Pages</h3>
-                    <p class="text-muted mb-0">Explore different aspects of QuarkTable functionality</p>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-table fa-2x text-primary mb-3"></i>
-                                    <h5>Basic Demo</h5>
-                                    <p class="text-muted small">Fundamental features with employee data</p>
-                                    <a href="/basic" class="btn btn-primary btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-search fa-2x text-success mb-3"></i>
-                                    <h5>Search Position</h5>
-                                    <p class="text-muted small">Different search box positions</p>
-                                    <a href="/search-position" class="btn btn-success btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-spinner fa-2x text-info mb-3"></i>
-                                    <h5>Loading Demo</h5>
-                                    <p class="text-muted small">Loading indicators and delays</p>
-                                    <a href="/loading" class="btn btn-info btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-cogs fa-2x text-warning mb-3"></i>
-                                    <h5>Configuration</h5>
-                                    <p class="text-muted small">Different configuration options</p>
-                                    <a href="/configuration" class="btn btn-warning btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-list-alt fa-2x text-danger mb-3"></i>
-                                    <h5>Events Demo</h5>
-                                    <p class="text-muted small">Event handling and logging</p>
-                                    <a href="/events" class="btn btn-danger btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-th-large fa-2x text-dark mb-3"></i>
-                                    <h5>Comprehensive Demo</h5>
-                                    <p class="text-muted small">Complete table features with dynamic headers</p>
-                                    <a href="/comprehensive" class="btn btn-dark btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-toggle-on fa-2x text-primary mb-3"></i>
-                                    <h5>Dual Mode Demo</h5>
-                                    <p class="text-muted small">Server-side vs Manual server mode comparison</p>
-                                    <a href="/dual-mode" class="btn btn-primary btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-bug fa-2x text-warning mb-3"></i>
-                                    <h5>Pagination Debug</h5>
-                                    <p class="text-muted small">Debug pagination issues</p>
-                                    <a href="/pagination-debug" class="btn btn-warning btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-database fa-2x text-info mb-3"></i>
-                                    <h5>New Data Types</h5>
-                                    <p class="text-muted small">DataTableServerResponse and object data support</p>
-                                    <a href="/new-data-types" class="btn btn-info btn-sm">View Demo</a>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Basic Table Demo -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Basic Table with Server-Side Processing</h3>
-                </div>
-                <div class="card-body">
-                    <QuarkTable @ref="basicTable" 
-                                OnServerSideRequest="HandleServerSideRequest"
-                                OnSearch="HandleSearch"
-                                OnOrder="HandleOrder"
-                                OnInitialize="HandleInitialize"
-                                ShowSearch="true"
-                                SearchPlaceholder="Search employees..."
-                                Options="basicTableOptions">
-                    </QuarkTable>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search Position Demo -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Search Box Position Examples</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12 mb-4">
-                            <h5>Search at Start (Left)</h5>
-                            <QuarkTable @ref="startSearchTable" 
-                                        OnServerSideRequest="HandleServerSideRequest"
-                                        OnSearch="HandleSearch"
-                                        OnOrder="HandleOrder"
-                                        ShowSearch="true"
-                                        SearchPlaceholder="Search employees..."
-                                        Options="startSearchOptions">
-                            </QuarkTable>
-                        </div>
-                    </div>
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="hero-content">
+                    <h1 class="display-4 fw-bold text-gradient mb-3">QuarkTable</h1>
+                    <p class="lead fs-5 text-muted mb-4">Modern, component-driven data tables for Blazor with server-side processing, real-time search, sorting, and pagination.</p>
                     
-                    <div class="row">
-                        <div class="col-12 mb-4">
-                            <h5>Search in Center</h5>
-                            <QuarkTable @ref="centerSearchTable" 
-                                        OnServerSideRequest="HandleServerSideRequest"
-                                        OnSearch="HandleSearch"
-                                        OnOrder="HandleOrder"
-                                        ShowSearch="true"
-                                        SearchPlaceholder="Search employees..."
-                                        Options="centerSearchOptions">
-                            </QuarkTable>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-12 mb-4">
-                            <h5>Search at End (Right) - Default</h5>
-                            <QuarkTable @ref="endSearchTable" 
-                                        OnServerSideRequest="HandleServerSideRequest"
-                                        OnSearch="HandleSearch"
-                                        OnOrder="HandleOrder"
-                                        ShowSearch="true"
-                                        SearchPlaceholder="Search employees..."
-                                        Options="endSearchOptions">
-                            </QuarkTable>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Event Log -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Event Log</h3>
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="ClearEventLog">Clear Log</button>
-                </div>
-                <div class="card-body">
-                    <div class="event-log" style="max-height: 300px; overflow-y: auto;">
-                        @foreach (LogEntry logEntry in eventLog)
-                        {
-                            <div class="log-entry @logEntry.Type.ToLower()">
-                                <small class="text-muted">@logEntry.Timestamp.ToString("HH:mm:ss")</small>
-                                <span class="badge bg-@logEntry.Type.ToLower() me-2">@logEntry.Type</span>
-                                <span>@logEntry.Message</span>
+                    <div class="demo-grid mt-5">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <a href="/basic" class="demo-card">
+                                    <div class="demo-card-content">
+                                        <div class="demo-icon">📊</div>
+                                        <h3>Basic Demo</h3>
+                                        <p>Simple table with search, sorting, and pagination</p>
+                                        <div class="demo-badges">
+                                            <span class="badge">Search</span>
+                                            <span class="badge">Sorting</span>
+                                            <span class="badge">Pagination</span>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
-                        }
+                            <div class="col-md-6">
+                                <a href="/component-driven" class="demo-card">
+                                    <div class="demo-card-content">
+                                        <div class="demo-icon">🧩</div>
+                                        <h3>Component Demo</h3>
+                                        <p>Custom table structure with individual components</p>
+                                        <div class="demo-badges">
+                                            <span class="badge">Custom Headers</span>
+                                            <span class="badge">Custom Rows</span>
+                                            <span class="badge">Flexible</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="/advanced-component-demo" class="demo-card">
+                                    <div class="demo-card-content">
+                                        <div class="demo-icon">⚙️</div>
+                                        <h3>Advanced Demo</h3>
+                                        <p>Advanced features with custom search and pagination</p>
+                                        <div class="demo-badges">
+                                            <span class="badge">Custom Search</span>
+                                            <span class="badge">Custom Pagination</span>
+                                            <span class="badge">Advanced</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="/clean-table-demo" class="demo-card">
+                                    <div class="demo-card-content">
+                                        <div class="demo-icon">✨</div>
+                                        <h3>Clean Demo</h3>
+                                        <p>Minimalist approach with standalone components</p>
+                                        <div class="demo-badges">
+                                            <span class="badge">Standalone</span>
+                                            <span class="badge">Minimal</span>
+                                            <span class="badge">Clean</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -228,299 +79,143 @@
     </div>
 </div>
 
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        position: relative;
+        overflow: hidden;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+    
+    .hero-content { 
+        position: relative; 
+        z-index: 1; 
+    }
+    
+    .text-gradient {
+        background: linear-gradient(45deg, #fff, #f8f9fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .demo-grid {
+        margin-top: 3rem;
+    }
+    
+    .demo-card {
+        display: block;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 2rem;
+        text-decoration: none;
+        color: white;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .demo-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .demo-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .demo-card:hover::before {
+        opacity: 1;
+    }
+    
+    .demo-card-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+    
+    .demo-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .demo-card h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .demo-card p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+    
+    .demo-badges {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .min-vh-75 { 
+        min-height: 75vh; 
+    }
+    
+    @@media (max-width: 768px) {
+        .hero-section { 
+            min-height: 100vh; 
+        }
+        .display-4 { 
+            font-size: 2.5rem; 
+        }
+        .demo-card {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
 @code {
-    private QuarkTable? basicTable;
-    private QuarkTable? styledTable;
-    private QuarkTable? loadingTable;
-    private QuarkTable? startSearchTable;
-    private QuarkTable? centerSearchTable;
-    private QuarkTable? endSearchTable;
-
-    private List<Product> products = [];
-    private List<User> users = [];
-
-    private List<LogEntry> eventLog = [];
-
-    // Table options
-    private QuarkTableOptions basicTableOptions = new()
+    protected override void OnInitialized()
     {
-        DefaultPageSize = 10,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true
-    };
-
-    private QuarkTableOptions styledTableOptions = new()
-    {
-        DefaultPageSize = 6,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true
-    };
-
-    private QuarkTableOptions loadingTableOptions = new()
-    {
-        DefaultPageSize = 8,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true
-    };
-
-    // Search position options
-    private QuarkTableOptions startSearchOptions = new()
-    {
-        DefaultPageSize = 5,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true,
-        SearchPosition = SearchPosition.Start
-    };
-
-    private QuarkTableOptions centerSearchOptions = new()
-    {
-        DefaultPageSize = 5,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true,
-        SearchPosition = SearchPosition.Center
-    };
-
-    private QuarkTableOptions endSearchOptions = new()
-    {
-        DefaultPageSize = 5,
-        ShowSearch = true,
-        ShowPagination = true,
-        ShowPageSizeSelector = true,
-        Sortable = true,
-        SearchPosition = SearchPosition.End
-    };
-
-    protected override async Task OnInitializedAsync()
-    {
-        await GenerateSampleData();
-    }
-
-    private async Task GenerateSampleData()
-    {
-
-        Faker<Product>? productFaker = new AutoFaker<Product>()
-                                       .RuleFor(p => p.Id, f => f.Random.Int(1, 1000))
-                                       .RuleFor(p => p.Name, f => f.Commerce.ProductName())
-                                       .RuleFor(p => p.Category, f => f.PickRandom("Electronics", "Clothing", "Books", "Home", "Sports"))
-                                       .RuleFor(p => p.Price, f => f.Random.Decimal(10, 1000))
-                                       .RuleFor(p => p.Stock, f => f.Random.Int(0, 100))
-                                       .RuleFor(p => p.Rating, f => f.Random.Decimal(1, 5));
-
-        products = productFaker.Generate(50);
-
-        Faker<User>? userFaker = new AutoFaker<User>()
-                                 .RuleFor(u => u.Id, f => f.Random.Int(1, 1000))
-                                 .RuleFor(u => u.Username, f => f.Internet.UserName())
-                                 .RuleFor(u => u.Email, f => f.Internet.Email())
-                                 .RuleFor(u => u.Role, f => f.PickRandom("Admin", "User", "Moderator", "Editor"))
-                                 .RuleFor(u => u.LastLogin, f => f.Date.Past(30))
-                                 .RuleFor(u => u.Status, f => f.PickRandom("Active", "Inactive"));
-
-        users = userFaker.Generate(75);
-    }
-
-    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest serverSideRequest)
-    {
-        return await EmployeeService.GetEmployees(serverSideRequest);
-    }
-
-    private async Task<DataTableServerResponse> HandleServerSideRequestProducts(DataTableServerSideRequest serverSideRequest)
-    {
-        LogEvent("INFO", $"Products server-side request: Start={serverSideRequest.Start}, Length={serverSideRequest.Length}, Search='{serverSideRequest.Search?.Value}'");
-
-        IEnumerable<Product> data = products.AsEnumerable();
-
-        // Apply search
-        if (!string.IsNullOrEmpty(serverSideRequest.Search?.Value))
-        {
-            string searchTerm = serverSideRequest.Search.Value.ToLower();
-            data = data.Where(p => 
-                p.Name.ToLower().Contains(searchTerm) ||
-                p.Category.ToLower().Contains(searchTerm));
-        }
-
-        int totalRecords = data.Count();
-        List<Product> pagedData = data.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
-
-        // Convert to table format
-        var tableData = new List<List<string>>
-        {
-            new() { "Product ID", "Product Name", "Category", "Price", "Stock", "Rating" }
-        };
-
-        foreach (Product product in pagedData)
-        {
-            tableData.Add([
-                product.Id.ToString(),
-
-                product.Name,
-
-                product.Category,
-
-                product.Price.ToString("C"),
-
-                product.Stock.ToString(),
-
-                product.Rating.ToString("F1") + " ⭐"
-            ]);
-        }
-
-        return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
-    }
-
-    private async Task<DataTableServerResponse> HandleServerSideRequestWithDelay(DataTableServerSideRequest serverSideRequest)
-    {
-        LogEvent("INFO", $"Delayed server-side request: Start={serverSideRequest.Start}, Length={serverSideRequest.Length}");
-
-        // Simulate network delay
-        await Task.Delay(1000);
-
-        IEnumerable<User> data = users.AsEnumerable();
-
-        // Apply search
-        if (!string.IsNullOrEmpty(serverSideRequest.Search?.Value))
-        {
-            string searchTerm = serverSideRequest.Search.Value.ToLower();
-            data = data.Where(u => 
-                u.Username.ToLower().Contains(searchTerm) ||
-                u.Email.ToLower().Contains(searchTerm) ||
-                u.Role.ToLower().Contains(searchTerm));
-        }
-
-        int totalRecords = data.Count();
-        List<User> pagedData = data.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
-
-        // Convert to table format
-        var tableData = new List<List<string>>
-        {
-            new() { "User ID", "Username", "Email", "Role", "Last Login", "Status" }
-        };
-
-        foreach (User user in pagedData)
-        {
-            tableData.Add([
-                user.Id.ToString(),
-
-                user.Username,
-
-                user.Email,
-
-                user.Role,
-
-                user.LastLogin.ToString("MM/dd/yyyy HH:mm"),
-
-                user.Status
-            ]);
-        }
-
-        return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
-    }
-
-    private async Task HandleSearch(string searchTerm)
-    {
-        LogEvent("SEARCH", $"Search term: '{searchTerm}'");
-    }
-
-    private async Task HandleNextPage()
-    {
-        LogEvent("PAGINATION", "Next page clicked");
-    }
-
-    private async Task HandlePreviousPage()
-    {
-        LogEvent("PAGINATION", "Previous page clicked");
-    }
-
-    private async Task HandleGoToPage(int page)
-    {
-        LogEvent("PAGINATION", $"Go to page: {page}");
-    }
-
-    private async Task HandlePageSizeChanged(int pageSize)
-    {
-        LogEvent("PAGINATION", $"Page size changed to: {pageSize}");
-    }
-
-    private async Task HandleOrder(QuarkTableOrderEventArgs args)
-    {
-        LogEvent("SORT", $"Column '{args.Column}' sorted {args.Direction}");
-    }
-
-    private async Task HandleFilterChange(QuarkTableFilterEventArgs args)
-    {
-        LogEvent("FILTER", $"Filter changed - Search: '{args.SearchTerm}', Page: {args.CurrentPage}, Size: {args.PageSize}");
-    }
-
-    private async Task HandleInitialize()
-    {
-        LogEvent("LIFECYCLE", "Table initialized");
-    }
-
-    private async Task HandleDestroy()
-    {
-        LogEvent("LIFECYCLE", "Table destroyed");
-    }
-
-    private void LogEvent(string type, string message)
-    {
-        eventLog.Insert(0, new LogEntry
-        {
-            Type = type,
-            Message = message,
-            Timestamp = DateTime.Now
-        });
-
-        // Keep only the last 50 entries
-        if (eventLog.Count > 50)
-        {
-            eventLog.RemoveRange(50, eventLog.Count - 50);
-        }
-
-        StateHasChanged();
-    }
-
-    private void ClearEventLog()
-    {
-        eventLog.Clear();
-        StateHasChanged();
-    }
-
-
-
-    public class Product
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public decimal Price { get; set; }
-        public int Stock { get; set; }
-        public decimal Rating { get; set; }
-    }
-
-    public class User
-    {
-        public int Id { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-        public DateTime LastLogin { get; set; }
-        public string Status { get; set; } = string.Empty;
-    }
-
-    public class LogEntry
-    {
-        public string Type { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-        public DateTime Timestamp { get; set; }
+        Logger.LogInformation("Landing page loaded");
     }
 }

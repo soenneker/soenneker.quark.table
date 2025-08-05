@@ -1,0 +1,48 @@
+@using Soenneker.Quark.Table.Abstract
+
+@inherits ComponentBase
+
+<th @onclick="HandleClick" 
+    class="quark-table-sortable @(Sortable ? GetSortClass() : string.Empty)"
+    style="@(Sortable ? "cursor:pointer;" : string.Empty) @Style">
+    @ChildContent @(Sortable ? GetSortIndicator() : string.Empty)
+</th>
+
+@code {
+    [CascadingParameter]
+    private IQuarkTable? QuarkTable { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool Sortable { get; set; } = true;
+
+    [Parameter]
+    public int ColumnIndex { get; set; }
+
+    [Parameter]
+    public string ColumnName { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
+
+    private async Task HandleClick()
+    {
+        if (!Sortable || QuarkTable == null) return;
+
+        await QuarkTable.HandleColumnSort(ColumnIndex, ColumnName);
+    }
+
+    private string GetSortClass()
+    {
+        if (QuarkTable == null) return string.Empty;
+        return QuarkTable.GetSortClassByIndex(ColumnIndex);
+    }
+
+    private string GetSortIndicator()
+    {
+        if (QuarkTable == null) return " ↕";
+        return QuarkTable.GetSortIndicatorByIndex(ColumnIndex);
+    }
+} 

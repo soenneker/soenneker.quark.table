@@ -1,0 +1,206 @@
+@page "/continuation-token-demo"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Quark.Table.Demo.Services
+@using Soenneker.Quark.Table.Demo.Dtos
+
+@inject ILogger<ContinuationTokenDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>Continuation Token Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid" >
+    <div class="row" >
+        <div class="col-12" >
+            <h3>Continuation Token Demo</h3>
+            <p class="text-muted mb-4" >This demo shows how QuarkTable works with continuation tokens for efficient server-side paging.</p>
+        </div>
+    </div>
+
+    <div class="row" >
+        <div class="col-12" >
+            <div class="card" >
+                <div class="card-body" >
+
+                    <!-- Search component above the table -->
+                    <div class="mb-3" >
+                        <QuarkTableSearch OnSearch="HandleSearch" />
+                    </div>
+
+                    <QuarkTable @ref="continuationTable"
+                                OnManualRequest="HandleManualRequest"
+                                OnOrder="HandleOrder"
+                                OnInitialize="HandleInitialize"
+                                Options="continuationTableOptions"
+                                TotalRecords="@totalRecords" >
+
+                        <!-- Table wrapper with proper table element -->
+                        <QuarkTableElement>
+                            <!-- Manual header using components -->
+                            <QuarkThead>
+                                <QuarkTr>
+                                    <QuarkTh ColumnIndex="0" ColumnName="Name" Sortable="true" >Name</QuarkTh>
+                                    <QuarkTh ColumnIndex="1" ColumnName="Department" Sortable="true" >Department</QuarkTh>
+                                    <QuarkTh ColumnIndex="2" ColumnName="Email" Sortable="true" >Email</QuarkTh>
+                                    <QuarkTh ColumnIndex="3" ColumnName="Salary" Sortable="true" >Salary</QuarkTh>
+                                    <QuarkTh ColumnIndex="4" ColumnName="HireDate" Sortable="true" >Hire Date</QuarkTh>
+                                    <QuarkTh ColumnIndex="5" ColumnName="Status" Sortable="true" >Status</QuarkTh>
+                                    <QuarkTh ColumnIndex="6" ColumnName="Id" Sortable="true" >ID</QuarkTh>
+                                </QuarkTr>
+                            </QuarkThead>
+
+                            <!-- Manual body using components -->
+                            <QuarkTbody>
+                                @if (currentEmployees != null)
+                                {
+                                    @foreach (Employee employee in currentEmployees)
+                                    {
+                                        <QuarkTr Key="@employee.Id" >
+                                            <QuarkTd>@employee.Name</QuarkTd>
+                                            <QuarkTd>@employee.Department</QuarkTd>
+                                            <QuarkTd>@employee.Email</QuarkTd>
+                                            <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                            <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
+                                            <QuarkTd>@employee.Status</QuarkTd>
+                                            <QuarkTd>@employee.Id</QuarkTd>
+                                        </QuarkTr>
+                                    }
+                                }
+                            </QuarkTbody>
+                        </QuarkTableElement>
+
+
+                        <QuarkTablePagination CurrentPage="@continuationTable.CurrentPage"
+                                              TotalPages="@continuationTable.TotalPages"
+                                              TotalRecords="@continuationTable.TotalRecordsCount"
+                                              PageSize="@continuationTable.PageSize" />
+
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Information -->
+    @if (continuationTable != null)
+    {
+        <div class="row mt-4" >
+            <div class="col-12" >
+                <div class="card" >
+                    <div class="card-header" >
+                        <h5>Debug Information</h5>
+                    </div>
+                    <div class="card-body" >
+                        <div class="row" >
+                            <div class="col-md-6" >
+                                <h6>Table State</h6>
+                                <ul class="list-unstyled" >
+                                    <li>
+                                        <strong>Current Page:</strong> @continuationTable.CurrentPage
+                                    </li>
+                                    <li>
+                                        <strong>Page Size:</strong> @continuationTable.PageSize
+                                    </li>
+                                    <li>
+                                        <strong>Total Pages:</strong> @continuationTable.TotalPages
+                                    </li>
+                                    <li>
+                                        <strong>Total Records:</strong> @continuationTable.TotalRecordsCount
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6" >
+                                <h6>Continuation Token Info</h6>
+                                <ul class="list-unstyled" >
+                                    <li>
+                                        <strong>Current Token:</strong> @(currentContinuationToken ?? "null")
+                                    </li>
+                                    <li>
+                                        <strong>Records Loaded:</strong> @(currentEmployees?.Count ?? 0)
+                                    </li>
+                                    <li>
+                                        <strong>Last Request Start:</strong> @lastRequestStart
+                                    </li>
+                                    <li>
+                                        <strong>Last Request Length:</strong> @lastRequestLength
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private QuarkTable? continuationTable;
+    private List<Employee> currentEmployees = new();
+
+    private QuarkTableOptions continuationTableOptions = new()
+    {
+        DefaultPageSize = 5, // Smaller page size to demonstrate paging
+        Sortable = true,
+        SearchPosition = SearchPosition.End
+    };
+
+    private int totalRecords = 150;
+    private string? currentContinuationToken;
+    private int lastRequestStart;
+    private int lastRequestLength;
+
+    protected override async Task OnInitializedAsync()
+    {
+        totalRecords = EmployeeService.GetTotalCount();
+    }
+
+    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
+    {
+        Logger.LogInformation("ContinuationTokenDemo: HandleManualRequest called with Start={Start}, Length={Length}, Token='{Token}'", serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.ContinuationToken ?? "null");
+
+        try
+        {
+            // Get filtered employees using the service
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
+
+            Logger.LogInformation("ContinuationTokenDemo: EmployeeService returned {Count} employees", employees.Count);
+
+            // Update the current employees list
+            currentEmployees = employees;
+
+            // Update debug information
+            currentContinuationToken = serverSideRequest.ContinuationToken;
+            lastRequestStart = serverSideRequest.Start;
+            lastRequestLength = serverSideRequest.Length;
+
+            // Update the total records count
+            totalRecords = EmployeeService.GetTotalCount();
+
+            // Trigger UI update
+            StateHasChanged();
+
+            Logger.LogInformation("ContinuationTokenDemo: Updated currentEmployees with {Count} records, totalRecords={TotalRecords}", currentEmployees.Count, totalRecords);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "ContinuationTokenDemo: Error handling manual request: {Message}", ex.Message);
+        }
+    }
+
+    private async Task HandleSearch(string searchTerm)
+    {
+        Logger.LogInformation("ContinuationTokenDemo: Search performed: {SearchTerm}", searchTerm);
+    }
+
+    private async Task HandleOrder(QuarkTableOrderEventArgs args)
+    {
+        Logger.LogInformation("ContinuationTokenDemo: Column '{Column}' sorted {Direction}", args.Column, args.Direction);
+    }
+
+    private async Task HandleInitialize()
+    {
+        Logger.LogInformation("ContinuationTokenDemo: Continuation token table initialized");
+    }
+
+}

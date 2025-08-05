@@ -1,0 +1,16 @@
+@inherits ComponentBase
+
+<td style="@Style" colspan="@Colspan">
+    @ChildContent
+</td>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
+
+    [Parameter]
+    public int Colspan { get; set; } = 1;
+} 

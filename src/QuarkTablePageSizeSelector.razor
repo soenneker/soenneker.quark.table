@@ -1,0 +1,47 @@
+@using Soenneker.Quark.Table.Abstract
+
+@inherits ComponentBase
+
+<div class="quark-table-page-size">
+    <label>Show:</label>
+    <select value="@PageSize" @onchange="OnPageSizeChangedHandler">
+        @for (var i = 0; i < PageSizeOptions.Length; i++)
+        {
+            int size = PageSizeOptions[i];
+            <option value="@size" selected="@(size == PageSize)">@size</option>
+        }
+    </select>
+    <span>entries per page</span>
+</div>
+
+@code {
+    [CascadingParameter]
+    private IQuarkTable? QuarkTable { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public EventCallback<int> PageSizeChanged { get; set; }
+
+    [Parameter]
+    public int[] PageSizeOptions { get; set; } = [10, 25, 50, 100];
+
+    private async Task OnPageSizeChangedHandler(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int size) && size != PageSize)
+        {
+            // First, try to use the QuarkTable if available
+            if (QuarkTable != null)
+            {
+                // The QuarkTable will handle the page size change internally
+                // We just need to trigger a manual request
+                await QuarkTable.HandleGoToPage(1); // Reset to first page
+            }
+            else if (PageSizeChanged.HasDelegate)
+            {
+                await PageSizeChanged.InvokeAsync(size);
+            }
+        }
+    }
+} 

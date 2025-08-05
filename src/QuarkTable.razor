@@ -1,170 +1,39 @@
 @using System.Threading
-@using System.Reflection
 @using Microsoft.Extensions.Logging
-@using Soenneker.DataTables.Dtos.ServerResponse
 @using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Extensions.Task
+@using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Options
 @using Soenneker.Quark.Table.Abstract
-@using Soenneker.Quark.Table.Enums
 @using Soenneker.Utils.Debounce
+@using Soenneker.Quark.Table
 
 @inherits ComponentBase
 @implements IQuarkTable
 
-<div class="quark-table-wrapper" style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")" >
-    <div class="quark-table-controls @GetSearchPositionClass()" >
-        @if (Options.ShowPageSizeSelector)
-        {
-            <div class="quark-table-page-size" >
-                <label>Show:</label>
-                <select value="@_pageSize" @onchange="OnPageSizeChangedHandler">
-                    @for (var i = 0; i < Options.PageSizeOptions.Length; i++)
-                    {
-                        int size = Options.PageSizeOptions[i];
-                        <option value="@size" selected="@(size == _pageSize)">@size</option>
-                    }
-                </select>
-                <span>entries per page</span>
-            </div>
-        }
+<CascadingValue Value="this" IsFixed="true">
+    <div class="quark-table-wrapper" style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")" >
 
-        @if (Options.ShowSearch)
-        {
-            <div class="quark-table-search" >
-                <label>Search:</label>
-                <input type="text"
-                       value="@SearchTerm"
-                       @oninput="OnSearchInputHandler"
-                       placeholder="@Options.SearchPlaceholder"
-                       class="quark-table-search-input" />
-            </div>
-        }
-    </div>
-
-    <div class="quark-table-container" >
-        @if (_columns.Count == 0 && !_isLoading && !ManualMode)
-        {
-            <div class="text-center p-4" >
-                <p>Loading...</p>
-            </div>
-        }
-        else
-        {
-            <table id="@ElementId" class="quark-table" >
-                @if (ManualMode && ManualHeader != null)
-                {
-                    @ManualHeader
-                }
-                else if (_columns.Count > 0)
-                {
-                    <thead>
-                        <tr>
-                            @for (var c = 0; c < _columns.Count; c++)
-                            {
-                                string col = _columns[c];
-                                <th @onclick="() => HandleColumnSort(col)"
-                                    class="quark-table-sortable @(GetSortClass(col))"
-                                    style="cursor:pointer;" >
-                                    @col @GetSortIndicator(col)
-                                </th>
-                            }
-                        </tr>
-                    </thead>
-                }
-                else if (_isLoading)
-                {
-                    <thead>
-                        <tr>
-                            <th style="width: 100%;">
-                                @if (LoadingIndicator != null)
-                                {
-                                    @LoadingIndicator
-                                }
-                                else
-                                {
-                                    <div class="text-center p-2">
-                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <span class="ms-2">Loading...</span>
-                                    </div>
-                                }
-                            </th>
-                        </tr>
-                    </thead>
-                }
-                <tbody style="position:relative;" >
-                    @if (_isLoading)
-                    {
-                        <tr>
-                            <td colspan="@(_columns.Count > 0 ? _columns.Count : 1)" style="padding:0;border:none;" >
-                                <div class="quark-table-loading-indicator" style="display:flex;" >
-                                    @if (LoadingIndicator != null)
-                                    {
-                                        @LoadingIndicator
-                                    }
-                                    else
-                                    {
-                                        <div class="text-center p-4">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                            <div class="mt-2">Loading...</div>
-                                        </div>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                    @if (ManualMode && ManualBody != null)
-                    {
-                        @ManualBody
-                    }
-                    else
-                    {
-                        @for (var r = 0; r < _rows.Count; r++)
-                        {
-                            List<string> row = _rows[r];
-                            <tr @key="r" >
-                                @for (var j = 0; j < row.Count; j++)
-                                {
-                                    <td>@row[j]</td>
-                                }
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
-
-    @if (Options.ShowPagination && _totalPages > 1)
-    {
-        <div class="quark-table-pagination" >
-            @if (Options.ShowInfo)
+        <div class="quark-table-container" >
+            @if (!_isLoading && ChildContent == null)
             {
-                <div class="quark-table-info" >Showing @StartRecord to @EndRecord of @_totalRecords entries</div>
+                <div class="text-center p-4" >
+                    <p>No content available</p>
+                </div>
             }
-            <div class="quark-table-pagination-controls" >
-                <button class="quark-table-pagination-btn" @onclick="HandleFirstPage" disabled="@(_currentPage == 1)" title="First" >«</button>
-                <button class="quark-table-pagination-btn" @onclick="HandlePreviousPage" disabled="@(_currentPage == 1)" title="Previous" >‹</button>
-
-                @for (int p = StartPage; p <= EndPage; p++)
-                {
-                    int pageNumber = p;          // 👈 capture by value
-                    <button class="quark-table-pagination-btn @(pageNumber == _currentPage ? "active" : string.Empty)"
-                            @onclick="@(() => HandleGoToPage(pageNumber))">
-                        @pageNumber
-                    </button>
-                }
-
-                <button class="quark-table-pagination-btn" @onclick="HandleNextPage" disabled="@(_currentPage == _totalPages)" title="Next" >›</button>
-                <button class="quark-table-pagination-btn" @onclick="HandleLastPage" disabled="@(_currentPage == _totalPages)" title="Last" >»</button>
-            </div>
+            else
+            {
+                <div class="quark-table-with-search">
+                    @if (ChildContent != null)
+                    {
+                        @ChildContent
+                    }
+                </div>
+            }
         </div>
-    }
-</div>
+
+    </div>
+</CascadingValue>
 
 @code {
 
@@ -178,9 +47,6 @@
     public EventCallback OnInitialize { get; set; }
 
     [Parameter]
-    public EventCallback<string> OnSearch { get; set; }
-
-    [Parameter]
     public EventCallback<int> OnPageSizeChanged { get; set; }
 
     [Parameter]
@@ -188,9 +54,6 @@
 
     [Parameter]
     public EventCallback<QuarkTableOrderEventArgs> OnOrder { get; set; }
-
-    [Parameter]
-    public Func<DataTableServerSideRequest, Task<DataTableServerResponse>>? OnServerSideRequest { get; set; }
 
     [Parameter]
     public QuarkTableOptions Options { get; set; } = new();
@@ -202,40 +65,16 @@
     public bool Visible { get; set; } = true;
 
     [Parameter]
-    public bool ShowSearch { get; set; } = true;
-
-    [Parameter]
-    public bool ShowPagination { get; set; } = true;
-
-    [Parameter]
     public bool ShowPageSizeSelector { get; set; } = true;
 
     [Parameter]
     public int[] PageSizeOptions { get; set; } = [10, 25, 50, 100];
 
     [Parameter]
-    public string SearchPlaceholder { get; set; } = "Search...";
-
-    [Parameter]
-    public int SearchDebounceMs { get; set; } = 300;
-
-    [Parameter]
     public int MaxPageButtons { get; set; } = 5;
 
     [Parameter]
-    public bool ManualMode { get; set; }
-
-    [Parameter]
-    public RenderFragment? ManualHeader { get; set; }
-
-    [Parameter]
-    public RenderFragment? ManualBody { get; set; }
-
-    [Parameter]
     public bool EnableManualHeaderSorting { get; set; }
-
-    [Parameter]
-    public object? DirectData { get; set; }
 
     [Parameter]
     public int TotalRecords { get; set; }
@@ -244,16 +83,7 @@
     public EventCallback<DataTableServerSideRequest> OnManualRequest { get; set; }
 
     [Parameter]
-    public List<string>? Headers { get; set; }
-
-    [Parameter]
-    public DataTableServerResponse? ServerResponse { get; set; }
-
-    [Parameter]
-    public List<object>? ObjectData { get; set; }
-
-    [Parameter]
-    public List<string>? ObjectDataProperties { get; set; }
+    public RenderFragment? ChildContent { get; set; }
 
     public readonly string ElementId = $"quark-table-{Guid.NewGuid():N}";
 
@@ -262,11 +92,11 @@
     public int PageSize => _pageSize;
     public int TotalPages => _totalPages;
 
+    // Interface implementation
+    QuarkTableOptions IQuarkTable.Options => _options;
+
     private readonly Debouncer _debouncer = new();
-    private readonly List<string> _columns = [];
     private readonly List<DataTableOrderRequest> _currentOrders = [];
-    private readonly List<List<string>> _rows = [];
-    private readonly Dictionary<string, int> _columnIndexMap = [];
 
     private string _searchTerm = string.Empty;
     private string? _continuationToken;
@@ -279,9 +109,11 @@
     private bool _dataChanged;
     private bool _isLoading;
     private bool _initialized;
+    private bool _dataLoaded;
     private QuarkTableOptions? _previousOptions;
+    private QuarkTableOptions _options = new();
 
-    public string SearchTerm => _searchTerm;
+    public int TotalRecordsCount => _totalRecords;
 
     private int StartRecord => (_currentPage - 1) * _pageSize + 1;
     private int EndRecord => Math.Min(_currentPage * _pageSize, _totalRecords);
@@ -300,7 +132,7 @@
             // Ensure we don't go below page 1
             start = Math.Max(1, start);
 
-            // If we're near the end, adjust to show the last MaxPageButtons pages
+            // If we's near the end, adjust to show the last MaxPageButtons pages
             if (start + Options.MaxPageButtons - 1 > _totalPages)
             {
                 start = Math.Max(1, _totalPages - Options.MaxPageButtons + 1);
@@ -320,39 +152,6 @@
         _pageSize = Options.DefaultPageSize;
         await QuarkTableInterop.Initialize();
 
-        if (ManualMode)
-        {
-            _totalRecords = TotalRecords;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-            // Load initial data for manual mode
-            if (OnManualRequest.HasDelegate)
-            {
-                await HandleManualRequest();
-            }
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-        else if (ServerResponse != null)
-        {
-            UpdateTableData(ServerResponse);
-            _totalRecords = ServerResponse.TotalRecords;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-        }
-        else if (ObjectData != null)
-        {
-            UpdateTableData(ObjectData);
-            _totalRecords = _rows.Count;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-        }
-        else if (DirectData != null)
-        {
-            UpdateTableData(DirectData);
-            _totalRecords = _rows.Count;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-        }
-
         _initialized = true;
         if (OnInitialize.HasDelegate)
             await OnInitialize.InvokeAsync();
@@ -360,6 +159,33 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        // Update the backing field for Options
+        _options = Options;
+
+        // Initialize total records and pages on first parameter set
+        if (!_dataLoaded)
+        {
+            _totalRecords = TotalRecords;
+            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+            
+            // Load initial data
+            if (OnManualRequest.HasDelegate)
+            {
+                await HandleManualRequest();
+            }
+            _dataLoaded = true;
+        }
+        else
+        {
+            // Check if TotalRecords has changed
+            if (_totalRecords != TotalRecords)
+            {
+                _totalRecords = TotalRecords;
+                _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
+                Logger.LogDebug("TotalRecords updated to {TotalRecords}, TotalPages={TotalPages}", _totalRecords, _totalPages);
+            }
+        }
+
         // Check if options have changed and trigger reload if needed
         if (_initialized && _previousOptions != null && !Options.Equals(_previousOptions))
         {
@@ -367,75 +193,17 @@
             _currentPage = 1;
             // Clear continuation token when options change
             _continuationToken = null;
-            if (ManualMode)
+            if (OnManualRequest.HasDelegate)
             {
-                if (OnManualRequest.HasDelegate)
-                {
-                    await HandleManualRequest();
-                }
+                await HandleManualRequest();
             }
-            else if (OnServerSideRequest != null)
-            {
-                await LoadData();
-            }
-        }
-
-        // Handle different data sources
-        if (ServerResponse != null && !ManualMode)
-        {
-            UpdateTableData(ServerResponse);
-            _totalRecords = ServerResponse.TotalRecords;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-            _dataChanged = true;
-        }
-        else if (ObjectData != null && !ManualMode)
-        {
-            UpdateTableData(ObjectData);
-            _totalRecords = _rows.Count;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-            _dataChanged = true;
-        }
-        else if (DirectData != null && !ManualMode)
-        {
-            UpdateTableData(DirectData);
-            _totalRecords = _rows.Count;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-            _dataChanged = true;
         }
 
         _previousOptions = Options.Clone();
         await base.OnParametersSetAsync();
     }
 
-    private Task OnSearchInputHandler(ChangeEventArgs e)
-    {
-        _searchTerm = e.Value?.ToString() ?? string.Empty;
 
-        _debouncer.Debounce(Options.SearchDebounceMs, async ct =>
-        {
-            _currentPage = 1;
-            // Clear continuation token when searching
-            _continuationToken = null;
-            if (ManualMode)
-            {
-                await HandleManualRequest(ct);
-            }
-            else if (OnServerSideRequest != null)
-            {
-                await LoadData(ct).NoSync();
-            }
-            else
-            {
-                // Client-side search - reload data with new search term
-                ReloadClientSideData();
-            }
-
-            if (OnSearch.HasDelegate)
-                await OnSearch.InvokeAsync(_searchTerm);
-        });
-
-        return Task.CompletedTask;
-    }
 
     private async Task OnPageSizeChangedHandler(ChangeEventArgs e)
     {
@@ -445,155 +213,42 @@
             _currentPage = 1;
             // Clear continuation token when changing page size
             _continuationToken = null;
-                    if (ManualMode)
-        {
             await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-        else
-        {
-            ReloadClientSideData();
-        }
-        if (OnPageSizeChanged.HasDelegate) await OnPageSizeChanged.InvokeAsync(_pageSize);
+            if (OnPageSizeChanged.HasDelegate) await OnPageSizeChanged.InvokeAsync(_pageSize);
         }
     }
 
-    private async Task HandleFirstPage()
-    {
-        if (_currentPage == 1) return;
-        _currentPage = 1;
-        // Clear continuation token when going to first page
-        _continuationToken = null;
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-        else
-        {
-            ReloadClientSideData();
-        }
-    }
 
-    private async Task HandlePreviousPage()
-    {
-        if (_currentPage == 1) return;
-        _currentPage--;
-        // Clear continuation token when navigating backwards
-        _continuationToken = null;
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-        else
-        {
-            ReloadClientSideData();
-        }
-    }
-
-    private async Task HandleNextPage()
-    {
-        if (_currentPage == _totalPages) return;
-        _currentPage++;
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-        else
-        {
-            ReloadClientSideData();
-        }
-    }
-
-    private async Task HandleLastPage()
-    {
-        if (_currentPage == _totalPages) return;
-        _currentPage = _totalPages;
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-        else
-        {
-            ReloadClientSideData();
-        }
-    }
 
     public async Task HandleGoToPage(int page)
     {
-        Logger.LogDebug("HandleGoToPage called: requested page={Page}, current page={CurrentPage}, total pages={TotalPages}, StartPage={StartPage}, EndPage={EndPage}", 
-            page, _currentPage, _totalPages, StartPage, EndPage);
+        if (page < 1 || page > _totalPages) return;
 
-        // Validate the page number
-        if (page < 1)
-        {
-            Logger.LogWarning("HandleGoToPage: Invalid page number {Page} - must be >= 1", page);
-            return;
-        }
-
-        if (page > _totalPages)
-        {
-            Logger.LogWarning("HandleGoToPage: Invalid page number {Page} - must be <= {TotalPages}", page, _totalPages);
-            return;
-        }
-
-        if (page == _currentPage)
-        {
-            Logger.LogDebug("HandleGoToPage: Already on page {Page}, no action needed", page);
-            return;
-        }
-
-        Logger.LogDebug("HandleGoToPage: setting current page from {OldPage} to {NewPage}", _currentPage, page);
         _currentPage = page;
-        // Clear continuation token when navigating to a specific page
+        // Clear continuation token when changing pages
         _continuationToken = null;
+        await HandleManualRequest();
 
-        Logger.LogDebug("HandleGoToPage: set current page to {Page}, cleared continuation token. After setting: _currentPage={CurrentPage}, StartPage={StartPage}, EndPage={EndPage}", 
-            _currentPage, _currentPage, StartPage, EndPage);
-
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-        else
-        {
-            ReloadClientSideData();
-        }
-        if (OnGoToPage.HasDelegate) await OnGoToPage.InvokeAsync(page);
+        if (OnGoToPage.HasDelegate)
+            await OnGoToPage.InvokeAsync(page);
     }
 
-    private async Task HandleColumnSort(string col)
+    public async Task HandleSearch(string searchTerm)
+    {
+        Logger.LogDebug("HandleSearch called with term: {SearchTerm}", searchTerm);
+        
+        _searchTerm = searchTerm;
+        _currentPage = 1; // Reset to first page when searching
+        _continuationToken = null; // Clear continuation token when searching
+        
+        await HandleManualRequest();
+    }
+
+    public async Task HandleSort(int columnIndex)
     {
         if (!Options.Sortable) return;
 
-        // Find the column index
-        if (!_columnIndexMap.TryGetValue(col, out int columnIndex))
-        {
-            Logger.LogWarning("Column {Column} not found in column index map", col);
-            return;
-        }
+        Logger.LogDebug("Sorting column by index: {ColumnIndex}", columnIndex);
 
         // Find existing order for this column
         DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
@@ -615,34 +270,25 @@
                 Column = columnIndex, 
                 Dir = nextDirection 
             });
-        }
-
-        // For server-side processing, reset to page 1 when sorting
-        // For client-side processing, maintain current page
-        if (OnServerSideRequest != null || ManualMode)
-        {
-            _currentPage = 1;
-        }
-        // Clear continuation token when sorting
-        _continuationToken = null;
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
+            Logger.LogDebug("Added order: Column={Column}, Direction={Direction}", columnIndex, nextDirection);
         }
         else
         {
-            ReloadClientSideData();
+            Logger.LogDebug("Removed order for column {Column}", columnIndex);
         }
+        
+        Logger.LogDebug("Current orders count: {Count}", _currentOrders.Count);
+
+        _currentPage = 1;
+        // Clear continuation token when sorting
+        _continuationToken = null;
+        await HandleManualRequest();
 
         if (OnOrder.HasDelegate)
         {
             var args = new QuarkTableOrderEventArgs 
             {
-                Column = col, 
+                Column = $"Column_{columnIndex}", 
                 Direction = nextDirection ?? string.Empty, 
                 Orders = _currentOrders.ToList()
             };
@@ -650,505 +296,8 @@
         }
     }
 
-    /*************** Data ***************/
-    private async Task LoadData(CancellationToken cancellationToken = default)
-    {
-        if (OnServerSideRequest == null) return;
-
-        _isLoading = true;
-        _dataChanged = true;
-        await InvokeAsync(StateHasChanged).NoSync();
-
-        try
-        {
-            var request = new DataTableServerSideRequest
-            {
-                Start = (_currentPage - 1) * _pageSize,
-                Length = _pageSize,
-                Search = !string.IsNullOrEmpty(_searchTerm) ? new DataTableSearchRequest { Value = _searchTerm } : null,
-                Order = _currentOrders.Count > 0 ? _currentOrders : null,
-                ContinuationToken = _continuationToken
-            };
-
-            Logger.LogDebug("LoadData: _currentPage={CurrentPage}, _pageSize={PageSize}, calculated Start={Start}, Length={Length}, TotalPages={TotalPages}", 
-                _currentPage, _pageSize, request.Start, request.Length, _totalPages);
-
-            DataTableServerResponse resp = await OnServerSideRequest.Invoke(request);
-            _totalRecords = resp.TotalRecords;
-            _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-            Logger.LogDebug("Calculated total pages: {TotalRecords} / {PageSize} = {TotalPages}", 
-                _totalRecords, _pageSize, _totalPages);
-            // Only set continuation token if the server supports it (not null or empty)
-            _continuationToken = !string.IsNullOrEmpty(resp.ContinuationToken) ? resp.ContinuationToken : null;
-
-            Logger.LogDebug("Response: TotalRecords={TotalRecords}, TotalPages={TotalPages}, PageSize={PageSize}", 
-                _totalRecords, _totalPages, _pageSize);
-
-            Logger.LogDebug("Received response: ContinuationToken={Token}", 
-                resp.ContinuationToken ?? "null");
-
-            UpdateTableData(resp.Data);
-            _dataChanged = true;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "LoadData error: {Message}", ex.Message);
-        }
-        finally
-        {
-            _isLoading = false;
-            _dataChanged = true;
-            await InvokeAsync(StateHasChanged).NoSync();
-        }
-    }
-
-    private async Task HandleManualRequest(CancellationToken cancellationToken = default)
-    {
-        if (!OnManualRequest.HasDelegate) return;
-
-        _isLoading = true;
-        _dataChanged = true;
-        await InvokeAsync(StateHasChanged).NoSync();
-
-        try
-        {
-            var request = new DataTableServerSideRequest
-            {
-                Start = (_currentPage - 1) * _pageSize,
-                Length = _pageSize,
-                Search = !string.IsNullOrEmpty(_searchTerm) ? new DataTableSearchRequest { Value = _searchTerm } : null,
-                Order = _currentOrders.Count > 0 ? _currentOrders : null,
-                ContinuationToken = _continuationToken
-            };
-            await OnManualRequest.InvokeAsync(request);
-            _dataChanged = true;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "HandleManualRequest error: {Message}", ex.Message);
-        }
-        finally
-        {
-            _isLoading = false;
-            _dataChanged = true;
-            await InvokeAsync(StateHasChanged).NoSync();
-        }
-    }
-
-    private void UpdateTableData(object? data)
-    {
-        _columns.Clear();
-        _rows.Clear();
-        _columnIndexMap.Clear();
-        
-        switch (data)
-        {
-            case DataTableServerResponse response:
-                UpdateTableDataFromServerResponse(response);
-                break;
-            case List<object> objectList when objectList.Count > 0:
-                UpdateTableDataFromObjects(objectList);
-                break;
-            case List<List<string>> list when list.Count > 0:
-                // If Headers are provided, use them; otherwise use first row as headers
-                if (Headers != null && Headers.Count > 0)
-                {
-                    _columns.AddRange(Headers);
-                    ApplyClientSidePagination(list);
-                }
-                else
-                {
-                    _columns.AddRange(list[0]);
-                    ApplyClientSidePagination(list.Skip(1).ToList());
-                }
-                break;
-            case List<Dictionary<string, object>> dict when dict.Count > 0:
-                var dictRows = new List<List<string>>();
-                if (Headers != null && Headers.Count > 0)
-                {
-                    _columns.AddRange(Headers);
-                    foreach (Dictionary<string, object> row in dict)
-                    {
-                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
-                    }
-                }
-                else
-                {
-                    _columns.AddRange(dict[0].Keys.Select(k => k.ToString()));
-                    foreach (Dictionary<string, object> row in dict)
-                    {
-                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
-                    }
-                }
-                ApplyClientSidePagination(dictRows);
-                break;
-        }
-
-        // Populate column index map for sorting
-        for (int i = 0; i < _columns.Count; i++)
-        {
-            _columnIndexMap[_columns[i]] = i;
-        }
-
-        Logger.LogDebug("Updated table data: {ColumnCount} columns, {RowCount} rows", _columns.Count, _rows.Count);
-    }
-
-    private void UpdateTableDataFromServerResponse(DataTableServerResponse response)
-    {
-        if (response.Data == null) return;
-
-        switch (response.Data)
-        {
-            case List<List<string>> list when list.Count > 0:
-                if (Headers != null && Headers.Count > 0)
-                {
-                    _columns.AddRange(Headers);
-                    ApplyClientSidePagination(list);
-                }
-                else
-                {
-                    _columns.AddRange(list[0]);
-                    ApplyClientSidePagination(list.Skip(1).ToList());
-                }
-                break;
-            case List<Dictionary<string, object>> dict when dict.Count > 0:
-                var dictRows = new List<List<string>>();
-                if (Headers != null && Headers.Count > 0)
-                {
-                    _columns.AddRange(Headers);
-                    foreach (Dictionary<string, object> row in dict)
-                    {
-                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
-                    }
-                }
-                else
-                {
-                    _columns.AddRange(dict[0].Keys.Select(k => k.ToString()));
-                    foreach (Dictionary<string, object> row in dict)
-                    {
-                        dictRows.Add(_columns.Select(c => row[c]?.ToString() ?? string.Empty).ToList());
-                    }
-                }
-                ApplyClientSidePagination(dictRows);
-                break;
-            case List<object> objectList when objectList.Count > 0:
-                UpdateTableDataFromObjects(objectList);
-                break;
-        }
-    }
-
-    private void UpdateTableDataFromObjects(List<object> objects)
-    {
-        if (objects.Count == 0) return;
-
-        object firstObject = objects[0];
-        List<string> properties = ObjectDataProperties ?? GetObjectProperties(firstObject);
-
-        if (Headers != null && Headers.Count > 0)
-        {
-            _columns.AddRange(Headers);
-        }
-        else
-        {
-            _columns.AddRange(properties);
-        }
-
-        // Store all data for client-side pagination
-        var allRows = new List<List<string>>();
-        foreach (object obj in objects)
-        {
-            var row = new List<string>();
-            foreach (string property in properties)
-            {
-                object? value = GetPropertyValue(obj, property);
-                row.Add(value?.ToString() ?? string.Empty);
-            }
-            allRows.Add(row);
-        }
-
-        // Apply client-side pagination
-        ApplyClientSidePagination(allRows);
-    }
-
-    private List<string> GetObjectProperties(object obj)
-    {
-        var properties = new List<string>();
-        Type type = obj.GetType();
-        
-        foreach (PropertyInfo property in type.GetProperties())
-        {
-            properties.Add(property.Name);
-        }
-        
-        return properties;
-    }
-
-    private object? GetPropertyValue(object obj, string propertyName)
-    {
-        Type type = obj.GetType();
-        PropertyInfo? property = type.GetProperty(propertyName);
-        return property?.GetValue(obj);
-    }
-
-    private void ApplyClientSidePagination(List<List<string>> allRows)
-    {
-        // Apply search filter if needed
-        var filteredRows = allRows;
-        if (!string.IsNullOrEmpty(_searchTerm))
-        {
-            filteredRows = allRows.Where(row => 
-                row.Any(cell => cell.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
-            ).ToList();
-        }
-
-        // Update total records count (before sorting)
-        _totalRecords = filteredRows.Count;
-        _totalPages = (int) Math.Ceiling((double) _totalRecords / _pageSize);
-
-        // Ensure current page is valid
-        if (_currentPage > _totalPages && _totalPages > 0)
-        {
-            _currentPage = _totalPages;
-        }
-        else if (_currentPage < 1)
-        {
-            _currentPage = 1;
-        }
-
-        // Apply sorting to the ENTIRE filtered dataset (not just current page)
-        if (_currentOrders.Count > 0)
-        {
-            filteredRows = ApplyClientSideSorting(filteredRows);
-        }
-
-        // Get the current page of data from the sorted dataset
-        int startIndex = (_currentPage - 1) * _pageSize;
-        _rows.Clear();
-        _rows.AddRange(filteredRows.Skip(startIndex).Take(_pageSize));
-    }
-
-    private List<List<string>> ApplyClientSideSorting(List<List<string>> rows)
-    {
-        var sortedRows = rows.ToList();
-
-        foreach (var order in _currentOrders.OrderBy(o => o.Column))
-        {
-            int columnIndex = order.Column;
-            if (columnIndex >= 0 && columnIndex < _columns.Count)
-            {
-                sortedRows = order.Dir switch
-                {
-                    "asc" => sortedRows.OrderBy(row => 
-                        GetSortableValue(row, columnIndex)).ToList(),
-                    "desc" => sortedRows.OrderByDescending(row => 
-                        GetSortableValue(row, columnIndex)).ToList(),
-                    _ => sortedRows
-                };
-            }
-        }
-
-        return sortedRows;
-    }
-
-    private IComparable GetSortableValue(List<string> row, int columnIndex)
-    {
-        if (columnIndex >= row.Count)
-            return string.Empty;
-
-        string value = row[columnIndex];
-        
-        // Try to parse as decimal (for currency, numbers, etc.)
-        if (decimal.TryParse(value.Replace("$", "").Replace(",", ""), out decimal decimalValue))
-        {
-            return decimalValue;
-        }
-        
-        // Try to parse as date
-        if (DateTime.TryParse(value, out DateTime dateValue))
-        {
-            return dateValue;
-        }
-        
-        // Default to string comparison
-        return value;
-    }
-
-    private void ReloadClientSideData()
-    {
-        // Store current data source for reloading
-        if (ServerResponse?.Data is List<List<string>> serverData)
-        {
-            if (Headers != null && Headers.Count > 0)
-            {
-                _columns.Clear();
-                _columns.AddRange(Headers);
-                ApplyClientSidePagination(serverData);
-            }
-            else
-            {
-                _columns.Clear();
-                _columns.AddRange(serverData[0]);
-                ApplyClientSidePagination(serverData.Skip(1).ToList());
-            }
-        }
-        else if (ObjectData != null)
-        {
-            UpdateTableDataFromObjects(ObjectData.Cast<object>().ToList());
-        }
-        else if (DirectData is List<List<string>> directData)
-        {
-            if (Headers != null && Headers.Count > 0)
-            {
-                _columns.Clear();
-                _columns.AddRange(Headers);
-                ApplyClientSidePagination(directData);
-            }
-            else
-            {
-                _columns.Clear();
-                _columns.AddRange(directData[0]);
-                ApplyClientSidePagination(directData.Skip(1).ToList());
-            }
-        }
-        
-        _dataChanged = true;
-        StateHasChanged();
-    }
-
-    private string GetSortClass(string col)
-    {
-        if (!_columnIndexMap.TryGetValue(col, out int columnIndex))
-            return string.Empty;
-
-        DataTableOrderRequest? o = _currentOrders.FirstOrDefault(x => x.Column == columnIndex);
-
-        return o?.Dir switch 
-        {
-            "asc" => "quark-table-sorted-asc", 
-            "desc" => "quark-table-sorted-desc", 
-            _ => string.Empty
-        };
-    }
-
-    private RenderFragment GetSortIndicator(string col) => builder =>
-    {
-        if (!_columnIndexMap.TryGetValue(col, out int columnIndex))
-        {
-            builder.AddContent(0, " ↕");
-            return;
-        }
-
-        DataTableOrderRequest? o = _currentOrders.FirstOrDefault(x => x.Column == columnIndex);
-        builder.AddContent(0, o?.Dir switch 
-        {
-            "asc" => " ↑", 
-            "desc" => " ↓", 
-            _ => " ↕"
-        });
-    };
-
-    private string GetSearchPositionClass()
-    {
-        switch (Options.SearchPosition)
-        {
-            case SearchPosition.StartValue: return "search-start";
-            case SearchPosition.CenterValue: return "search-center";
-            default: return "search-end";
-        }
-    }
-
-    protected override bool ShouldRender()
-    {
-        bool s = _dataChanged;
-        _dataChanged = false;
-        return s;
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _debouncer.DisposeAsync();
-    }
-
     /// <summary>
-    /// Clears all current sorting and resets to first page
-    /// </summary>
-    public async Task ClearSorting()
-    {
-        _currentOrders.Clear();
-        _currentPage = 1;
-        _continuationToken = null;
-        
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-    }
-
-    /// <summary>
-    /// Clears the search term and resets to first page
-    /// </summary>
-    public async Task ClearSearch()
-    {
-        _searchTerm = string.Empty;
-        _currentPage = 1;
-        _continuationToken = null;
-        
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-    }
-
-    /// <summary>
-    /// Resets the table to its initial state (clears search, sorting, and goes to first page)
-    /// </summary>
-    public async Task Reset()
-    {
-        _searchTerm = string.Empty;
-        _currentOrders.Clear();
-        _currentPage = 1;
-        _continuationToken = null;
-        
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-    }
-
-    /// <summary>
-    /// Sets the search term programmatically and triggers a search
-    /// </summary>
-    /// <param name="searchTerm">The search term to set</param>
-    public async Task SetSearchTerm(string searchTerm)
-    {
-        _searchTerm = searchTerm ?? string.Empty;
-        _currentPage = 1;
-        _continuationToken = null;
-        
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
-    }
-
-    /// <summary>
-    /// Gets the current list of orders
+    /// Gets the current orders
     /// </summary>
     /// <returns>A copy of the current orders</returns>
     public List<DataTableOrderRequest> GetCurrentOrders()
@@ -1169,15 +318,7 @@
         }
         _currentPage = 1;
         _continuationToken = null;
-        
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
+        await HandleManualRequest();
     }
 
     /// <summary>
@@ -1222,14 +363,7 @@
         _currentPage = 1;
         // Clear continuation token when sorting
         _continuationToken = null;
-        if (ManualMode)
-        {
-            await HandleManualRequest();
-        }
-        else if (OnServerSideRequest != null)
-        {
-            await LoadData();
-        }
+        await HandleManualRequest();
 
         if (OnOrder.HasDelegate)
         {
@@ -1286,4 +420,162 @@
         };
     }
 
-}
+
+
+    private async Task HandleFirstPage()
+    {
+        if (_currentPage == 1) return;
+        _currentPage = 1;
+        // Clear continuation token when going to first page
+        _continuationToken = null;
+        await HandleManualRequest();
+    }
+
+    private async Task HandlePreviousPage()
+    {
+        if (_currentPage == 1) return;
+        _currentPage--;
+        // Clear continuation token when navigating backwards
+        _continuationToken = null;
+        await HandleManualRequest();
+    }
+
+    private async Task HandleNextPage()
+    {
+        if (_currentPage == _totalPages) return;
+        _currentPage++;
+        await HandleManualRequest();
+    }
+
+    private async Task HandleLastPage()
+    {
+        if (_currentPage == _totalPages) return;
+        _currentPage = _totalPages;
+        await HandleManualRequest();
+    }
+
+    public async Task HandleColumnSort(int columnIndex, string columnName)
+    {
+        if (!Options.Sortable) return;
+
+        Logger.LogDebug("HandleColumnSort called: columnIndex={ColumnIndex}, columnName={ColumnName}", columnIndex, columnName);
+
+        // Find existing order for this column
+        DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
+        string? nextDirection = existing?.Dir switch
+        {
+            "asc" => "desc",
+            "desc" => null,
+            _ => "asc"
+        };
+
+        // Remove existing order for this column
+        _currentOrders.RemoveAll(o => o.Column == columnIndex);
+        
+        // Add new order if direction is not null
+        if (nextDirection != null)
+        {
+            _currentOrders.Add(new DataTableOrderRequest 
+            { 
+                Column = columnIndex, 
+                Dir = nextDirection 
+            });
+        }
+
+        // Reset to page 1 when sorting
+        _currentPage = 1;
+        // Clear continuation token when sorting
+        _continuationToken = null;
+        await HandleManualRequest();
+
+        if (OnOrder.HasDelegate)
+        {
+            var args = new QuarkTableOrderEventArgs 
+            {
+                Column = columnName, 
+                Direction = nextDirection ?? string.Empty, 
+                Orders = _currentOrders.ToList()
+            };
+            await OnOrder.InvokeAsync(args);
+        }
+    }
+
+    private async Task HandleManualRequest(CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("HandleManualRequest called: Page={Page}, PageSize={PageSize}, SearchTerm='{SearchTerm}'", 
+            _currentPage, _pageSize, _searchTerm);
+            
+        if (!OnManualRequest.HasDelegate) 
+        {
+            Logger.LogWarning("HandleManualRequest: No OnManualRequest delegate");
+            return;
+        }
+
+        _isLoading = true;
+        _dataChanged = true;
+        await InvokeAsync(StateHasChanged).NoSync();
+
+        try
+        {
+            var request = new DataTableServerSideRequest
+            {
+                Start = (_currentPage - 1) * _pageSize,
+                Length = _pageSize,
+                Search = !string.IsNullOrEmpty(_searchTerm) ? new DataTableSearchRequest { Value = _searchTerm } : null,
+                Order = _currentOrders.Count > 0 ? _currentOrders : null,
+                ContinuationToken = _continuationToken
+            };
+            
+            Logger.LogDebug("Sending request: Start={Start}, Length={Length}, Search='{Search}'", 
+                request.Start, request.Length, request.Search?.Value ?? "null");
+                
+            await OnManualRequest.InvokeAsync(request);
+            _dataChanged = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "HandleManualRequest error: {Message}", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+            _dataChanged = true;
+            await InvokeAsync(StateHasChanged).NoSync();
+        }
+    }
+
+    protected override bool ShouldRender()
+    {
+        bool s = _dataChanged;
+        _dataChanged = false;
+        return s;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _debouncer.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Clears all current sorting and resets to first page
+    /// </summary>
+    public async Task ClearSorting()
+    {
+        _currentOrders.Clear();
+        _currentPage = 1;
+        _continuationToken = null;
+        await HandleManualRequest();
+    }
+
+    /// <summary>
+    /// Resets the table to its initial state (clears sorting and goes to first page)
+    /// </summary>
+    public async Task Reset()
+    {
+        _currentOrders.Clear();
+        _currentPage = 1;
+        _continuationToken = null;
+        await HandleManualRequest();
+    }
+
+} 

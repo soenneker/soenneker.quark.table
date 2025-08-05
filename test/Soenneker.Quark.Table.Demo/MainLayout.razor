@@ -1,5 +1,15 @@
 ﻿@inherits LayoutComponentBase
+@using Soenneker.Quark.Table.Demo.Shared
+
+<DemoNavigation CurrentPath="@CurrentPath" />
 
 <main>
     @Body
 </main>
+
+@code {
+    private string CurrentPath => NavigationManager.Uri;
+    
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+}

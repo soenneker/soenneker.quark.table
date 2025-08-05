@@ -1,0 +1,13 @@
+@inherits ComponentBase
+
+<tr @key="@Key">
+    @ChildContent
+</tr>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public object? Key { get; set; }
+} 
