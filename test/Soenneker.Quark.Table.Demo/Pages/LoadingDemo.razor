@@ -12,7 +12,7 @@
                 <p class="text-muted mb-0">Try searching, sorting, or changing pages to see the smooth loading overlay</p>
             </div>
             <div class="card-body">
-                <QuarkTable @ref="tableRef" 
+                <QuarkTable @ref="_tableRef" 
                             TotalRecords="100">
                     
                     <QuarkTableElement>
@@ -27,9 +27,9 @@
                         </QuarkThead>
                         
                         <QuarkTbody>
-                            @if (tableData != null)
+                            @if (_tableData != null)
                             {
-                                @foreach (List<string> row in tableData)
+                                @foreach (List<string> row in _tableData)
                                 {
                                     <QuarkTr Key="@row[0]">
                                         <QuarkTd>@row[0]</QuarkTd>
@@ -49,14 +49,14 @@
 </div>
 
 @code {
-    private QuarkTable? tableRef;
-    private List<Employee> employees = new();
-    private List<List<string>>? tableData;
+    private QuarkTable? _tableRef;
+    private List<Employee> _employees = new();
+    private List<List<string>>? _tableData;
 
     protected override void OnInitialized()
     {
         // Sample employee data
-        employees = new List<Employee>
+        _employees = new List<Employee>
         {
             new Employee { Id = 1, Name = "John Doe", Email = "john@example.com", Age = 30, Department = "Engineering", Salary = 75000 },
             new Employee { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Age = 25, Department = "Marketing", Salary = 65000 },
@@ -81,7 +81,7 @@
         // Simulate server-side processing with a longer delay to showcase the loading
         await Task.Delay(800);
 
-        IQueryable<Employee> filteredEmployees = employees.AsQueryable();
+        IQueryable<Employee> filteredEmployees = _employees.AsQueryable();
 
         // Apply search
         if (!string.IsNullOrEmpty(request.Search?.Value))
@@ -113,11 +113,11 @@
         int totalRecords = filteredEmployees.Count();
         List<Employee> pagedEmployees = filteredEmployees.Skip(request.Start).Take(request.Length).ToList();
 
-        tableData = pagedEmployees.Select(p => new List<string> { p.Name, p.Email, p.Age.ToString(), p.Department, p.Salary.ToString("C") }).ToList();
+        _tableData = pagedEmployees.Select(p => new List<string> { p.Name, p.Email, p.Age.ToString(), p.Department, p.Salary.ToString("C") }).ToList();
 
         return new DataTableServerResponse
         {
-            Data = tableData,
+            Data = _tableData,
             TotalRecords = totalRecords,
             ContinuationToken = null
         };

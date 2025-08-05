@@ -1,0 +1,200 @@
+@page "/paged-result-demo"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Quark.Table.Demo.Services
+@using Soenneker.Quark.Table.Demo.Dtos
+@using Soenneker.Dtos.Results.Paged
+
+@inject ILogger<PagedResultDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>PagedResult Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h3>PagedResult Demo</h3>
+            <p class="text-muted mb-4">This demo shows how QuarkTable works with PagedResult and handles continuation tokens internally.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+
+                    <QuarkTable @ref="_quarkTable"
+                                OnManualRequest="HandleManualRequest"
+                                OnOrder="HandleOrder"
+                                OnInitialize="HandleInitialize"
+                                Options="_tableOptions"
+                                TotalRecords="@_totalRecords">
+
+                        <QuarkTableSearch />
+
+                        <QuarkTableElement>
+                            <QuarkThead>
+                                <QuarkTr>
+                                    <QuarkTh ColumnIndex="0" ColumnName="Name" Sortable="true">Name</QuarkTh>
+                                    <QuarkTh ColumnIndex="1" ColumnName="Department" Sortable="true">Department</QuarkTh>
+                                    <QuarkTh ColumnIndex="2" ColumnName="Email" Sortable="true">Email</QuarkTh>
+                                    <QuarkTh ColumnIndex="3" ColumnName="Salary" Sortable="true">Salary</QuarkTh>
+                                    <QuarkTh ColumnIndex="4" ColumnName="HireDate" Sortable="true">Hire Date</QuarkTh>
+                                    <QuarkTh ColumnIndex="5" ColumnName="Status" Sortable="true">Status</QuarkTh>
+                                    <QuarkTh ColumnIndex="6" ColumnName="Id" Sortable="true">ID</QuarkTh>
+                                </QuarkTr>
+                            </QuarkThead>
+                            <QuarkTbody>
+                                @if (_currentEmployees != null)
+                                {
+                                    @foreach (Employee employee in _currentEmployees)
+                                    {
+                                        <QuarkTr Key="@employee.Id">
+                                            <QuarkTd>@employee.Name</QuarkTd>
+                                            <QuarkTd>@employee.Department</QuarkTd>
+                                            <QuarkTd>@employee.Email</QuarkTd>
+                                            <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                            <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
+                                            <QuarkTd>@employee.Status</QuarkTd>
+                                            <QuarkTd>@employee.Id</QuarkTd>
+                                        </QuarkTr>
+                                    }
+                                }
+                            </QuarkTbody>
+                        </QuarkTableElement>
+
+                        <QuarkTablePagination CurrentPage="@(_quarkTable?.CurrentPage ?? 1)"
+                                              TotalPages="@(_quarkTable?.TotalPages ?? 1)"
+                                              TotalRecords="@(_quarkTable?.TotalRecordsCount ?? 0)"
+                                              PageSize="@(_quarkTable?.PageSize ?? 5)" />
+
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Information -->
+    @if (_quarkTable != null)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Debug Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Table State</h6>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <strong>Current Page:</strong> @_quarkTable.CurrentPage
+                                    </li>
+                                    <li>
+                                        <strong>Page Size:</strong> @_quarkTable.PageSize
+                                    </li>
+                                    <li>
+                                        <strong>Total Pages:</strong> @_quarkTable.TotalPages
+                                    </li>
+                                    <li>
+                                        <strong>Total Records:</strong> @_quarkTable.TotalRecordsCount
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>PagedResult Info</h6>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <strong>Current Token:</strong> @(_currentContinuationToken ?? "null")
+                                    </li>
+                                    <li>
+                                        <strong>Records Loaded:</strong> @(_currentEmployees?.Count ?? 0)
+                                    </li>
+                                    <li>
+                                        <strong>Last Request Start:</strong> @_lastRequestStart
+                                    </li>
+                                    <li>
+                                        <strong>Last Request Length:</strong> @_lastRequestLength
+                                    </li>
+                                    <li>
+                                        <strong>PagedResult TotalCount:</strong> @(_lastPagedResult?.TotalCount ?? 0)
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private QuarkTable? _quarkTable;
+    private List<Employee> _currentEmployees = [];
+
+    private QuarkTableOptions _tableOptions = new()
+    {
+        DefaultPageSize = 5, // Smaller page size to demonstrate paging
+        Sortable = true,
+        SearchPosition = SearchPosition.End
+    };
+
+    private string? _currentContinuationToken;
+    private int _lastRequestStart;
+    private int _lastRequestLength;
+    private PagedResult<Employee>? _lastPagedResult;
+    private int _totalRecords;
+
+    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
+    {
+        Logger.LogInformation("PagedResultDemo: HandleManualRequest called with Start={Start}, Length={Length}, Token='{Token}'", 
+            serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.ContinuationToken ?? "null");
+
+        try
+        {
+            PagedResult<Employee> pagedResult = await EmployeeService.GetEmployeesPaged(serverSideRequest);
+
+            Logger.LogInformation("PagedResultDemo: EmployeeService returned {Count} employees, TotalCount={TotalCount}, ContinuationToken='{Token}'", 
+                pagedResult.Items.Count, pagedResult.TotalCount, pagedResult.ContinuationToken ?? "null");
+
+            // Update the current employees list
+            _currentEmployees = pagedResult.Items;
+
+            // Update the QuarkTable's continuation token paging
+            if (_quarkTable != null)
+            {
+                _quarkTable.UpdateContinuationTokenPaging(
+                    pagedResult.Items.Count,
+                    pagedResult.ContinuationToken,
+                    serverSideRequest.ContinuationToken);
+            }
+
+            // Update debug information
+            _currentContinuationToken = pagedResult.ContinuationToken;
+            _lastRequestStart = serverSideRequest.Start;
+            _lastRequestLength = serverSideRequest.Length;
+            _lastPagedResult = pagedResult;
+
+            // StateHasChanged is not needed here as the QuarkTable will handle the UI update
+
+            Logger.LogInformation("PagedResultDemo: Updated currentEmployees with {Count} records, totalRecords={TotalRecords}", 
+                _currentEmployees.Count, _totalRecords);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "PagedResultDemo: Error handling manual request: {Message}", ex.Message);
+        }
+    }
+
+    private async Task HandleOrder(QuarkTableOrderEventArgs args)
+    {
+        Logger.LogInformation("PagedResultDemo: Column '{Column}' sorted {Direction}", args.Column, args.Direction);
+    }
+
+    private async Task HandleInitialize()
+    {
+        Logger.LogInformation("PagedResultDemo: PagedResult table initialized");
+    }
+} 

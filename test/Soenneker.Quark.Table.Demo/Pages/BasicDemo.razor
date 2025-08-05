@@ -21,12 +21,12 @@
         <div class="col-12" >
             <div class="card" >
                 <div class="card-body" >
-                    <QuarkTable @ref="basicTable"
+                    <QuarkTable @ref="_basicTable"
                                 OnManualRequest="HandleManualRequest"
                                 OnOrder="HandleOrder"
                                 OnInitialize="HandleInitialize"
-                                Options="basicTableOptions"
-                                TotalRecords="@totalRecords" >
+                                Options="_basicTableOptions"
+                                TotalRecords="@_totalRecords" >
 
                         <QuarkTableSearch></QuarkTableSearch>
 
@@ -43,9 +43,9 @@
                             </QuarkThead>
 
                             <QuarkTbody>
-                                @if (currentEmployees is {Count: > 0})
+                                @if (_currentEmployees is {Count: > 0})
                                 {
-                                    @foreach (Employee employee in currentEmployees)
+                                    @foreach (Employee employee in _currentEmployees)
                                     {
                                         <QuarkTr Key="@employee.Id" >
                                             <QuarkTd>@employee.Name</QuarkTd>
@@ -74,23 +74,23 @@
 </div>
 
 @code {
-    private QuarkTable? basicTable;
-    private List<Employee> currentEmployees = new();
+    private QuarkTable? _basicTable;
+    private List<Employee> _currentEmployees = new();
 
-    private QuarkTableOptions basicTableOptions = new()
+    private QuarkTableOptions _basicTableOptions = new()
     {
         DefaultPageSize = 10,
         Sortable = true,
         SearchPosition = SearchPosition.End
     };
 
-    private int totalRecords; // Start with 0 and update when data is loaded
+    private int _totalRecords; // Start with 0 and update when data is loaded
 
     protected override async Task OnInitializedAsync()
     {
         // Initialize total records from the service
-        totalRecords = EmployeeService.GetTotalCount();
-        Logger.LogInformation("BasicDemo: OnInitializedAsync - Initialized with {TotalRecords} total records", totalRecords);
+        _totalRecords = EmployeeService.GetTotalCount();
+        Logger.LogInformation("BasicDemo: OnInitializedAsync - Initialized with {TotalRecords} total records", _totalRecords);
 
         // Test the service directly
         List<Employee> testEmployees = EmployeeService.GetAllEmployees();
@@ -99,7 +99,7 @@
 
     private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
     {
-        Logger.LogInformation("BasicDemo: HandleManualRequest called: basicTable is {IsNull}, Request: Start={Start}, Length={Length}", basicTable == null ? "null" : "not null", serverSideRequest.Start, serverSideRequest.Length);
+        Logger.LogInformation("BasicDemo: HandleManualRequest called: basicTable is {IsNull}, Request: Start={Start}, Length={Length}", _basicTable == null ? "null" : "not null", serverSideRequest.Start, serverSideRequest.Length);
 
         try
         {
@@ -109,15 +109,15 @@
             Logger.LogInformation("BasicDemo: EmployeeService returned {Count} employees", employees.Count);
 
             // Update the current employees list
-            currentEmployees = employees;
+            _currentEmployees = employees;
 
             // Update the total records count
-            totalRecords = EmployeeService.GetTotalCount();
+            _totalRecords = EmployeeService.GetTotalCount();
 
             // Trigger UI update
             StateHasChanged();
 
-            Logger.LogInformation("BasicDemo: Updated currentEmployees with {Count} records, totalRecords={TotalRecords}", currentEmployees.Count, totalRecords);
+            Logger.LogInformation("BasicDemo: Updated currentEmployees with {Count} records, totalRecords={TotalRecords}", _currentEmployees.Count, _totalRecords);
         }
         catch (Exception ex)
         {

@@ -2,6 +2,7 @@ using Bogus;
 using Microsoft.Extensions.Logging;
 using Soenneker.DataTables.Dtos.ServerResponse;
 using Soenneker.DataTables.Dtos.ServerSideRequest;
+using Soenneker.Dtos.Results.Paged;
 using Soenneker.Quark.Table.Demo.Dtos;
 using Soenneker.Utils.AutoBogus;
 using Soenneker.Utils.Delay;
@@ -178,6 +179,79 @@ public class EmployeeService
     public List<Employee> GetAllEmployees()
     {
         return _employees.ToList();
+    }
+
+    public async Task<PagedResult<Employee>> GetEmployeesPaged(DataTableServerSideRequest serverSideRequest)
+    {
+        _logger.LogDebug("GetEmployeesPaged: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", 
+            serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.Search?.Value, serverSideRequest.ContinuationToken ?? "null");
+
+        IEnumerable<Employee> filteredData = _employees.AsEnumerable();
+
+        // Apply search
+        if (!string.IsNullOrEmpty(serverSideRequest.Search?.Value))
+        {
+            string searchTerm = serverSideRequest.Search.Value.ToLower();
+            filteredData = filteredData.Where(e => 
+                e.Name.ToLower().Contains(searchTerm) ||
+                e.Department.ToLower().Contains(searchTerm) ||
+                e.Email.ToLower().Contains(searchTerm) ||
+                e.Status.ToLower().Contains(searchTerm));
+        }
+
+        // Apply sorting
+        if (serverSideRequest.Order != null && serverSideRequest.Order.Count > 0)
+        {
+            _logger.LogDebug("Applying sorting: {OrderCount} orders", serverSideRequest.Order.Count);
+            
+            IOrderedEnumerable<Employee>? orderedData = null;
+            
+            foreach (DataTableOrderRequest order in serverSideRequest.Order)
+            {
+                _logger.LogDebug("Sorting column {Column} in direction {Direction}", order.Column, order.Dir);
+                
+                if (orderedData == null)
+                {
+                    // First sort
+                    orderedData = order.Dir.ToLower() == "asc" 
+                        ? filteredData.OrderBy(e => GetEmployeeProperty(e, order.Column))
+                        : filteredData.OrderByDescending(e => GetEmployeeProperty(e, order.Column));
+                }
+                else
+                {
+                    // Additional sorts
+                    orderedData = order.Dir.ToLower() == "asc" 
+                        ? orderedData.ThenBy(e => GetEmployeeProperty(e, order.Column))
+                        : orderedData.ThenByDescending(e => GetEmployeeProperty(e, order.Column));
+                }
+            }
+            
+            if (orderedData != null)
+            {
+                filteredData = orderedData;
+            }
+        }
+
+        int totalRecords = filteredData.Count();
+        var pagedData = filteredData.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
+
+        // Simulate continuation token logic
+        string? continuationToken = null;
+        if (serverSideRequest.Start + serverSideRequest.Length < totalRecords)
+        {
+            // Generate a simple continuation token for demo purposes
+            continuationToken = $"page_{serverSideRequest.Start + serverSideRequest.Length}_{serverSideRequest.Length}";
+        }
+
+        await DelayUtil.Delay(500, _logger);
+
+        return new PagedResult<Employee>
+        {
+            Items = pagedData,
+            TotalCount = totalRecords,
+            PageSize = serverSideRequest.Length,
+            ContinuationToken = continuationToken
+        };
     }
 
     private static object GetEmployeeProperty(Employee employee, int columnIndex)
