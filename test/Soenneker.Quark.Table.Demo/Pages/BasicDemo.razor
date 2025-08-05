@@ -9,36 +9,36 @@
 
 <PageTitle>Basic Demo - QuarkTable</PageTitle>
 
-<div class="container-fluid" >
-    <div class="row" >
-        <div class="col-12" >
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
             <h3>Basic QuarkTable Demo</h3>
-            <p class="text-muted mb-4" >A simple demonstration of QuarkTable with basic features including search, sorting, and pagination. The search is now integrated directly above the table headers.</p>
+            <p class="text-muted mb-4">A simple demonstration of QuarkTable with basic features including search, sorting, and pagination.</p>
         </div>
     </div>
 
-    <div class="row" >
-        <div class="col-12" >
-            <div class="card" >
-                <div class="card-body" >
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
                     <QuarkTable @ref="_basicTable"
                                 OnManualRequest="HandleManualRequest"
                                 OnOrder="HandleOrder"
                                 OnInitialize="HandleInitialize"
                                 Options="_basicTableOptions"
-                                TotalRecords="@_totalRecords" >
+                                TotalRecords="@_totalRecords">
 
-                        <QuarkTableSearch></QuarkTableSearch>
+                        <QuarkTableSearch Placeholder="Search employees..."></QuarkTableSearch>
 
                         <QuarkTableElement>
                             <QuarkThead>
                                 <QuarkTr>
-                                    <QuarkTh ColumnIndex="0" ColumnName="Name" Sortable="true" >Name</QuarkTh>
-                                    <QuarkTh ColumnIndex="1" ColumnName="Department" Sortable="true" >Department</QuarkTh>
-                                    <QuarkTh ColumnIndex="2" ColumnName="Email" Sortable="true" >Email</QuarkTh>
-                                    <QuarkTh ColumnIndex="3" ColumnName="Salary" Sortable="true" >Salary</QuarkTh>
-                                    <QuarkTh ColumnIndex="4" ColumnName="HireDate" Sortable="true" >Hire Date</QuarkTh>
-                                    <QuarkTh ColumnIndex="5" ColumnName="Status" Sortable="true" >Status</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Name</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Department</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Email</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Salary</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Hire Date</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Status</QuarkTh>
                                 </QuarkTr>
                             </QuarkThead>
 
@@ -47,7 +47,7 @@
                                 {
                                     @foreach (Employee employee in _currentEmployees)
                                     {
-                                        <QuarkTr Key="@employee.Id" >
+                                        <QuarkTr Key="@employee.Id">
                                             <QuarkTd>@employee.Name</QuarkTd>
                                             <QuarkTd>@employee.Department</QuarkTd>
                                             <QuarkTd>@employee.Email</QuarkTd>
@@ -60,11 +60,12 @@
                                 else
                                 {
                                     <QuarkTr>
-                                        <QuarkTd colspan="6" class="text-center" >No data available</QuarkTd>
+                                        <QuarkTd Colspan="6" Style="text-align: center;">No data available</QuarkTd>
                                     </QuarkTr>
                                 }
                             </QuarkTbody>
                         </QuarkTableElement>
+                        
                         <QuarkTablePagination />
                     </QuarkTable>
                 </div>
@@ -84,7 +85,7 @@
         SearchPosition = SearchPosition.End
     };
 
-    private int _totalRecords; // Start with 0 and update when data is loaded
+    private int _totalRecords;
 
     protected override async Task OnInitializedAsync()
     {
@@ -125,11 +126,6 @@
         }
     }
 
-    private async Task HandleSearch(string searchTerm)
-    {
-        Logger.LogInformation("Search performed: {SearchTerm}", searchTerm);
-    }
-
     private async Task HandleOrder(QuarkTableOrderEventArgs args)
     {
         Logger.LogInformation("Column '{Column}' sorted {Direction}", args.Column, args.Direction);
@@ -139,10 +135,4 @@
     {
         Logger.LogInformation("Basic table initialized");
     }
-
-    private async Task HandleDestroy()
-    {
-        Logger.LogInformation("Basic table destroyed");
-    }
-
 }

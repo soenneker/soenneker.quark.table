@@ -2,11 +2,9 @@
 @using Microsoft.Extensions.Logging
 @using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Extensions.Task
-@using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Options
 @using Soenneker.Quark.Table.Abstract
 @using Soenneker.Utils.Debounce
-@using Soenneker.Quark.Table
 
 @inherits ComponentBase
 @implements IQuarkTable
@@ -98,6 +96,7 @@
     private readonly Debouncer _debouncer = new();
     private readonly List<DataTableOrderRequest> _currentOrders = [];
     private readonly QuarkTableContinuationTokenPaging _continuationTokenPaging = new();
+    private readonly List<ComponentBase> _registeredColumns = [];
 
     private string _searchTerm = string.Empty;
     private string? _continuationToken;
@@ -231,23 +230,6 @@
         
         await base.OnParametersSetAsync();
     }
-
-
-
-    private async Task OnPageSizeChangedHandler(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out int size) && size != _pageSize)
-        {
-            _pageSize = size;
-            _currentPage = 1;
-            // Clear continuation token when changing page size
-            _continuationToken = null;
-            await HandleManualRequest();
-            if (OnPageSizeChanged.HasDelegate) await OnPageSizeChanged.InvokeAsync(_pageSize);
-        }
-    }
-
-
 
     public async Task HandleGoToPage(int page)
     {
@@ -453,47 +435,12 @@
         };
     }
 
-
-
-    private async Task HandleFirstPage()
-    {
-        if (_currentPage == 1) return;
-        _currentPage = 1;
-        // Reset continuation token paging when going to first page
-        _continuationTokenPaging.Reset();
-        _continuationToken = null;
-        await HandleManualRequest();
-    }
-
-    private async Task HandlePreviousPage()
-    {
-        if (_currentPage == 1) return;
-        _currentPage--;
-        // Let the continuation token paging handle backward navigation
-        await HandleManualRequest();
-    }
-
-    private async Task HandleNextPage()
-    {
-        if (_currentPage == _totalPages) return;
-        _currentPage++;
-        // Don't clear continuation token for next page - let the paging system handle it
-        await HandleManualRequest();
-    }
-
-    private async Task HandleLastPage()
-    {
-        if (_currentPage == _totalPages) return;
-        _currentPage = _totalPages;
-        await HandleManualRequest();
-    }
-
-    public async Task HandleColumnSort(int columnIndex, string columnName)
+    public async Task HandleColumnSort(int columnIndex)
     {
         if (!Options.Sortable) return;
 
-        Logger.LogDebug("HandleColumnSort called: columnIndex={ColumnIndex}, columnName={ColumnName}", columnIndex, columnName);
-
+        Logger.LogDebug("HandleColumnSort called for column index: {ColumnIndex}", columnIndex);
+        
         // Find existing order for this column
         DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
         string? nextDirection = existing?.Dir switch
@@ -527,12 +474,24 @@
         {
             var args = new QuarkTableOrderEventArgs 
             {
-                Column = columnName, 
+                Column = $"Column_{columnIndex}", 
                 Direction = nextDirection ?? string.Empty, 
                 Orders = _currentOrders.ToList()
             };
             await OnOrder.InvokeAsync(args);
         }
+    }
+
+    public int RegisterColumn(ComponentBase columnHeader)
+    {
+        // Add the column to our list and return its index
+        _registeredColumns.Add(columnHeader);
+        int columnIndex = _registeredColumns.Count - 1;
+        
+        Logger.LogDebug("Registered column {ColumnIndex} for component {ComponentType}", 
+            columnIndex, columnHeader.GetType().Name);
+            
+        return columnIndex;
     }
 
     private async Task HandleManualRequest(CancellationToken cancellationToken = default)
@@ -627,6 +586,7 @@
         _continuationTokenPaging.Reset();
         _continuationToken = null;
         _manualRequestCount = 0; // Reset the counter
+        _registeredColumns.Clear(); // Reset column registration
         await HandleManualRequest();
     }
 
@@ -640,6 +600,7 @@
         _continuationToken = null;
         _continuationTokenPaging.Reset();
         _manualRequestCount = 0; // Reset the counter
+        _registeredColumns.Clear(); // Reset column registration
         await HandleManualRequest();
     }
 

@@ -41,8 +41,14 @@ public interface IQuarkTable : IAsyncDisposable
     /// Handles column sorting for the component-driven approach
     /// </summary>
     /// <param name="columnIndex">The column index to sort</param>
-    /// <param name="columnName">The column name</param>
-    Task HandleColumnSort(int columnIndex, string columnName);
+    Task HandleColumnSort(int columnIndex);
+
+    /// <summary>
+    /// Registers a column header component and returns its index
+    /// </summary>
+    /// <param name="columnHeader">The column header component to register</param>
+    /// <returns>The column index</returns>
+    int RegisterColumn(ComponentBase columnHeader);
 
     /// <summary>
     /// Handles search from child components

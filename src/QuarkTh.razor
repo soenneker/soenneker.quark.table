@@ -19,30 +19,38 @@
     public bool Sortable { get; set; } = true;
 
     [Parameter]
-    public int ColumnIndex { get; set; }
-
-    [Parameter]
-    public string ColumnName { get; set; } = string.Empty;
+    public bool Searchable { get; set; } = true;
 
     [Parameter]
     public string Style { get; set; } = string.Empty;
+
+    private int _columnIndex = -1;
+
+    protected override void OnInitialized()
+    {
+        // Register this column with the parent table to get its position
+        if (QuarkTable != null)
+        {
+            _columnIndex = QuarkTable.RegisterColumn(this);
+        }
+    }
 
     private async Task HandleClick()
     {
         if (!Sortable || QuarkTable == null) return;
 
-        await QuarkTable.HandleColumnSort(ColumnIndex, ColumnName);
+        await QuarkTable.HandleColumnSort(_columnIndex);
     }
 
     private string GetSortClass()
     {
         if (QuarkTable == null) return string.Empty;
-        return QuarkTable.GetSortClassByIndex(ColumnIndex);
+        return QuarkTable.GetSortClassByIndex(_columnIndex);
     }
 
     private string GetSortIndicator()
     {
         if (QuarkTable == null) return " ↕";
-        return QuarkTable.GetSortIndicatorByIndex(ColumnIndex);
+        return QuarkTable.GetSortIndicatorByIndex(_columnIndex);
     }
 } 

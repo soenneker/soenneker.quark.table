@@ -13,16 +13,19 @@
             </div>
             <div class="card-body">
                 <QuarkTable @ref="_tableRef" 
-                            TotalRecords="100">
+                            TotalRecords="100"
+                            OnManualRequest="HandleServerSideRequest">
+                    
+                    <QuarkTableSearch Placeholder="Search employees..." />
                     
                     <QuarkTableElement>
                         <QuarkThead>
                             <QuarkTr>
-                                <QuarkTh ColumnIndex="0" ColumnName="Name" Sortable="true">Name</QuarkTh>
-                                <QuarkTh ColumnIndex="1" ColumnName="Email" Sortable="true">Email</QuarkTh>
-                                <QuarkTh ColumnIndex="2" ColumnName="Age" Sortable="true">Age</QuarkTh>
-                                <QuarkTh ColumnIndex="3" ColumnName="Department" Sortable="false">Department</QuarkTh>
-                                <QuarkTh ColumnIndex="4" ColumnName="Salary" Sortable="true">Salary</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true">Name</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true">Email</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true">Age</QuarkTh>
+                                <QuarkTh Sortable="false" Searchable="true">Department</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true">Salary</QuarkTh>
                             </QuarkTr>
                         </QuarkThead>
                         
@@ -42,6 +45,8 @@
                             }
                         </QuarkTbody>
                     </QuarkTableElement>
+                    
+                    <QuarkTablePagination />
                 </QuarkTable>
             </div>
         </div>
@@ -76,7 +81,7 @@
         };
     }
 
-    private async Task<DataTableServerResponse> HandleServerSideRequest(DataTableServerSideRequest request)
+    private async Task HandleServerSideRequest(DataTableServerSideRequest request)
     {
         // Simulate server-side processing with a longer delay to showcase the loading
         await Task.Delay(800);
@@ -115,12 +120,7 @@
 
         _tableData = pagedEmployees.Select(p => new List<string> { p.Name, p.Email, p.Age.ToString(), p.Department, p.Salary.ToString("C") }).ToList();
 
-        return new DataTableServerResponse
-        {
-            Data = _tableData,
-            TotalRecords = totalRecords,
-            ContinuationToken = null
-        };
+        StateHasChanged();
     }
 
     public class Employee

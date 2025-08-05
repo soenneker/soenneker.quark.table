@@ -30,18 +30,18 @@
                                 Options="_tableOptions"
                                 TotalRecords="@_totalRecords">
 
-                        <QuarkTableSearch />
+                        <QuarkTableSearch Placeholder="Search employees..." />
 
                         <QuarkTableElement>
                             <QuarkThead>
                                 <QuarkTr>
-                                    <QuarkTh ColumnIndex="0" ColumnName="Name" Sortable="true">Name</QuarkTh>
-                                    <QuarkTh ColumnIndex="1" ColumnName="Department" Sortable="true">Department</QuarkTh>
-                                    <QuarkTh ColumnIndex="2" ColumnName="Email" Sortable="true">Email</QuarkTh>
-                                    <QuarkTh ColumnIndex="3" ColumnName="Salary" Sortable="true">Salary</QuarkTh>
-                                    <QuarkTh ColumnIndex="4" ColumnName="HireDate" Sortable="true">Hire Date</QuarkTh>
-                                    <QuarkTh ColumnIndex="5" ColumnName="Status" Sortable="true">Status</QuarkTh>
-                                    <QuarkTh ColumnIndex="6" ColumnName="Id" Sortable="true">ID</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Name</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Department</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Email</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Salary</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Hire Date</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">Status</QuarkTh>
+                                    <QuarkTh Sortable="true" Searchable="true">ID</QuarkTh>
                                 </QuarkTr>
                             </QuarkThead>
                             <QuarkTbody>
@@ -63,10 +63,7 @@
                             </QuarkTbody>
                         </QuarkTableElement>
 
-                        <QuarkTablePagination CurrentPage="@(_quarkTable?.CurrentPage ?? 1)"
-                                              TotalPages="@(_quarkTable?.TotalPages ?? 1)"
-                                              TotalRecords="@(_quarkTable?.TotalRecordsCount ?? 0)"
-                                              PageSize="@(_quarkTable?.PageSize ?? 5)" />
+                        <QuarkTablePagination />
 
                     </QuarkTable>
                 </div>
