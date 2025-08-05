@@ -3,7 +3,7 @@
 [![](https://img.shields.io/nuget/dt/soenneker.quark.table.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.quark.table/)
 [![](https://img.shields.io/badge/Demo-Live-blueviolet?style=for-the-badge&logo=github)](https://soenneker.github.io/soenneker.quark.table/)
 
-# QuarkTable - Component-Driven Blazor Table Library
+# Soenneker.Quark.Table
 
 A modern, component-driven Blazor table library that provides complete control over table structure and behavior through Razor components.
 
