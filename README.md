@@ -32,13 +32,16 @@ A modern, component-driven Blazor table library that provides complete control o
 ### Feature Components
 - **QuarkTableSearch**: Standalone search component
 - **QuarkTablePagination**: Pagination controls component
-- **QuarkTableInfo**: Information display component
+- **QuarkTableInfo**: Information display component (shows "x-y of z" format)
+- **QuarkTableControls**: Layout wrapper for info and pagination components
+- **QuarkTableNoData**: No data state component with customizable content
+- **QuarkTableLoader**: Loading state component
 - **QuarkTablePageSizeSelector**: Page size selector component
 
 ## Basic Usage
 
 ```razor
-<QuarkTable TotalRecords="100" OnManualRequest="HandleManualRequest">
+<QuarkTable TotalRecords="100" OnInteraction="OnInteraction">
     <QuarkTableSearch Placeholder="Search employees..." />
     
     <QuarkTableElement>
@@ -66,10 +69,74 @@ A modern, component-driven Blazor table library that provides complete control o
 </QuarkTable>
 ```
 
+## Custom Components
+
+### QuarkTableNoData
+Display a custom "no data" state when there are no records to show:
+
+```razor
+<QuarkTableNoData>
+    <div style="text-align: center; padding: 2rem;">
+        <h4>No records found</h4>
+        <p>Try adjusting your search criteria.</p>
+    </div>
+</QuarkTableNoData>
+```
+
+### QuarkTableInfo
+Display table information independently of pagination:
+
+```razor
+<QuarkTableInfo />
+<!-- or with custom content -->
+<QuarkTableInfo>
+    <span>Showing @start-@end of @total records</span>
+</QuarkTableInfo>
+```
+
+### QuarkTableControls
+Layout wrapper that combines info and pagination components with flexible layout options:
+
+```razor
+<!-- Default layout: Info left, pagination right -->
+<QuarkTableControls>
+    <QuarkTableInfo />
+    <QuarkTablePagination />
+</QuarkTableControls>
+
+<!-- Reversed layout: Info right, pagination left -->
+<QuarkTableControls ControlsLayout="QuarkTableControlsLayout.InfoRightPaginationLeft">
+    <QuarkTableInfo />
+    <QuarkTablePagination />
+</QuarkTableControls>
+
+<!-- Centered layout -->
+<QuarkTableControls ControlsLayout="QuarkTableControlsLayout.Centered">
+    <QuarkTableInfo />
+    <QuarkTablePagination />
+</QuarkTableControls>
+
+<!-- Stacked layout -->
+<QuarkTableControls ControlsLayout="QuarkTableControlsLayout.Stacked">
+    <QuarkTableInfo />
+    <QuarkTablePagination />
+</QuarkTableControls>
+
+<!-- Info only -->
+<QuarkTableControls>
+    <QuarkTableInfo />
+</QuarkTableControls>
+
+<!-- Pagination only -->
+<QuarkTableControls>
+    <QuarkTablePagination />
+</QuarkTableControls>
+```
+
 ## Server-Side Processing
 
 ```csharp
-private async Task HandleManualRequest(DataTableServerSideRequest request)
+private async Task OnInteraction(DataTableServerSideRequest request)
 {
     var query = dbContext.Employees.AsQueryable();
 

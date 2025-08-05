@@ -5,12 +5,6 @@
 @if (ShowPagination)
 {
     <div class="quark-table-pagination">
-        @if (ShowInfo)
-        {
-            <div class="quark-table-info">
-                @StartRecord-@EndRecord of @TotalRecords
-            </div>
-        }
         <div class="quark-table-pagination-controls">
             <button class="quark-table-pagination-btn" @onclick="HandleFirstPage" disabled="@(CurrentPage == 1)" title="First">«</button>
             <button class="quark-table-pagination-btn" @onclick="HandlePreviousPage" disabled="@(CurrentPage == 1)" title="Previous">‹</button>
@@ -45,9 +39,6 @@
 
     [Parameter]
     public bool ShowPagination { get; set; } = true;
-
-    [Parameter]
-    public bool ShowInfo { get; set; } = true;
 
     [Parameter]
     public int CurrentPage { get; set; } = 1;
@@ -85,9 +76,6 @@
     private int ComputedTotalRecords => QuarkTable?.TotalRecordsCount ?? TotalRecords;
     private int ComputedPageSize => QuarkTable?.PageSize ?? PageSize;
     private int ComputedMaxPageButtons => QuarkTable?.Options?.MaxPageButtons ?? MaxPageButtons;
-
-    private int StartRecord => (ComputedCurrentPage - 1) * ComputedPageSize + 1;
-    private int EndRecord => Math.Min(ComputedCurrentPage * ComputedPageSize, ComputedTotalRecords);
 
     public int StartPage
     {

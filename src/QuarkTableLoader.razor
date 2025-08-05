@@ -1,0 +1,30 @@
+<div class="quark-table-loader @(IsLoading ? "quark-table-loader-active" : "")" >
+    @if (IsLoading)
+    {
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <div class="quark-table-loader-overlay" >
+                <div class="quark-table-loader-content" >
+                    <div class="quark-table-loader-default" >
+                        <div class="quark-table-spinner" ></div>
+                        <span>Loading...</span>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+
+    [CascadingParameter(Name = "IsLoading")]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+}

@@ -310,13 +310,12 @@
     }
 
 /*------------------------------------------------------------*
-  Pagination footer
+  Controls wrapper and layout
 *------------------------------------------------------------*/
-.quark-table-pagination {
+.quark-table-controls {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    justify-content: space-between;
     align-items: center;
     padding: 0.5rem;
     background-color: var(--qt-surface-2);
@@ -324,12 +323,66 @@
     border-radius: 0 0 0.375rem 0.375rem;
 }
 
+.quark-table-controls.InfoLeftPaginationRight {
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+}
+
+.quark-table-controls.InfoRightPaginationLeft {
+    justify-content: flex-start;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 1rem;
+}
+
+.quark-table-controls.Centered {
+    justify-content: center;
+    gap: 1rem;
+    align-items: center;
+}
+
+.quark-table-controls.Stacked {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Helper classes for child components */
+.quark-table-controls .quark-table-info {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.quark-table-controls .quark-table-pagination {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+/*------------------------------------------------------------*
+  Pagination footer
+*------------------------------------------------------------*/
+.quark-table-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+}
+
 .quark-table-info {
     color: var(--qt-muted);
     font-size: 0.875rem;
     font-weight: 500;
-    margin-left: auto;
-    padding-right: 0.5rem;
+    padding: 0.25rem 0;
+    display: flex;
+    align-items: center;
 }
 
 .quark-table-pagination-controls {
@@ -423,9 +476,71 @@
     position: relative;
 }
 
+.quark-table-container {
+    position: relative;
+}
+
 .quark-table-loading-content {
     color: var(--qt-text);
     text-align: center;
+}
+
+/*------------------------------------------------------------*
+  QuarkTableLoader component styles
+*------------------------------------------------------------*/
+.quark-table-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+.quark-table-loader-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(38, 41, 47, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 0.5rem;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    min-width: 120px;
+    min-height: 80px;
+}
+
+.quark-table-loader-content {
+    color: var(--qt-text);
+    text-align: center;
+}
+
+.quark-table-loader-default {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quark-table-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--qt-border);
+    border-top: 2px solid var(--qt-accent);
+    border-radius: 50%;
+    animation: quark-table-spin 1s linear infinite;
+}
+
+@keyframes quark-table-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /*------------------------------------------------------------*
@@ -504,4 +619,46 @@
         .quark-table th {
             background-color: #f0f0f0 !important;
         }
+}
+
+/*------------------------------------------------------------*
+  No Data component
+*------------------------------------------------------------*/
+.quark-table-no-data {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1rem;
+    background-color: var(--qt-surface);
+    border: 1px solid var(--qt-border);
+    border-radius: 0.375rem;
+    margin: 0.5rem 0;
+}
+
+.quark-table-no-data-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    max-width: 400px;
+}
+
+.quark-table-no-data-icon {
+    color: var(--qt-muted);
+    opacity: 0.6;
+}
+
+.quark-table-no-data-text h4 {
+    margin: 0;
+    color: var(--qt-heading);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.quark-table-no-data-text p {
+    margin: 0;
+    color: var(--qt-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
 }

@@ -1,15 +1,30 @@
+@using Soenneker.Quark.Table.Abstract
+
 @inherits ComponentBase
 
-<div class="quark-table-info">
-    @StartRecord-@EndRecord of @TotalRecords
-</div>
+@if (ShowInfo)
+{
+    <div class="quark-table-info">
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <span>@StartRecord-@EndRecord of @TotalRecords</span>
+        }
+    </div>
+}
 
 @code {
-    [Parameter]
-    public int CurrentPage { get; set; } = 1;
+    [CascadingParameter]
+    private IQuarkTable? QuarkTable { get; set; }
 
     [Parameter]
-    public int TotalPages { get; set; } = 1;
+    public bool ShowInfo { get; set; } = true;
+
+    [Parameter]
+    public int CurrentPage { get; set; } = 1;
 
     [Parameter]
     public int TotalRecords { get; set; }
@@ -17,6 +32,14 @@
     [Parameter]
     public int PageSize { get; set; } = 10;
 
-    private int StartRecord => (CurrentPage - 1) * PageSize + 1;
-    private int EndRecord => Math.Min(CurrentPage * PageSize, TotalRecords);
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    // Computed properties that use QuarkTable values when available
+    private int ComputedCurrentPage => QuarkTable?.CurrentPage ?? CurrentPage;
+    private int ComputedTotalRecords => QuarkTable?.TotalRecordsCount ?? TotalRecords;
+    private int ComputedPageSize => QuarkTable?.PageSize ?? PageSize;
+
+    private int StartRecord => (ComputedCurrentPage - 1) * ComputedPageSize + 1;
+    private int EndRecord => Math.Min(ComputedCurrentPage * ComputedPageSize, ComputedTotalRecords);
 } 

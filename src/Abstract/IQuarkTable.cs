@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
 using Soenneker.DataTables.Dtos.ServerSideRequest;
 using Soenneker.Quark.Table.Options;
 
@@ -48,7 +47,7 @@ public interface IQuarkTable : IAsyncDisposable
     /// </summary>
     /// <param name="columnHeader">The column header component to register</param>
     /// <returns>The column index</returns>
-    int RegisterColumn(ComponentBase columnHeader);
+    int RegisterColumn(QuarkTh columnHeader);
 
     /// <summary>
     /// Handles search from child components

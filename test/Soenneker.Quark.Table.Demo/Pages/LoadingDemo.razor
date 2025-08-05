@@ -1,52 +1,73 @@
 @page "/loading-demo"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Demo.Services
+@using Soenneker.Quark.Table.Demo.Dtos
+@using Soenneker.Utils.Delay
+
+@inject ILogger<LoadingDemo> Logger
+@inject EmployeeService EmployeeService
 
 <h3>Loading Behavior Demo</h3>
 
 <p>This demo showcases the improved loading behavior. The table content stays visible while a loading overlay appears, preventing the jarring flickering effect.</p>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
+<div class="row" >
+    <div class="col-12" >
+        <div class="card" >
+            <div class="card-header" >
                 <h4>Employee Directory</h4>
-                <p class="text-muted mb-0">Try searching, sorting, or changing pages to see the smooth loading overlay</p>
+                <p class="text-muted mb-0" >Try searching, sorting, or changing pages to see the smooth loading overlay</p>
             </div>
-            <div class="card-body">
-                <QuarkTable @ref="_tableRef" 
-                            TotalRecords="100"
-                            OnManualRequest="HandleServerSideRequest">
-                    
+            <div class="card-body" >
+                <QuarkTable @ref="_tableRef"
+                            TotalRecords="@_totalRecords"
+                            OnInteraction="HandleServerSideRequest" >
+
                     <QuarkTableSearch Placeholder="Search employees..." />
-                    
+
+                    <QuarkTableLoader>
+                    </QuarkTableLoader>
+
                     <QuarkTableElement>
                         <QuarkThead>
                             <QuarkTr>
-                                <QuarkTh Sortable="true" Searchable="true">Name</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true">Email</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true">Age</QuarkTh>
-                                <QuarkTh Sortable="false" Searchable="true">Department</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true">Salary</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true" >Name</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true" >Department</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true" >Email</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true" >Salary</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true" >Hire Date</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true" >Status</QuarkTh>
+                                <QuarkTh Sortable="true" Searchable="true" Visible="false">Hidden Column</QuarkTh>
                             </QuarkTr>
                         </QuarkThead>
-                        
+
                         <QuarkTbody>
-                            @if (_tableData != null)
+                            @if (_currentEmployees is {Count: > 0})
                             {
-                                @foreach (List<string> row in _tableData)
+                                @foreach (Employee employee in _currentEmployees)
                                 {
-                                    <QuarkTr Key="@row[0]">
-                                        <QuarkTd>@row[0]</QuarkTd>
-                                        <QuarkTd>@row[1]</QuarkTd>
-                                        <QuarkTd>@row[2]</QuarkTd>
-                                        <QuarkTd>@row[3]</QuarkTd>
-                                        <QuarkTd>@row[4]</QuarkTd>
+                                    <QuarkTr Key="@employee.Id" >
+                                        <QuarkTd>@employee.Name</QuarkTd>
+                                        <QuarkTd>@employee.Department</QuarkTd>
+                                        <QuarkTd>@employee.Email</QuarkTd>
+                                        <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                        <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
+                                        <QuarkTd>@employee.Status</QuarkTd>
+                                        <QuarkTd>Hidden Data</QuarkTd>
                                     </QuarkTr>
                                 }
                             }
+                            else if (_hasLoadedOnce)
+                            {
+                                <QuarkTableNoData />
+                            }
                         </QuarkTbody>
                     </QuarkTableElement>
-                    
-                    <QuarkTablePagination />
+
+                    <QuarkTableControls>
+                        <QuarkTableInfo />
+                        <QuarkTablePagination />
+                    </QuarkTableControls>
                 </QuarkTable>
             </div>
         </div>
@@ -55,81 +76,38 @@
 
 @code {
     private QuarkTable? _tableRef;
-    private List<Employee> _employees = new();
-    private List<List<string>>? _tableData;
-
-    protected override void OnInitialized()
-    {
-        // Sample employee data
-        _employees = new List<Employee>
-        {
-            new Employee { Id = 1, Name = "John Doe", Email = "john@example.com", Age = 30, Department = "Engineering", Salary = 75000 },
-            new Employee { Id = 2, Name = "Jane Smith", Email = "jane@example.com", Age = 25, Department = "Marketing", Salary = 65000 },
-            new Employee { Id = 3, Name = "Bob Johnson", Email = "bob@example.com", Age = 35, Department = "Sales", Salary = 80000 },
-            new Employee { Id = 4, Name = "Alice Brown", Email = "alice@example.com", Age = 28, Department = "Engineering", Salary = 70000 },
-            new Employee { Id = 5, Name = "Charlie Wilson", Email = "charlie@example.com", Age = 32, Department = "HR", Salary = 60000 },
-            new Employee { Id = 6, Name = "Diana Prince", Email = "diana@example.com", Age = 29, Department = "Engineering", Salary = 85000 },
-            new Employee { Id = 7, Name = "Eve Adams", Email = "eve@example.com", Age = 27, Department = "Marketing", Salary = 62000 },
-            new Employee { Id = 8, Name = "Frank Miller", Email = "frank@example.com", Age = 33, Department = "Sales", Salary = 72000 },
-            new Employee { Id = 9, Name = "Grace Lee", Email = "grace@example.com", Age = 31, Department = "HR", Salary = 58000 },
-            new Employee { Id = 10, Name = "Henry Davis", Email = "henry@example.com", Age = 26, Department = "Engineering", Salary = 68000 },
-            new Employee { Id = 11, Name = "Ivy Chen", Email = "ivy@example.com", Age = 34, Department = "Engineering", Salary = 90000 },
-            new Employee { Id = 12, Name = "Jack Wilson", Email = "jack@example.com", Age = 31, Department = "Marketing", Salary = 68000 },
-            new Employee { Id = 13, Name = "Kate Martinez", Email = "kate@example.com", Age = 29, Department = "Sales", Salary = 75000 },
-            new Employee { Id = 14, Name = "Liam O'Connor", Email = "liam@example.com", Age = 27, Department = "Engineering", Salary = 72000 },
-            new Employee { Id = 15, Name = "Maya Patel", Email = "maya@example.com", Age = 33, Department = "HR", Salary = 65000 }
-        };
-    }
+    private List<Employee> _currentEmployees = new();
+    private bool _hasLoadedOnce = false;
+    private int _totalRecords;
 
     private async Task HandleServerSideRequest(DataTableServerSideRequest request)
     {
-        // Simulate server-side processing with a longer delay to showcase the loading
-        await Task.Delay(800);
+        Logger.LogInformation("LoadingDemo: HandleServerSideRequest called: Start={Start}, Length={Length}", request.Start, request.Length);
 
-        IQueryable<Employee> filteredEmployees = _employees.AsQueryable();
-
-        // Apply search
-        if (!string.IsNullOrEmpty(request.Search?.Value))
+        try
         {
-            string searchTerm = request.Search.Value.ToLower();
-            filteredEmployees = filteredEmployees.Where(p => 
-                p.Name.ToLower().Contains(searchTerm) ||
-                p.Email.ToLower().Contains(searchTerm) ||
-                p.Department.ToLower().Contains(searchTerm));
-        }
+            // Get filtered employees using the service
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(request);
 
-        // Apply sorting
-        if (request.Order?.Any() == true)
+            await DelayUtil.Delay(3000, Logger);
+
+            Logger.LogInformation("LoadingDemo: EmployeeService returned {Count} employees", employees.Count);
+
+            // Update the current employees list
+            _currentEmployees = employees;
+            _hasLoadedOnce = true;
+
+
+
+            // Trigger UI update
+            StateHasChanged();
+
+            Logger.LogInformation("LoadingDemo: Updated currentEmployees with {Count} records, totalRecords={TotalRecords}", _currentEmployees.Count, _totalRecords);
+        }
+        catch (Exception ex)
         {
-            foreach (DataTableOrderRequest order in request.Order)
-            {
-                filteredEmployees = order.Column switch
-                {
-                    0 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Name) : filteredEmployees.OrderByDescending(p => p.Name),
-                    1 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Email) : filteredEmployees.OrderByDescending(p => p.Email),
-                    2 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Age) : filteredEmployees.OrderByDescending(p => p.Age),
-                    3 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Department) : filteredEmployees.OrderByDescending(p => p.Department),
-                    4 => order.Dir == "asc" ? filteredEmployees.OrderBy(p => p.Salary) : filteredEmployees.OrderByDescending(p => p.Salary),
-                    _ => filteredEmployees
-                };
-            }
+            Logger.LogError(ex, "LoadingDemo: Error handling server-side request: {Message}", ex.Message);
         }
-
-        int totalRecords = filteredEmployees.Count();
-        List<Employee> pagedEmployees = filteredEmployees.Skip(request.Start).Take(request.Length).ToList();
-
-        _tableData = pagedEmployees.Select(p => new List<string> { p.Name, p.Email, p.Age.ToString(), p.Department, p.Salary.ToString("C") }).ToList();
-
-        StateHasChanged();
     }
 
-    public class Employee
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public int Age { get; set; }
-        public string Department { get; set; } = string.Empty;
-        public int Salary { get; set; }
-    }
-} 
+}

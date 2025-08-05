@@ -1,0 +1,17 @@
+@using Soenneker.Quark.Table.Enums
+
+@inherits ComponentBase
+
+<div class="quark-table-controls-wrapper">
+    <div class="quark-table-controls @ControlsLayout">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public QuarkTableControlsLayout ControlsLayout { get; set; } = QuarkTableControlsLayout.InfoLeftPaginationRight;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+} 

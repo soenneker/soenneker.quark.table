@@ -47,6 +47,7 @@ public class EmployeeService
         {
             string searchTerm = serverSideRequest.Search.Value.ToLower();
             filteredData = filteredData.Where(e => 
+            e.Id.ToString().Contains(searchTerm) ||
                 e.Name.ToLower().Contains(searchTerm) ||
                 e.Department.ToLower().Contains(searchTerm) ||
                 e.Email.ToLower().Contains(searchTerm) ||

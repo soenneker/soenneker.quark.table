@@ -6,8 +6,7 @@ namespace Soenneker.Quark.Table.Tests
     {
         [Fact]
         public void Default()
-        { 
-        
+        {
         }
     }
 }

@@ -24,7 +24,7 @@
                 <div class="card-body">
 
                     <QuarkTable @ref="_quarkTable"
-                                OnManualRequest="HandleManualRequest"
+                                OnInteraction="HandleManualRequest"
                                 OnOrder="HandleOrder"
                                 OnInitialize="HandleInitialize"
                                 Options="_tableOptions"
@@ -63,7 +63,10 @@
                             </QuarkTbody>
                         </QuarkTableElement>
 
-                        <QuarkTablePagination />
+                        <QuarkTableControls>
+                            <QuarkTableInfo />
+                            <QuarkTablePagination />
+                        </QuarkTableControls>
 
                     </QuarkTable>
                 </div>

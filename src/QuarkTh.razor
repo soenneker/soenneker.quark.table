@@ -4,7 +4,7 @@
 
 <th @onclick="HandleClick" 
     class="quark-table-sortable @(Sortable ? GetSortClass() : string.Empty)"
-    style="@(Sortable ? "cursor:pointer;" : string.Empty) @Style">
+    style="@(Sortable ? "cursor:pointer;" : string.Empty) Style)">
     @ChildContent @(Sortable ? GetSortIndicator() : string.Empty)
 </th>
 
@@ -23,6 +23,20 @@
 
     [Parameter]
     public string Style { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The property name or field bound to the column's data in the source.
+    /// This is used when building DataTableServerSideRequest to specify the column's data locator.
+    /// </summary>
+    [Parameter]
+    public string? Data { get; set; }
+
+    /// <summary>
+    /// The human-readable name/identifier for the column.
+    /// This is used as the column's content/display name in the DataTableServerSideRequest.
+    /// </summary>
+    [Parameter]
+    public string? Name { get; set; }
 
     private int _columnIndex = -1;
 

@@ -22,7 +22,7 @@
             <div class="card">
                 <div class="card-body">
                     <QuarkTable @ref="_basicTable"
-                                OnManualRequest="HandleManualRequest"
+                                OnInteraction="HandleManualRequest"
                                 OnOrder="HandleOrder"
                                 OnInitialize="HandleInitialize"
                                 Options="_basicTableOptions"
@@ -33,12 +33,13 @@
                         <QuarkTableElement>
                             <QuarkThead>
                                 <QuarkTr>
-                                    <QuarkTh Sortable="true" Searchable="true">Name</QuarkTh>
-                                    <QuarkTh Sortable="true" Searchable="true">Department</QuarkTh>
-                                    <QuarkTh Sortable="true" Searchable="true">Email</QuarkTh>
-                                    <QuarkTh Sortable="true" Searchable="true">Salary</QuarkTh>
-                                    <QuarkTh Sortable="true" Searchable="true">Hire Date</QuarkTh>
-                                    <QuarkTh Sortable="true" Searchable="true">Status</QuarkTh>
+                                    <QuarkTh Data="Id" Searchable="true">Id</QuarkTh>
+                                    <QuarkTh Data="Name" Sortable="true" Searchable="true">Name</QuarkTh>
+                                    <QuarkTh Data="test.dept" Sortable="true" Searchable="true">Department</QuarkTh>
+                                    <QuarkTh Data="Email" Sortable="true" Searchable="true">Email</QuarkTh>
+                                    <QuarkTh Data="Salary" Sortable="true" Searchable="true">Salary</QuarkTh>
+                                    <QuarkTh Data="HireDate" Sortable="true" Searchable="true">Hire Date</QuarkTh>
+                                    <QuarkTh Data="Status" Sortable="true" Searchable="true">Status</QuarkTh>
                                 </QuarkTr>
                             </QuarkThead>
 
@@ -57,16 +58,22 @@
                                         </QuarkTr>
                                     }
                                 }
-                                else
+                                else if (_hasLoadedOnce)
                                 {
-                                    <QuarkTr>
-                                        <QuarkTd Colspan="6" Style="text-align: center;">No data available</QuarkTd>
-                                    </QuarkTr>
+                                    <QuarkTableNoData>
+                                        <div style="text-align: center; padding: 2rem;">
+                                            <h4>No employees found</h4>
+                                            <p>Try adjusting your search criteria or filters.</p>
+                                        </div>
+                                    </QuarkTableNoData>
                                 }
                             </QuarkTbody>
                         </QuarkTableElement>
                         
-                        <QuarkTablePagination />
+                        <QuarkTableControls>
+                            <QuarkTableInfo />
+                            <QuarkTablePagination />
+                        </QuarkTableControls>
                     </QuarkTable>
                 </div>
             </div>
@@ -77,6 +84,7 @@
 @code {
     private QuarkTable? _basicTable;
     private List<Employee> _currentEmployees = new();
+    private bool _hasLoadedOnce = false;
 
     private QuarkTableOptions _basicTableOptions = new()
     {
@@ -101,6 +109,21 @@
     private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
     {
         Logger.LogInformation("BasicDemo: HandleManualRequest called: basicTable is {IsNull}, Request: Start={Start}, Length={Length}", _basicTable == null ? "null" : "not null", serverSideRequest.Start, serverSideRequest.Length);
+        
+        // Log columns information if available
+        if (serverSideRequest.Columns != null && serverSideRequest.Columns.Count > 0)
+        {
+            Logger.LogInformation("BasicDemo: Request includes {ColumnCount} columns:", serverSideRequest.Columns.Count);
+            foreach (var column in serverSideRequest.Columns)
+            {
+                Logger.LogInformation("  Column: Data='{Data}', Name='{Name}', Searchable={Searchable}, Orderable={Orderable}", 
+                    column.Data ?? "null", column.Name ?? "null", column.Searchable, column.Orderable);
+            }
+        }
+        else
+        {
+            Logger.LogInformation("BasicDemo: Request has no columns information");
+        }
 
         try
         {
@@ -111,6 +134,7 @@
 
             // Update the current employees list
             _currentEmployees = employees;
+            _hasLoadedOnce = true;
 
             // Update the total records count
             _totalRecords = EmployeeService.GetTotalCount();
