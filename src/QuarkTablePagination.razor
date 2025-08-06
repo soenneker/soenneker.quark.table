@@ -76,7 +76,7 @@
     private int ComputedTotalPages => QuarkTable?.TotalPages ?? TotalPages;
     private int ComputedTotalRecords => QuarkTable?.TotalRecordsCount ?? TotalRecords;
     private int ComputedPageSize => QuarkTable?.PageSize ?? PageSize;
-    private int ComputedMaxPageButtons => QuarkTable?.Options?.MaxPageButtons ?? MaxPageButtons;
+    private int ComputedMaxPageButtons => MaxPageButtons;
 
     public int StartPage
     {

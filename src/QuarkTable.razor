@@ -61,18 +61,6 @@
     public bool Visible { get; set; } = true;
 
     [Parameter]
-    public bool ShowPageSizeSelector { get; set; } = true;
-
-    [Parameter]
-    public int[] PageSizeOptions { get; set; } = [10, 25, 50, 100];
-
-    [Parameter]
-    public int MaxPageButtons { get; set; } = 5;
-
-    [Parameter]
-    public bool EnableManualHeaderSorting { get; set; }
-
-    [Parameter]
     public int TotalRecords { get; set; }
 
     [Parameter]
@@ -113,35 +101,7 @@
     private int _manualRequestCount = 0; // Counter to track manual request calls
     private QuarkTableOptions? _previousOptions;
 
-    public int StartPage
-    {
-        get
-        {
-            // Ensure we have valid values
-            if (TotalPages <= 0) return 1;
-            if (CurrentPage <= 0) return 1;
 
-            // Simple pagination: show a window around the current page
-            int halfButtons = Options.MaxPageButtons / 2;
-            int start = CurrentPage - halfButtons;
-
-            // Ensure we don't go below page 1
-            start = Math.Max(1, start);
-
-            // If we's near the end, adjust to show the last MaxPageButtons pages
-            if (start + Options.MaxPageButtons - 1 > TotalPages)
-            {
-                start = Math.Max(1, TotalPages - Options.MaxPageButtons + 1);
-            }
-
-            // Ensure we don't exceed total pages
-            if (start > TotalPages) start = TotalPages;
-
-            return start;
-        }
-    }
-
-    public int EndPage => Math.Min(TotalPages, StartPage + Options.MaxPageButtons - 1);
 
     protected override async Task OnInitializedAsync()
     {
@@ -257,78 +217,13 @@
         await HandleManualRequest(cancellationToken).NoSync();
     }
 
-    public async Task HandleSort(int columnIndex, CancellationToken cancellationToken = default)
-    {
-        if (!Options.Sortable) return;
 
-        if (Options.Debug)
-            Logger.LogDebug("Sorting column by index: {ColumnIndex}", columnIndex);
 
-        // Find existing order for this column
-        DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
-        string? nextDirection = existing?.Dir switch
-        {
-            "asc" => "desc",
-            "desc" => null,
-            _ => "asc"
-        };
-
-        // Remove existing order for this column
-        _currentOrders.RemoveAll(o => o.Column == columnIndex);
-
-        // Add new order if direction is not null
-        if (nextDirection != null)
-        {
-            _currentOrders.Add(new DataTableOrderRequest
-            {
-                Column = columnIndex,
-                Dir = nextDirection
-            });
-
-            if (Options.Debug)
-                Logger.LogDebug("Added order: Column={Column}, Direction={Direction}", columnIndex, nextDirection);
-        }
-        else
-        {
-            if (Options.Debug)
-                Logger.LogDebug("Removed order for column {Column}", columnIndex);
-        }
-
-        if (Options.Debug)
-            Logger.LogDebug("Current orders count: {Count}", _currentOrders.Count);
-
-        CurrentPage = 1;
-        // Reset continuation token paging when sorting
-        _continuationTokenPaging.Reset();
-        _continuationToken = null;
-        await HandleManualRequest(cancellationToken).NoSync();
-
-        if (OnOrder.HasDelegate)
-        {
-            var args = new QuarkTableOrderEventArgs
-            {
-                Column = $"Column_{columnIndex}",
-                Direction = nextDirection ?? string.Empty,
-                Orders = _currentOrders.ToList()
-            };
-            await OnOrder.InvokeAsync(args).NoSync();
-        }
-    }
-
-    /// <summary>
-    /// Gets the current orders
-    /// </summary>
-    /// <returns>A copy of the current orders</returns>
     public List<DataTableOrderRequest> GetCurrentOrders()
     {
         return _currentOrders.ToList();
     }
 
-    /// <summary>
-    /// Sets the orders programmatically and triggers a reload
-    /// </summary>
-    /// <param name="orders">The orders to set</param>
-    /// <param name="cancellationToken">A token to cancel the operation</param>
     public async Task SetOrders(List<DataTableOrderRequest> orders, CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
@@ -343,84 +238,12 @@
         await HandleManualRequest(cancellationToken).NoSync();
     }
 
-    /// <summary>
-    /// Sorts a column by index (for use in manual mode)
-    /// </summary>
-    /// <param name="columnIndex">The column index to sort</param>
-    /// <param name="cancellationToken">A token to cancel the operation</param>
-    public async Task SortColumnByIndex(int columnIndex, CancellationToken cancellationToken = default)
-    {
-        if (!Options.Sortable) return;
-
-        if (Options.Debug)
-            Logger.LogDebug("Sorting column by index: {ColumnIndex}", columnIndex);
-
-        // Find existing order for this column
-        DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
-        string? nextDirection = existing?.Dir switch
-        {
-            "asc" => "desc",
-            "desc" => null,
-            _ => "asc"
-        };
-
-        // Remove existing order for this column
-        _currentOrders.RemoveAll(o => o.Column == columnIndex);
-
-        // Add new order if direction is not null
-        if (nextDirection != null)
-        {
-            _currentOrders.Add(new DataTableOrderRequest
-            {
-                Column = columnIndex,
-                Dir = nextDirection
-            });
-            if (Options.Debug)
-                Logger.LogDebug("Added order: Column={Column}, Direction={Direction}", columnIndex, nextDirection);
-        }
-        else
-        {
-            if (Options.Debug)
-                Logger.LogDebug("Removed order for column {Column}", columnIndex);
-        }
-
-        if (Options.Debug)
-            Logger.LogDebug("Current orders count: {Count}", _currentOrders.Count);
-
-        CurrentPage = 1;
-        // Reset continuation token paging when sorting
-        _continuationTokenPaging.Reset();
-        _continuationToken = null;
-        await HandleManualRequest(cancellationToken).NoSync();
-
-        if (OnOrder.HasDelegate)
-        {
-            var args = new QuarkTableOrderEventArgs
-            {
-                Column = $"Column_{columnIndex}",
-                Direction = nextDirection ?? string.Empty,
-                Orders = _currentOrders.ToList()
-            };
-            await OnOrder.InvokeAsync(args);
-        }
-    }
-
-    /// <summary>
-    /// Gets the current sort direction for a column index
-    /// </summary>
-    /// <param name="columnIndex">The column index</param>
-    /// <returns>The sort direction ("asc", "desc", or null if not sorted)</returns>
     public string? GetSortDirection(int columnIndex)
     {
         DataTableOrderRequest? order = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
         return order?.Dir;
     }
 
-    /// <summary>
-    /// Gets the CSS class for a column index based on its sort state
-    /// </summary>
-    /// <param name="columnIndex">The column index</param>
-    /// <returns>The CSS class for the sort state</returns>
     public string GetSortClassByIndex(int columnIndex)
     {
         string? direction = GetSortDirection(columnIndex);
@@ -432,11 +255,6 @@
         };
     }
 
-    /// <summary>
-    /// Gets the sort indicator for a column index
-    /// </summary>
-    /// <param name="columnIndex">The column index</param>
-    /// <returns>The sort indicator (↑, ↓, or ↕)</returns>
     public string GetSortIndicatorByIndex(int columnIndex)
     {
         string? direction = GetSortDirection(columnIndex);
@@ -450,7 +268,7 @@
 
     public async Task HandleColumnSort(int columnIndex, CancellationToken cancellationToken = default)
     {
-        if (!Options.Sortable) return;
+        if (!IsColumnSortable(columnIndex)) return;
 
         if (Options.Debug)
             Logger.LogDebug("HandleColumnSort called for column index: {ColumnIndex}", columnIndex);
@@ -506,6 +324,19 @@
             Logger.LogDebug("Registered column {ColumnIndex} for component {ComponentType}", columnIndex, columnHeader.GetType().Name);
 
         return columnIndex;
+    }
+
+    /// <summary>
+    /// Checks if a column at the given index is sortable
+    /// </summary>
+    /// <param name="columnIndex">The column index to check</param>
+    /// <returns>True if the column is sortable, false otherwise</returns>
+    private bool IsColumnSortable(int columnIndex)
+    {
+        if (columnIndex < 0 || columnIndex >= _registeredColumns.Count)
+            return false;
+        
+        return _registeredColumns[columnIndex].Sortable;
     }
 
     /// <summary>
@@ -630,18 +461,6 @@
         return shouldRender;
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        await _debouncer.DisposeAsync().NoSync();
-        
-        await _cancellationTokenSource.CancelAsync();
-        _cancellationTokenSource.Dispose();
-    }
-
-    /// <summary>
-    /// Clears all current sorting and resets to first page
-    /// </summary>
-    /// <param name="cancellationToken">A token to cancel the operation</param>
     public async Task ClearSorting(CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
@@ -655,10 +474,6 @@
         await HandleManualRequest(cancellationToken).NoSync();
     }
 
-    /// <summary>
-    /// Resets the table to its initial state (clears sorting and goes to first page)
-    /// </summary>
-    /// <param name="cancellationToken">A token to cancel the operation</param>
     public async Task Reset(CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
@@ -672,36 +487,17 @@
         await HandleManualRequest(cancellationToken).NoSync();
     }
 
-    /// <summary>
-    /// Resets the manual request counter (useful for debugging)
-    /// </summary>
-    public void ResetManualRequestCounter()
-    {
-        _manualRequestCount = 0;
-        if (Options.Debug)
-            Logger.LogDebug("Manual request counter reset to 0");
-    }
-
-    /// <summary>
-    /// Cancels any ongoing operations and resets the loading state
-    /// </summary>
     public async Task CancelOperationsAsync()
     {
         if (Options.Debug)
             Logger.LogDebug("Cancelling ongoing operations");
-        await _cancellationTokenSource.CancelAsync();
+        await _cancellationTokenSource.CancelAsync().NoSync();
         _isLoading = false;
         _isHandlingManualRequest = false;
         _dataChanged = true;
         await InvokeAsync(StateHasChanged).NoSync();
     }
 
-    /// <summary>
-    /// Updates the continuation token paging with response data
-    /// </summary>
-    /// <param name="recordCount">The number of records in the current response</param>
-    /// <param name="continuationToken">The continuation token from the response</param>
-    /// <param name="tokenUsedForCurrentPage">The continuation token that was used to reach the current page</param>
     public void UpdateContinuationTokenPaging(int recordCount, string? continuationToken, string? tokenUsedForCurrentPage = null)
     {
         if (Options.Debug)
@@ -730,6 +526,14 @@
 
         if (Options.Debug)
             Logger.LogDebug("Updated continuation token paging: RecordCount={RecordCount}, Token='{Token}', TotalRecords={TotalRecords}, TotalPages={TotalPages} (was {OldTotalPages})", recordCount, continuationToken ?? "null", TotalRecordsCount, TotalPages, oldTotalPages);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _debouncer.DisposeAsync().NoSync();
+        
+        await _cancellationTokenSource.CancelAsync();
+        _cancellationTokenSource.Dispose();
     }
 
 }

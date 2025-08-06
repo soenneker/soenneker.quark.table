@@ -193,12 +193,13 @@ private async Task HandleManualRequest(DataTableServerSideRequest request)
 ## Key Parameters
 
 ### QuarkTable
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `TotalRecords` | `int` | Total number of records for pagination |
-| `OnManualRequest` | `EventCallback<DataTableServerSideRequest>` | Server-side data processing callback |
-| `OnOrder` | `EventCallback<QuarkTableOrderEventArgs>` | Called when column sorting changes |
-| `Options` | `QuarkTableOptions` | Table configuration options |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `TotalRecords` | `int` | `0` | Total number of records for pagination |
+| `Visible` | `bool` | `true` | Whether the table is visible |
+| `OnManualRequest` | `EventCallback<DataTableServerSideRequest>` | - | Server-side data processing callback |
+| `OnOrder` | `EventCallback<QuarkTableOrderEventArgs>` | - | Called when column sorting changes |
+| `Options` | `QuarkTableOptions` | `new()` | Table configuration options |
 
 ### QuarkTh
 | Parameter | Type | Default | Description |
@@ -209,10 +210,9 @@ private async Task HandleManualRequest(DataTableServerSideRequest request)
 ### QuarkTableOptions
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `Sortable` | `bool` | `true` | Enable sorting for the table |
 | `DefaultPageSize` | `int` | `10` | Default page size |
 | `SearchDebounceMs` | `int` | `300` | Search debounce delay in milliseconds |
-| `MaxPageButtons` | `int` | `5` | Maximum number of page buttons |
+| `SearchPosition` | `SearchPosition` | `End` | Position of the search box |
 | `Debug` | `bool` | `false` | Enable debug logging |
 
 ## Events

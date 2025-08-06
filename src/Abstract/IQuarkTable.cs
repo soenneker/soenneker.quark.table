@@ -120,4 +120,12 @@ public interface IQuarkTable : IAsyncDisposable
     /// Cancels any ongoing operations and resets the loading state
     /// </summary>
     Task CancelOperationsAsync();
+
+    /// <summary>
+    /// Updates the continuation token paging with response data
+    /// </summary>
+    /// <param name="recordCount">The number of records in the current response</param>
+    /// <param name="continuationToken">The continuation token from the response</param>
+    /// <param name="tokenUsedForCurrentPage">The continuation token that was used to reach the current page</param>
+    void UpdateContinuationTokenPaging(int recordCount, string? continuationToken, string? tokenUsedForCurrentPage = null);
 } 
