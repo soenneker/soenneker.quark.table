@@ -24,7 +24,7 @@ public sealed class QuarkTableInterop : IQuarkTableInterop
         });
     }
 
-    public ValueTask Initialize( CancellationToken cancellationToken = default)
+    public ValueTask Initialize(CancellationToken cancellationToken = default)
     {
         return _styleInitializer.Init(cancellationToken);
     }

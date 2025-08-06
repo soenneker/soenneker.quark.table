@@ -1,5 +1,6 @@
 @page "/loading-demo"
 @using Microsoft.Extensions.Logging
+@using Soenneker.Extensions.Task
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 @using Soenneker.Utils.Delay
@@ -85,9 +86,9 @@
         try
         {
             // Get filtered employees using the service
-            List<Employee> employees = await EmployeeService.GetFilteredEmployees(request);
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(request).NoSync();
 
-            await DelayUtil.Delay(3000, Logger);
+            await DelayUtil.Delay(3000, Logger).NoSync();
 
             Logger.LogInformation("LoadingDemo: EmployeeService returned {Count} employees", employees.Count);
 

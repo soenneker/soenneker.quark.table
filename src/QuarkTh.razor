@@ -1,3 +1,4 @@
+@using Soenneker.Extensions.Task
 @using Soenneker.Quark.Table.Abstract
 
 @inherits ComponentBase
@@ -53,7 +54,7 @@
     {
         if (!Sortable || QuarkTable == null) return;
 
-        await QuarkTable.HandleColumnSort(_columnIndex);
+        await QuarkTable.HandleColumnSort(_columnIndex).NoSync();
     }
 
     private string GetSortClass()

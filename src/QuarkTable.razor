@@ -2,6 +2,7 @@
 @using Microsoft.Extensions.Logging
 @using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Extensions.Task
+@using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Options
 @using Soenneker.Quark.Table.Abstract
 @using Soenneker.Utils.Debounce
@@ -91,10 +92,13 @@
 
     public int TotalRecordsCount { get; private set; }
 
+    public bool HasLoadedOnce { get; private set; }
+
     private readonly Debouncer _debouncer = new();
     private readonly List<DataTableOrderRequest> _currentOrders = [];
     private readonly QuarkTableContinuationTokenPaging _continuationTokenPaging = new();
     private readonly List<QuarkTh> _registeredColumns = [];
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     private string _searchTerm = string.Empty;
     private string? _continuationToken;
@@ -103,6 +107,7 @@
     private bool _isLoading;
     private bool _initialized;
     private bool _dataLoaded;
+    private bool _hasLoadedOnce; // Flag to track if data has been loaded at least once
     private bool _isUpdatingParameters; // Flag to prevent infinite loops
     private bool _isHandlingManualRequest; // Flag to prevent multiple simultaneous manual requests
     private int _manualRequestCount = 0; // Counter to track manual request calls
@@ -141,11 +146,11 @@
     protected override async Task OnInitializedAsync()
     {
         PageSize = Options.DefaultPageSize;
-        await QuarkTableInterop.Initialize();
+        await QuarkTableInterop.Initialize(_cancellationTokenSource.Token).NoSync();
 
         _initialized = true;
         if (OnInitialize.HasDelegate)
-            await OnInitialize.InvokeAsync();
+            await OnInitialize.InvokeAsync().NoSync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -177,7 +182,7 @@
                 if (OnInteraction.HasDelegate)
                 {
                     Logger.LogDebug("Calling HandleManualRequest for initial data load");
-                    await HandleManualRequest();
+                    await HandleManualRequest().NoSync();
                 }
 
                 _dataLoaded = true;
@@ -205,7 +210,7 @@
                 _continuationTokenPaging.Reset();
                 if (OnInteraction.HasDelegate)
                 {
-                    await HandleManualRequest();
+                    await HandleManualRequest().NoSync();
                 }
             }
 
@@ -216,23 +221,23 @@
             _isUpdatingParameters = false;
         }
 
-        await base.OnParametersSetAsync();
+        await base.OnParametersSetAsync().NoSync();
     }
 
-    public async Task HandleGoToPage(int page)
+    public async Task HandleGoToPage(int page, CancellationToken cancellationToken = default)
     {
         if (page < 1 || page > TotalPages) return;
 
         CurrentPage = page;
         // Clear continuation token when changing pages
         _continuationToken = null;
-        await HandleManualRequest();
+        await HandleManualRequest(cancellationToken).NoSync();
 
         if (OnGoToPage.HasDelegate)
-            await OnGoToPage.InvokeAsync(page);
+            await OnGoToPage.InvokeAsync(page).NoSync();
     }
 
-    public async Task HandleSearch(string searchTerm)
+    public async Task HandleSearch(string searchTerm, CancellationToken cancellationToken = default)
     {
         Logger.LogDebug("HandleSearch called with term: {SearchTerm}", searchTerm);
 
@@ -241,10 +246,10 @@
         _continuationTokenPaging.Reset(); // Reset continuation token paging when searching
         _continuationToken = null; // Clear continuation token when searching
 
-        await HandleManualRequest();
+        await HandleManualRequest(cancellationToken).NoSync();
     }
 
-    public async Task HandleSort(int columnIndex)
+    public async Task HandleSort(int columnIndex, CancellationToken cancellationToken = default)
     {
         if (!Options.Sortable) return;
 
@@ -283,7 +288,7 @@
         // Reset continuation token paging when sorting
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await HandleManualRequest();
+        await HandleManualRequest(cancellationToken).NoSync();
 
         if (OnOrder.HasDelegate)
         {
@@ -293,7 +298,7 @@
                 Direction = nextDirection ?? string.Empty,
                 Orders = _currentOrders.ToList()
             };
-            await OnOrder.InvokeAsync(args);
+            await OnOrder.InvokeAsync(args).NoSync();
         }
     }
 
@@ -310,7 +315,8 @@
     /// Sets the orders programmatically and triggers a reload
     /// </summary>
     /// <param name="orders">The orders to set</param>
-    public async Task SetOrders(List<DataTableOrderRequest> orders)
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    public async Task SetOrders(List<DataTableOrderRequest> orders, CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
         if (orders != null)
@@ -321,14 +327,15 @@
         CurrentPage = 1;
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await HandleManualRequest();
+        await HandleManualRequest(cancellationToken).NoSync();
     }
 
     /// <summary>
     /// Sorts a column by index (for use in manual mode)
     /// </summary>
     /// <param name="columnIndex">The column index to sort</param>
-    public async Task SortColumnByIndex(int columnIndex)
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    public async Task SortColumnByIndex(int columnIndex, CancellationToken cancellationToken = default)
     {
         if (!Options.Sortable) return;
 
@@ -367,7 +374,7 @@
         // Reset continuation token paging when sorting
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await HandleManualRequest();
+        await HandleManualRequest(cancellationToken).NoSync();
 
         if (OnOrder.HasDelegate)
         {
@@ -424,7 +431,7 @@
         };
     }
 
-    public async Task HandleColumnSort(int columnIndex)
+    public async Task HandleColumnSort(int columnIndex, CancellationToken cancellationToken = default)
     {
         if (!Options.Sortable) return;
 
@@ -457,7 +464,7 @@
         // Reset continuation token paging when sorting
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await HandleManualRequest();
+        await HandleManualRequest(cancellationToken).NoSync();
 
         if (OnOrder.HasDelegate)
         {
@@ -467,7 +474,7 @@
                 Direction = nextDirection ?? string.Empty,
                 Orders = _currentOrders.ToList()
             };
-            await OnOrder.InvokeAsync(args);
+            await OnOrder.InvokeAsync(args).NoSync();
         }
     }
 
@@ -536,6 +543,9 @@
 
         try
         {
+            // Create a linked cancellation token source to combine the component's token with the passed token
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancellationTokenSource.Token);
+
             // Calculate the actual start position based on current page
             int actualStart = (CurrentPage - 1) * PageSize;
 
@@ -554,7 +564,19 @@
 
             Logger.LogDebug("Sending request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", request.Start, request.Length, request.Search?.Value ?? "null", request.ContinuationToken ?? "null");
 
-            await OnInteraction.InvokeAsync(request);
+            await OnInteraction.InvokeAsync(request).NoSync();
+            
+            // Mark that we've loaded data at least once after a successful request
+            if (!_hasLoadedOnce)
+            {
+                _hasLoadedOnce = true;
+                HasLoadedOnce = true;
+                Logger.LogDebug("Set HasLoadedOnce to true after first successful data load");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.LogDebug("HandleManualRequest was cancelled");
         }
         catch (Exception ex)
         {
@@ -583,13 +605,17 @@
 
     public async ValueTask DisposeAsync()
     {
-        await _debouncer.DisposeAsync();
+        await _debouncer.DisposeAsync().NoSync();
+        
+        await _cancellationTokenSource.CancelAsync();
+        _cancellationTokenSource.Dispose();
     }
 
     /// <summary>
     /// Clears all current sorting and resets to first page
     /// </summary>
-    public async Task ClearSorting()
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    public async Task ClearSorting(CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
         CurrentPage = 1;
@@ -597,13 +623,16 @@
         _continuationToken = null;
         _manualRequestCount = 0; // Reset the counter
         _registeredColumns.Clear(); // Reset column registration
-        await HandleManualRequest();
+        _hasLoadedOnce = false; // Reset the loaded flag
+        HasLoadedOnce = false;
+        await HandleManualRequest(cancellationToken).NoSync();
     }
 
     /// <summary>
     /// Resets the table to its initial state (clears sorting and goes to first page)
     /// </summary>
-    public async Task Reset()
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    public async Task Reset(CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
         CurrentPage = 1;
@@ -611,7 +640,9 @@
         _continuationTokenPaging.Reset();
         _manualRequestCount = 0; // Reset the counter
         _registeredColumns.Clear(); // Reset column registration
-        await HandleManualRequest();
+        _hasLoadedOnce = false; // Reset the loaded flag
+        HasLoadedOnce = false;
+        await HandleManualRequest(cancellationToken).NoSync();
     }
 
     /// <summary>
@@ -621,6 +652,19 @@
     {
         _manualRequestCount = 0;
         Logger.LogDebug("Manual request counter reset to 0");
+    }
+
+    /// <summary>
+    /// Cancels any ongoing operations and resets the loading state
+    /// </summary>
+    public async Task CancelOperationsAsync()
+    {
+        Logger.LogDebug("Cancelling ongoing operations");
+        await _cancellationTokenSource.CancelAsync();
+        _isLoading = false;
+        _isHandlingManualRequest = false;
+        _dataChanged = true;
+        await InvokeAsync(StateHasChanged).NoSync();
     }
 
     /// <summary>

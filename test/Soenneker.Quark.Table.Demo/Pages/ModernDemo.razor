@@ -3,7 +3,7 @@
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
-@using Soenneker.DataTables.Dtos.ServerSideRequest
+@using Soenneker.Extensions.Task
 
 @inject ILogger<ModernDemo> Logger
 @inject EmployeeService EmployeeService
@@ -13,26 +13,36 @@
 <style>
     :root {
         /* Core tones */
-        --qt-bg: #ffffff; /* page background */
-        --qt-surface: #ffffff; /* table body */
-        --qt-surface-2: #fff; /* header / controls */
-        --qt-border: #dee2e6; /* borders & separators */
-        --qt-row-alt: #ffffff; /* zebra alt rows */
-        --qt-hover: #eef3f7; /* row / btn hover */
+        --qt-bg: #ffffff;
+        --qt-surface: #ffffff;
+        --qt-surface-2: #ffffff;
+        --qt-border: #dee2e6;
+        --qt-row-alt: #ffffff;
+        --qt-hover: #eef3f7;
         /* Content colours */
-        --qt-text: #212529; /* body text */
-        --qt-muted: #6c757d; /* subdued text */
-        --qt-heading: #000000; /* headings */
+        --qt-text: #212529;
+        --qt-muted: #6c757d;
+        --qt-heading: #000000;
         /* Accent / states */
-        --qt-accent: #6c757d; /* active, selected, focus */
-        --qt-accent-hover: #5c636a; /* accent hover */
-        --qt-focus-ring: rgba(108,117,125,.25);
+        --qt-accent: #6c757d;
+        --qt-accent-hover: #5c636a;
+        --qt-focus-ring: rgba(108, 117, 125, 0.25);
+        /* Shared colors for light bg components */
+        --qt-shadow: rgba(0, 0, 0, 0.08);
+        --qt-hover-alt: #eef1f4;
+        --qt-border-light: rgba(0, 0, 0, 0.04);
     }
 
-    /* Optional: soften box-shadow on light background */
+    /* Box styling */
     .quark-table {
-        box-shadow: 0 2px 4px rgba(0,0,0,.08);
+        border: none !important;
+        box-shadow: none; /* override any previous shadow */
     }
+
+        /* Optional: soften box-shadow on light background */
+        .quark-table.with-shadow {
+            box-shadow: 0 2px 4px var(--qt-shadow);
+        }
 
     /* Optional: lighter pagination buttons on hover */
     .quark-table-pagination-btn:hover:not([disabled]) {
@@ -42,58 +52,46 @@
 
     /* Optional: active pagination button tint */
     .quark-table-pagination-btn.active {
-        color: #fff; /* ensure text is visible */
+        color: #fff;
     }
 
     .quark-table-search-input {
         background: #f0f2f5;
-        border-radius: 0.375rem; /* 6 px */
+        border-radius: 0.375rem;
     }
 
-    .quark-table tbody tr:hover,
-    .quark-table-pagination-btn:hover:not([disabled]) {
-        background-color: #eef1f4;
-    }
-
-    .quark-table-sortable{
+    .quark-table-sortable {
         background-color: rgb(229, 231, 235) !important;
         color: rgb(17, 24, 39) !important;
     }
 
-    .quark-table th,
-    .quark-table td {
-        padding: 0.3rem 0.6rem; /* ↓ was 0.5rem 0.75rem */
-        line-height: 1.2; /* optional: tighter line height */
+    /* Hover states */
+    .quark-table tbody tr:hover,
+    .quark-table-pagination-btn:hover:not([disabled]) {
+        background-color: var(--qt-hover-alt);
     }
 
-    /* If you also want the search row (when present) compacted */
+    /* Table cell spacing */
+    .quark-table th,
+    .quark-table td {
+        padding: 0.3rem 0.6rem;
+        line-height: 1.2;
+        border-bottom: 1px solid var(--qt-border-light);
+    }
+
     .quark-table-search-cell {
         padding: 0.4rem 0.6rem;
     }
 
-    .quark-table td,
-    .quark-table th {
-        /* Hairline: 1 px, very light gray (adjust if needed) */
-        border-bottom: 1px solid rgba(0,0,0,0.04);
+    /* Edge case: last row cleanup */
+    .quark-table tbody tr:last-child td {
+        border-bottom-color: var(--qt-border-light);
     }
 
-    /* 2️⃣  Kill the table's box-shadow so no "shadow bar" shows */
-    .quark-table {
-        box-shadow: none; /* override any previous shadow */
-    }
-
-        /* 3️⃣  Optional: also remove zebra striping hover tint on last row edge */
-        .quark-table tbody tr:last-child td {
-            border-bottom-color: rgba(0,0,0,0.04); /* same faint line */
-        }
-
+    /* Header / control bar */
     .quark-table-with-search .quark-table-search,
     .quark-table-controls {
         border: none;
-    }
-
-    .quark-table {
-        border: none !important; /* overrides the 1 px solid in the base theme */
     }
 </style>
 
@@ -178,7 +176,7 @@
         try
         {
             // Get filtered employees using the EmployeeService
-            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest).NoSync();
 
             Logger.LogInformation("ModernDemo: Returned {Count} employees", employees.Count);
 

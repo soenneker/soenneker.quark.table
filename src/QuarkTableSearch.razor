@@ -1,4 +1,6 @@
 @using Microsoft.Extensions.Logging
+@using Soenneker.Extensions.Task
+@using Soenneker.Extensions.ValueTask
 @using Soenneker.Utils.Debounce
 @using Soenneker.Quark.Table.Abstract
 
@@ -36,11 +38,6 @@
 
     private readonly Debouncer _debouncer = new();
 
-    protected override void OnInitialized()
-    {
-
-    }
-
     private Task OnSearchInputHandler(ChangeEventArgs e)
     {
         string newSearchTerm = e.Value?.ToString() ?? string.Empty;
@@ -50,12 +47,12 @@
             // First, notify the parent QuarkTable if available
             if (QuarkTable != null)
             {
-                await QuarkTable.HandleSearch(newSearchTerm);
+                await QuarkTable.HandleSearch(newSearchTerm, ct).NoSync();
             }
 
             // Then, invoke the OnSearch callback if provided
             if (OnSearch.HasDelegate)
-                await OnSearch.InvokeAsync(newSearchTerm);
+                await OnSearch.InvokeAsync(newSearchTerm).NoSync();
         });
 
         if (SearchTermChanged.HasDelegate)
@@ -64,8 +61,8 @@
         return Task.CompletedTask;
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        await _debouncer.DisposeAsync();
+        return _debouncer.DisposeAsync();
     }
 } 

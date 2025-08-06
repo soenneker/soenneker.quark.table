@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.DataTables.Dtos.ServerSideRequest;
 using Soenneker.Quark.Table.Options;
@@ -32,6 +33,11 @@ public interface IQuarkTable : IAsyncDisposable
     int TotalRecordsCount { get; }
 
     /// <summary>
+    /// Gets whether the table has loaded data at least once
+    /// </summary>
+    bool HasLoadedOnce { get; }
+
+    /// <summary>
     /// Gets the table options
     /// </summary>
     QuarkTableOptions Options { get; }
@@ -40,7 +46,8 @@ public interface IQuarkTable : IAsyncDisposable
     /// Handles column sorting for the component-driven approach
     /// </summary>
     /// <param name="columnIndex">The column index to sort</param>
-    Task HandleColumnSort(int columnIndex);
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    Task HandleColumnSort(int columnIndex, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Registers a column header component and returns its index
@@ -53,23 +60,27 @@ public interface IQuarkTable : IAsyncDisposable
     /// Handles search from child components
     /// </summary>
     /// <param name="searchTerm">The search term</param>
-    Task HandleSearch(string searchTerm);
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    Task HandleSearch(string searchTerm, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Handles navigation to a specific page
     /// </summary>
     /// <param name="page">The page number to navigate to</param>
-    Task HandleGoToPage(int page);
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    Task HandleGoToPage(int page, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears all current sorting and resets to first page
     /// </summary>
-    Task ClearSorting();
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    Task ClearSorting(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Resets the table to its initial state (clears sorting and goes to first page)
     /// </summary>
-    Task Reset();
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    Task Reset(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the current list of orders
@@ -81,7 +92,8 @@ public interface IQuarkTable : IAsyncDisposable
     /// Sets the orders programmatically and triggers a reload
     /// </summary>
     /// <param name="orders">The orders to set</param>
-    Task SetOrders(List<DataTableOrderRequest> orders);
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    Task SetOrders(List<DataTableOrderRequest> orders, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the current sort direction for a column index
@@ -103,4 +115,9 @@ public interface IQuarkTable : IAsyncDisposable
     /// <param name="columnIndex">The column index</param>
     /// <returns>The sort indicator (↑, ↓, or ↕)</returns>
     string GetSortIndicatorByIndex(int columnIndex);
+
+    /// <summary>
+    /// Cancels any ongoing operations and resets the loading state
+    /// </summary>
+    Task CancelOperationsAsync();
 } 

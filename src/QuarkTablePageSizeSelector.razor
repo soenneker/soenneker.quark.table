@@ -1,3 +1,4 @@
+@using Soenneker.Extensions.Task
 @using Soenneker.Quark.Table.Abstract
 
 @inherits ComponentBase
@@ -36,11 +37,11 @@
             {
                 // The QuarkTable will handle the page size change internally
                 // We just need to trigger a manual request
-                await QuarkTable.HandleGoToPage(1); // Reset to first page
-            }
-            else if (PageSizeChanged.HasDelegate)
-            {
-                await PageSizeChanged.InvokeAsync(size);
+                            await QuarkTable.HandleGoToPage(1).NoSync(); // Reset to first page
+        }
+        else if (PageSizeChanged.HasDelegate)
+        {
+            await PageSizeChanged.InvokeAsync(size).NoSync();
             }
         }
     }

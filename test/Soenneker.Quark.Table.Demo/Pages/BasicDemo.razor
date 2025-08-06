@@ -1,5 +1,6 @@
 @page "/basic"
 @using Microsoft.Extensions.Logging
+@using Soenneker.Extensions.Task
 @using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
@@ -127,7 +128,7 @@
         try
         {
             // Get filtered employees using the service
-            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest).NoSync();
 
             Logger.LogInformation("BasicDemo: EmployeeService returned {Count} employees", employees.Count);
 

@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Serilog;
 using Serilog.Debugging;
+using Soenneker.Extensions.Task;
+using Soenneker.Extensions.ValueTask;
 using Soenneker.Serilog.Sinks.Browser.Blazor.Registrars;
 using Soenneker.Quark.Table.Registrars;
 using Soenneker.Quark.Table.Demo.Services;
@@ -42,7 +44,7 @@ public sealed class Program
 
             SetGlobalLogger(jsRuntime);
 
-            await host.RunAsync();
+            await host.RunAsync().NoSync();
         }
         catch (Exception e)
         {
@@ -51,7 +53,7 @@ public sealed class Program
         }
         finally
         {
-            await Log.CloseAndFlushAsync();
+            await Log.CloseAndFlushAsync().NoSync();
         }
     }
 

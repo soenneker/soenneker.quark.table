@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 namespace Soenneker.Quark.Table.Abstract;
 
 /// <summary>
-/// A Blazor interop library for the select user control library, Tom Select
+/// A Blazor interop library for the Quark Table component
 /// </summary>
-public interface IQuarkTableInterop :  IAsyncDisposable
+public interface IQuarkTableInterop : IAsyncDisposable
 {
     /// <summary>
-    /// Initializes the TomSelect interop by loading required scripts and styles.
+    /// Initializes the Quark Table interop by loading required scripts and styles.
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the initialization operation.</param>
     /// <returns>A <see cref="ValueTask"/> representing the asynchronous operation.</returns>

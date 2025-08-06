@@ -1,3 +1,4 @@
+@using Soenneker.Extensions.Task
 @using Soenneker.Quark.Table.Abstract
 
 @inherits ComponentBase
@@ -105,15 +106,15 @@
     {
         if (QuarkTable != null)
         {
-            await QuarkTable.HandleGoToPage(1);
+            await QuarkTable.HandleGoToPage(1).NoSync();
         }
         else if (OnFirstPage.HasDelegate)
         {
-            await OnFirstPage.InvokeAsync();
+            await OnFirstPage.InvokeAsync().NoSync();
         }
         else if (OnGoToPage.HasDelegate)
         {
-            await OnGoToPage.InvokeAsync(1);
+            await OnGoToPage.InvokeAsync(1).NoSync();
         }
     }
 
@@ -121,15 +122,15 @@
     {
         if (QuarkTable != null && ComputedCurrentPage > 1)
         {
-            await QuarkTable.HandleGoToPage(ComputedCurrentPage - 1);
+            await QuarkTable.HandleGoToPage(ComputedCurrentPage - 1).NoSync();
         }
         else if (OnPreviousPage.HasDelegate)
         {
-            await OnPreviousPage.InvokeAsync();
+            await OnPreviousPage.InvokeAsync().NoSync();
         }
         else if (OnGoToPage.HasDelegate && ComputedCurrentPage > 1)
         {
-            await OnGoToPage.InvokeAsync(ComputedCurrentPage - 1);
+            await OnGoToPage.InvokeAsync(ComputedCurrentPage - 1).NoSync();
         }
     }
 
@@ -137,15 +138,15 @@
     {
         if (QuarkTable != null && ComputedCurrentPage < ComputedTotalPages)
         {
-            await QuarkTable.HandleGoToPage(ComputedCurrentPage + 1);
+            await QuarkTable.HandleGoToPage(ComputedCurrentPage + 1).NoSync();
         }
         else if (OnNextPage.HasDelegate)
         {
-            await OnNextPage.InvokeAsync();
+            await OnNextPage.InvokeAsync().NoSync();
         }
         else if (OnGoToPage.HasDelegate && ComputedCurrentPage < ComputedTotalPages)
         {
-            await OnGoToPage.InvokeAsync(ComputedCurrentPage + 1);
+            await OnGoToPage.InvokeAsync(ComputedCurrentPage + 1).NoSync();
         }
     }
 
@@ -153,15 +154,15 @@
     {
         if (QuarkTable != null)
         {
-            await QuarkTable.HandleGoToPage(ComputedTotalPages);
+            await QuarkTable.HandleGoToPage(ComputedTotalPages).NoSync();
         }
         else if (OnLastPage.HasDelegate)
         {
-            await OnLastPage.InvokeAsync();
+            await OnLastPage.InvokeAsync().NoSync();
         }
         else if (OnGoToPage.HasDelegate)
         {
-            await OnGoToPage.InvokeAsync(ComputedTotalPages);
+            await OnGoToPage.InvokeAsync(ComputedTotalPages).NoSync();
         }
     }
 
@@ -169,11 +170,11 @@
     {
         if (QuarkTable != null)
         {
-            await QuarkTable.HandleGoToPage(page);
+            await QuarkTable.HandleGoToPage(page).NoSync();
         }
         else if (OnGoToPage.HasDelegate)
         {
-            await OnGoToPage.InvokeAsync(page);
+            await OnGoToPage.InvokeAsync(page).NoSync();
         }
     }
 } 
