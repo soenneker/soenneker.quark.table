@@ -329,6 +329,14 @@
     gap: 1rem;
 }
 
+.quark-table-controls.InfoLeftPaginationRight .quark-table-info {
+    flex: 0 0 auto;
+}
+
+.quark-table-controls.InfoLeftPaginationRight .quark-table-pagination {
+    flex: 0 0 auto;
+}
+
 .quark-table-controls.InfoRightPaginationLeft {
     justify-content: flex-start;
     flex-direction: row-reverse;
@@ -497,6 +505,51 @@
     width: 100%;
     height: 100%;
     z-index: 10;
+}
+
+/* Make the loader only cover the table content area, not the controls */
+.quark-table-with-search .quark-table-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+/* Position the loader to only cover the table element area */
+.quark-table-with-search .quark-table-element {
+    position: relative;
+}
+
+/* Make the loader non-blocking for table interactions */
+.quark-table-with-search .quark-table-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.quark-table-with-search .quark-table-loader .quark-table-loader-overlay {
+    pointer-events: auto;
+}
+
+/* Allow table interactions to pass through the loader */
+.quark-table-with-search .quark-table {
+    position: relative;
+    z-index: 1;
+}
+
+.quark-table-with-search .quark-table tbody {
+    position: relative;
+    z-index: 2;
 }
 
 .quark-table-loader-overlay {

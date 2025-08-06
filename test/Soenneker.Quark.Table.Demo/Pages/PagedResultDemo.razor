@@ -22,9 +22,8 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-
                     <QuarkTable @ref="_quarkTable"
-                                OnInteraction="HandleManualRequest"
+                                OnInteraction="OnInteraction"
                                 OnOrder="HandleOrder"
                                 OnInitialize="HandleInitialize"
                                 Options="_tableOptions"
@@ -134,7 +133,7 @@
     private QuarkTable? _quarkTable;
     private List<Employee> _currentEmployees = [];
 
-    private QuarkTableOptions _tableOptions = new()
+    private readonly QuarkTableOptions _tableOptions = new()
     {
         DefaultPageSize = 5, // Smaller page size to demonstrate paging
         Sortable = true,
@@ -147,9 +146,9 @@
     private PagedResult<Employee>? _lastPagedResult;
     private int _totalRecords;
 
-    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
+    private async Task OnInteraction(DataTableServerSideRequest serverSideRequest)
     {
-        Logger.LogInformation("PagedResultDemo: HandleManualRequest called with Start={Start}, Length={Length}, Token='{Token}'", 
+        Logger.LogInformation("PagedResultDemo: OnInteraction called with Start={Start}, Length={Length}, Token='{Token}'", 
             serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.ContinuationToken ?? "null");
 
         try
@@ -159,17 +158,13 @@
             Logger.LogInformation("PagedResultDemo: EmployeeService returned {Count} employees, TotalCount={TotalCount}, ContinuationToken='{Token}'", 
                 pagedResult.Items.Count, pagedResult.TotalCount, pagedResult.ContinuationToken ?? "null");
 
-            // Update the current employees list
             _currentEmployees = pagedResult.Items;
 
             // Update the QuarkTable's continuation token paging
-            if (_quarkTable != null)
-            {
-                _quarkTable.UpdateContinuationTokenPaging(
-                    pagedResult.Items.Count,
-                    pagedResult.ContinuationToken,
-                    serverSideRequest.ContinuationToken);
-            }
+            _quarkTable?.UpdateContinuationTokenPaging(
+                pagedResult.Items.Count,
+                pagedResult.ContinuationToken,
+                serverSideRequest.ContinuationToken);
 
             // Update debug information
             _currentContinuationToken = pagedResult.ContinuationToken;

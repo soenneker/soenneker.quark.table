@@ -33,7 +33,6 @@
                         <QuarkTableElement>
                             <QuarkThead>
                                 <QuarkTr>
-                                    <QuarkTh Data="Id" Searchable="true">Id</QuarkTh>
                                     <QuarkTh Data="Name" Sortable="true" Searchable="true">Name</QuarkTh>
                                     <QuarkTh Data="test.dept" Sortable="true" Searchable="true">Department</QuarkTh>
                                     <QuarkTh Data="Email" Sortable="true" Searchable="true">Email</QuarkTh>
@@ -86,7 +85,7 @@
     private List<Employee> _currentEmployees = new();
     private bool _hasLoadedOnce = false;
 
-    private QuarkTableOptions _basicTableOptions = new()
+    private readonly QuarkTableOptions _basicTableOptions = new()
     {
         DefaultPageSize = 10,
         Sortable = true,

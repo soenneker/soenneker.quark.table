@@ -1,0 +1,212 @@
+@page "/modern-demo"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Quark.Table.Enums
+@using Soenneker.Quark.Table.Demo.Services
+@using Soenneker.Quark.Table.Demo.Dtos
+@using Soenneker.DataTables.Dtos.ServerSideRequest
+
+@inject ILogger<ModernDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>Modern Demo - QuarkTable</PageTitle>
+
+<style>
+    :root {
+        /* Core tones */
+        --qt-bg: #ffffff; /* page background */
+        --qt-surface: #ffffff; /* table body */
+        --qt-surface-2: #fff; /* header / controls */
+        --qt-border: #dee2e6; /* borders & separators */
+        --qt-row-alt: #ffffff; /* zebra alt rows */
+        --qt-hover: #eef3f7; /* row / btn hover */
+        /* Content colours */
+        --qt-text: #212529; /* body text */
+        --qt-muted: #6c757d; /* subdued text */
+        --qt-heading: #000000; /* headings */
+        /* Accent / states */
+        --qt-accent: #6c757d; /* active, selected, focus */
+        --qt-accent-hover: #5c636a; /* accent hover */
+        --qt-focus-ring: rgba(108,117,125,.25);
+    }
+
+    /* Optional: soften box-shadow on light background */
+    .quark-table {
+        box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    }
+
+    /* Optional: lighter pagination buttons on hover */
+    .quark-table-pagination-btn:hover:not([disabled]) {
+        background-color: var(--qt-hover);
+        border-color: var(--qt-accent);
+    }
+
+    /* Optional: active pagination button tint */
+    .quark-table-pagination-btn.active {
+        color: #fff; /* ensure text is visible */
+    }
+
+    .quark-table-search-input {
+        background: #f0f2f5;
+        border-radius: 0.375rem; /* 6 px */
+    }
+
+    .quark-table tbody tr:hover,
+    .quark-table-pagination-btn:hover:not([disabled]) {
+        background-color: #eef1f4;
+    }
+
+    .quark-table-sortable{
+        background-color: rgb(229, 231, 235) !important;
+        color: rgb(17, 24, 39) !important;
+    }
+
+    .quark-table th,
+    .quark-table td {
+        padding: 0.3rem 0.6rem; /* ↓ was 0.5rem 0.75rem */
+        line-height: 1.2; /* optional: tighter line height */
+    }
+
+    /* If you also want the search row (when present) compacted */
+    .quark-table-search-cell {
+        padding: 0.4rem 0.6rem;
+    }
+
+    .quark-table td,
+    .quark-table th {
+        /* Hairline: 1 px, very light gray (adjust if needed) */
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+
+    /* 2️⃣  Kill the table's box-shadow so no "shadow bar" shows */
+    .quark-table {
+        box-shadow: none; /* override any previous shadow */
+    }
+
+        /* 3️⃣  Optional: also remove zebra striping hover tint on last row edge */
+        .quark-table tbody tr:last-child td {
+            border-bottom-color: rgba(0,0,0,0.04); /* same faint line */
+        }
+
+    .quark-table-with-search .quark-table-search,
+    .quark-table-controls {
+        border: none;
+    }
+
+    .quark-table {
+        border: none !important; /* overrides the 1 px solid in the base theme */
+    }
+</style>
+
+<QuarkTable @ref="_modernTable"
+            OnInteraction="HandleManualRequest"
+            OnOrder="HandleOrder"
+            OnInitialize="HandleInitialize"
+            Options="_modernTableOptions"
+            TotalRecords="@_totalRecords" >
+
+    <QuarkTableSearch Placeholder="Search..." />
+
+    <QuarkTableElement>
+        <QuarkThead>
+            <QuarkTr>
+                <QuarkTh Data="Name" Sortable="true" Searchable="true" >Name</QuarkTh>
+                <QuarkTh Data="Department" Sortable="true" Searchable="true" >Department</QuarkTh>
+                <QuarkTh Data="Email" Sortable="true" Searchable="true" >Email</QuarkTh>
+                <QuarkTh Data="Salary" Sortable="true" Searchable="true" >Salary</QuarkTh>
+                <QuarkTh Data="HireDate" Sortable="true" Searchable="true" >Hire Date</QuarkTh>
+                <QuarkTh Data="Status" Sortable="true" Searchable="true" >Status</QuarkTh>
+            </QuarkTr>
+        </QuarkThead>
+
+        <QuarkTbody>
+            @if (_currentEmployees is {Count: > 0})
+            {
+                @foreach (var employee in _currentEmployees)
+                {
+                    <QuarkTr Key="@employee.Id" >
+                        <QuarkTd>@employee.Name</QuarkTd>
+                        <QuarkTd>@employee.Department</QuarkTd>
+                        <QuarkTd>@employee.Email</QuarkTd>
+                        <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                        <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
+                        <QuarkTd>@employee.Status</QuarkTd>
+                    </QuarkTr>
+                }
+            }
+            else if (_hasLoadedOnce)
+            {
+                <QuarkTableNoData>
+                    <div class="no-data" >
+                        <h4>No employees found</h4>
+                        <p>Try adjusting your search criteria.</p>
+                    </div>
+                </QuarkTableNoData>
+            }
+        </QuarkTbody>
+    </QuarkTableElement>
+
+    <QuarkTableControls>
+        <QuarkTablePagination />
+    </QuarkTableControls>
+</QuarkTable>
+
+@code {
+    private QuarkTable? _modernTable;
+    private List<Employee> _currentEmployees = new();
+    private bool _hasLoadedOnce = false;
+
+    private readonly QuarkTableOptions _modernTableOptions = new()
+    {
+        DefaultPageSize = 10,
+        Sortable = true,
+        SearchPosition = SearchPosition.End
+    };
+
+    private int _totalRecords;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize with employee data
+        _totalRecords = EmployeeService.GetTotalCount();
+        Logger.LogInformation("ModernDemo: OnInitializedAsync - Initialized with {TotalRecords} total employee records", _totalRecords);
+    }
+
+    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
+    {
+        Logger.LogInformation("ModernDemo: HandleManualRequest called: Request: Start={Start}, Length={Length}", serverSideRequest.Start, serverSideRequest.Length);
+
+        try
+        {
+            // Get filtered employees using the EmployeeService
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
+
+            Logger.LogInformation("ModernDemo: Returned {Count} employees", employees.Count);
+
+            // Update the current employees list
+            _currentEmployees = employees;
+            _hasLoadedOnce = true;
+
+            // Update the total records count
+            _totalRecords = EmployeeService.GetTotalCount();
+
+            // Trigger UI update
+            StateHasChanged();
+
+            Logger.LogInformation("ModernDemo: Updated currentEmployees with {Count} records, totalRecords={TotalRecords}", _currentEmployees.Count, _totalRecords);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "ModernDemo: Error handling manual request: {Message}", ex.Message);
+        }
+    }
+
+    private async Task HandleOrder(QuarkTableOrderEventArgs args)
+    {
+        Logger.LogInformation("Column '{Column}' sorted {Direction}", args.Column, args.Direction);
+    }
+
+    private async Task HandleInitialize()
+    {
+        Logger.LogInformation("Modern table initialized");
+    }
+}
