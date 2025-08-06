@@ -52,6 +52,12 @@ public sealed class QuarkTableOptions
     public bool ShowPageSizeSelector { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets whether to enable debug logging
+    /// </summary>
+    [JsonPropertyName("debug")]
+    public bool Debug { get; set; } = false;
+
+    /// <summary>
     /// Creates a clone of the current options
     /// </summary>
     /// <returns>A new instance with the same values</returns>
@@ -65,7 +71,8 @@ public sealed class QuarkTableOptions
             SearchDebounceMs = this.SearchDebounceMs,
             SearchPosition = this.SearchPosition,
             MaxPageButtons = this.MaxPageButtons,
-            ShowPageSizeSelector = this.ShowPageSizeSelector
+            ShowPageSizeSelector = this.ShowPageSizeSelector,
+            Debug = this.Debug
         };
     }
 
@@ -85,6 +92,7 @@ public sealed class QuarkTableOptions
                SearchPosition == other.SearchPosition &&
                MaxPageButtons == other.MaxPageButtons &&
                ShowPageSizeSelector == other.ShowPageSizeSelector &&
+               Debug == other.Debug &&
                (PageSizeOptions == null && other.PageSizeOptions == null ||
                 PageSizeOptions != null && other.PageSizeOptions != null &&
                 PageSizeOptions.SequenceEqual(other.PageSizeOptions));
@@ -105,6 +113,7 @@ public sealed class QuarkTableOptions
             hash = hash * 23 + SearchPosition.GetHashCode();
             hash = hash * 23 + MaxPageButtons.GetHashCode();
             hash = hash * 23 + ShowPageSizeSelector.GetHashCode();
+            hash = hash * 23 + Debug.GetHashCode();
             hash = hash * 23 + (PageSizeOptions != null ? string.Join(",", PageSizeOptions).GetHashCode() : 0);
             return hash;
         }

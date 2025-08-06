@@ -213,6 +213,7 @@ private async Task HandleManualRequest(DataTableServerSideRequest request)
 | `DefaultPageSize` | `int` | `10` | Default page size |
 | `SearchDebounceMs` | `int` | `300` | Search debounce delay in milliseconds |
 | `MaxPageButtons` | `int` | `5` | Maximum number of page buttons |
+| `Debug` | `bool` | `false` | Enable debug logging |
 
 ## Events
 

@@ -158,11 +158,13 @@
         // Prevent infinite loops by checking if we're already updating parameters
         if (_isUpdatingParameters)
         {
-            Logger.LogDebug("OnParametersSetAsync called while already updating parameters - skipping");
+            if (Options.Debug)
+                Logger.LogDebug("OnParametersSetAsync called while already updating parameters - skipping");
             return;
         }
 
-        Logger.LogDebug("OnParametersSetAsync called: _dataLoaded={DataLoaded}, _initialized={Initialized}, TotalRecords={TotalRecords}, _totalRecords={CurrentTotalRecords}", _dataLoaded, _initialized, TotalRecords, TotalRecordsCount);
+        if (Options.Debug)
+            Logger.LogDebug("OnParametersSetAsync called: _dataLoaded={DataLoaded}, _initialized={Initialized}, TotalRecords={TotalRecords}, _totalRecords={CurrentTotalRecords}", _dataLoaded, _initialized, TotalRecords, TotalRecordsCount);
 
         _isUpdatingParameters = true;
 
@@ -174,14 +176,16 @@
             // Initialize total records and pages on first parameter set
             if (!_dataLoaded)
             {
-                Logger.LogDebug("First parameter set - initializing data");
+                if (Options.Debug)
+                    Logger.LogDebug("First parameter set - initializing data");
                 TotalRecordsCount = TotalRecords;
                 TotalPages = (int) Math.Ceiling((double) TotalRecordsCount / PageSize);
 
                 // Load initial data
                 if (OnInteraction.HasDelegate)
                 {
-                    Logger.LogDebug("Calling HandleManualRequest for initial data load");
+                    if (Options.Debug)
+                        Logger.LogDebug("Calling HandleManualRequest for initial data load");
                     await HandleManualRequest().NoSync();
                 }
 
@@ -192,17 +196,20 @@
                 // Check if TotalRecords has changed
                 if (TotalRecordsCount != TotalRecords)
                 {
-                    Logger.LogDebug("TotalRecords changed from {OldTotal} to {NewTotal}", TotalRecordsCount, TotalRecords);
+                    if (Options.Debug)
+                        Logger.LogDebug("TotalRecords changed from {OldTotal} to {NewTotal}", TotalRecordsCount, TotalRecords);
                     TotalRecordsCount = TotalRecords;
                     TotalPages = (int) Math.Ceiling((double) TotalRecordsCount / PageSize);
-                    Logger.LogDebug("TotalRecords updated to {TotalRecords}, TotalPages={TotalPages}", TotalRecordsCount, TotalPages);
+                    if (Options.Debug)
+                        Logger.LogDebug("TotalRecords updated to {TotalRecords}, TotalPages={TotalPages}", TotalRecordsCount, TotalPages);
                 }
             }
 
             // Check if options have changed and trigger reload if needed
             if (_initialized && _previousOptions != null && !Options.Equals(_previousOptions))
             {
-                Logger.LogDebug("Options changed - resetting table");
+                if (Options.Debug)
+                    Logger.LogDebug("Options changed - resetting table");
                 PageSize = Options.DefaultPageSize;
                 CurrentPage = 1;
                 // Clear continuation token when options change
@@ -239,7 +246,8 @@
 
     public async Task HandleSearch(string searchTerm, CancellationToken cancellationToken = default)
     {
-        Logger.LogDebug("HandleSearch called with term: {SearchTerm}", searchTerm);
+        if (Options.Debug)
+            Logger.LogDebug("HandleSearch called with term: {SearchTerm}", searchTerm);
 
         _searchTerm = searchTerm;
         CurrentPage = 1; // Reset to first page when searching
@@ -253,7 +261,8 @@
     {
         if (!Options.Sortable) return;
 
-        Logger.LogDebug("Sorting column by index: {ColumnIndex}", columnIndex);
+        if (Options.Debug)
+            Logger.LogDebug("Sorting column by index: {ColumnIndex}", columnIndex);
 
         // Find existing order for this column
         DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
@@ -275,14 +284,18 @@
                 Column = columnIndex,
                 Dir = nextDirection
             });
-            Logger.LogDebug("Added order: Column={Column}, Direction={Direction}", columnIndex, nextDirection);
+
+            if (Options.Debug)
+                Logger.LogDebug("Added order: Column={Column}, Direction={Direction}", columnIndex, nextDirection);
         }
         else
         {
-            Logger.LogDebug("Removed order for column {Column}", columnIndex);
+            if (Options.Debug)
+                Logger.LogDebug("Removed order for column {Column}", columnIndex);
         }
 
-        Logger.LogDebug("Current orders count: {Count}", _currentOrders.Count);
+        if (Options.Debug)
+            Logger.LogDebug("Current orders count: {Count}", _currentOrders.Count);
 
         CurrentPage = 1;
         // Reset continuation token paging when sorting
@@ -339,7 +352,8 @@
     {
         if (!Options.Sortable) return;
 
-        Logger.LogDebug("Sorting column by index: {ColumnIndex}", columnIndex);
+        if (Options.Debug)
+            Logger.LogDebug("Sorting column by index: {ColumnIndex}", columnIndex);
 
         // Find existing order for this column
         DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
@@ -361,14 +375,17 @@
                 Column = columnIndex,
                 Dir = nextDirection
             });
-            Logger.LogDebug("Added order: Column={Column}, Direction={Direction}", columnIndex, nextDirection);
+            if (Options.Debug)
+                Logger.LogDebug("Added order: Column={Column}, Direction={Direction}", columnIndex, nextDirection);
         }
         else
         {
-            Logger.LogDebug("Removed order for column {Column}", columnIndex);
+            if (Options.Debug)
+                Logger.LogDebug("Removed order for column {Column}", columnIndex);
         }
 
-        Logger.LogDebug("Current orders count: {Count}", _currentOrders.Count);
+        if (Options.Debug)
+            Logger.LogDebug("Current orders count: {Count}", _currentOrders.Count);
 
         CurrentPage = 1;
         // Reset continuation token paging when sorting
@@ -435,7 +452,8 @@
     {
         if (!Options.Sortable) return;
 
-        Logger.LogDebug("HandleColumnSort called for column index: {ColumnIndex}", columnIndex);
+        if (Options.Debug)
+            Logger.LogDebug("HandleColumnSort called for column index: {ColumnIndex}", columnIndex);
 
         // Find existing order for this column
         DataTableOrderRequest? existing = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
@@ -484,7 +502,8 @@
         _registeredColumns.Add(columnHeader);
         int columnIndex = _registeredColumns.Count - 1;
 
-        Logger.LogDebug("Registered column {ColumnIndex} for component {ComponentType}", columnIndex, columnHeader.GetType().Name);
+        if (Options.Debug)
+            Logger.LogDebug("Registered column {ColumnIndex} for component {ComponentType}", columnIndex, columnHeader.GetType().Name);
 
         return columnIndex;
     }
@@ -516,23 +535,27 @@
         // Prevent multiple simultaneous calls to HandleManualRequest
         if (_isHandlingManualRequest)
         {
-            Logger.LogDebug("HandleManualRequest called while already handling a request - skipping");
+            if (Options.Debug)
+                Logger.LogDebug("HandleManualRequest called while already handling a request - skipping");
             return;
         }
 
         // Prevent infinite loops by limiting consecutive calls
         if (_manualRequestCount > 100)
         {
-            Logger.LogWarning("HandleManualRequest called too many times ({Count}) - possible infinite loop detected", _manualRequestCount);
+            if (Options.Debug)
+                Logger.LogWarning("HandleManualRequest called too many times ({Count}) - possible infinite loop detected", _manualRequestCount);
             return;
         }
 
         _manualRequestCount++;
-        Logger.LogDebug("HandleManualRequest called (count: {Count}): Page={Page}, PageSize={PageSize}, SearchTerm='{SearchTerm}'", _manualRequestCount, CurrentPage, PageSize, _searchTerm);
+        if (Options.Debug)
+            Logger.LogDebug("HandleManualRequest called (count: {Count}): Page={Page}, PageSize={PageSize}, SearchTerm='{SearchTerm}'", _manualRequestCount, CurrentPage, PageSize, _searchTerm);
 
         if (!OnInteraction.HasDelegate)
         {
-            Logger.LogWarning("HandleManualRequest: No OnInteraction delegate");
+            if (Options.Debug)
+                Logger.LogWarning("HandleManualRequest: No OnInteraction delegate");
             return;
         }
 
@@ -562,7 +585,8 @@
                 ContinuationToken = continuationToken
             };
 
-            Logger.LogDebug("Sending request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", request.Start, request.Length, request.Search?.Value ?? "null", request.ContinuationToken ?? "null");
+            if (Options.Debug)
+                Logger.LogDebug("Sending request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", request.Start, request.Length, request.Search?.Value ?? "null", request.ContinuationToken ?? "null");
 
             await OnInteraction.InvokeAsync(request).NoSync();
             
@@ -571,12 +595,14 @@
             {
                 _hasLoadedOnce = true;
                 HasLoadedOnce = true;
-                Logger.LogDebug("Set HasLoadedOnce to true after first successful data load");
+                if (Options.Debug)
+                    Logger.LogDebug("Set HasLoadedOnce to true after first successful data load");
             }
         }
         catch (OperationCanceledException)
         {
-            Logger.LogDebug("HandleManualRequest was cancelled");
+            if (Options.Debug)
+                Logger.LogDebug("HandleManualRequest was cancelled");
         }
         catch (Exception ex)
         {
@@ -596,7 +622,8 @@
         bool shouldRender = _dataChanged;
         if (shouldRender)
         {
-            Logger.LogDebug("ShouldRender returning true - _dataChanged was true");
+            if (Options.Debug)
+                Logger.LogDebug("ShouldRender returning true - _dataChanged was true");
         }
 
         _dataChanged = false;
@@ -651,7 +678,8 @@
     public void ResetManualRequestCounter()
     {
         _manualRequestCount = 0;
-        Logger.LogDebug("Manual request counter reset to 0");
+        if (Options.Debug)
+            Logger.LogDebug("Manual request counter reset to 0");
     }
 
     /// <summary>
@@ -659,7 +687,8 @@
     /// </summary>
     public async Task CancelOperationsAsync()
     {
-        Logger.LogDebug("Cancelling ongoing operations");
+        if (Options.Debug)
+            Logger.LogDebug("Cancelling ongoing operations");
         await _cancellationTokenSource.CancelAsync();
         _isLoading = false;
         _isHandlingManualRequest = false;
@@ -675,7 +704,8 @@
     /// <param name="tokenUsedForCurrentPage">The continuation token that was used to reach the current page</param>
     public void UpdateContinuationTokenPaging(int recordCount, string? continuationToken, string? tokenUsedForCurrentPage = null)
     {
-        Logger.LogDebug("UpdateContinuationTokenPaging called: RecordCount={RecordCount}, Token='{Token}', TokenUsed='{TokenUsed}', TotalRecords={TotalRecords}", recordCount, continuationToken ?? "null", tokenUsedForCurrentPage ?? "null", TotalRecords);
+        if (Options.Debug)
+            Logger.LogDebug("UpdateContinuationTokenPaging called: RecordCount={RecordCount}, Token='{Token}', TokenUsed='{TokenUsed}', TotalRecords={TotalRecords}", recordCount, continuationToken ?? "null", tokenUsedForCurrentPage ?? "null", TotalRecords);
 
         _continuationTokenPaging.UpdateFromResponse(PageSize, recordCount, continuationToken, tokenUsedForCurrentPage);
         _continuationToken = continuationToken;
@@ -686,17 +716,20 @@
         {
             int oldTotalRecords = TotalRecordsCount;
             TotalRecordsCount = _continuationTokenPaging.CalculateTotalRecords(PageSize);
-            Logger.LogDebug("Updated _totalRecords from {OldTotal} to {NewTotal} (TotalRecords parameter is {ParamTotal})", oldTotalRecords, TotalRecordsCount, TotalRecords);
+            if (Options.Debug)
+                Logger.LogDebug("Updated _totalRecords from {OldTotal} to {NewTotal} (TotalRecords parameter is {ParamTotal})", oldTotalRecords, TotalRecordsCount, TotalRecords);
         }
         else
         {
-            Logger.LogDebug("Keeping _totalRecords as {CurrentTotal} (TotalRecords parameter is {ParamTotal})", TotalRecordsCount, TotalRecords);
+            if (Options.Debug)
+                Logger.LogDebug("Keeping _totalRecords as {CurrentTotal} (TotalRecords parameter is {ParamTotal})", TotalRecordsCount, TotalRecords);
         }
 
         int oldTotalPages = TotalPages;
         TotalPages = (int) Math.Ceiling((double) TotalRecordsCount / PageSize);
 
-        Logger.LogDebug("Updated continuation token paging: RecordCount={RecordCount}, Token='{Token}', TotalRecords={TotalRecords}, TotalPages={TotalPages} (was {OldTotalPages})", recordCount, continuationToken ?? "null", TotalRecordsCount, TotalPages, oldTotalPages);
+        if (Options.Debug)
+            Logger.LogDebug("Updated continuation token paging: RecordCount={RecordCount}, Token='{Token}', TotalRecords={TotalRecords}, TotalPages={TotalPages} (was {OldTotalPages})", recordCount, continuationToken ?? "null", TotalRecordsCount, TotalPages, oldTotalPages);
     }
 
 }

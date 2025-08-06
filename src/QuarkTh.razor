@@ -5,7 +5,7 @@
 
 <th @onclick="HandleClick" 
     class="quark-table-sortable @(Sortable ? GetSortClass() : string.Empty)"
-    style="@(Sortable ? "cursor:pointer;" : string.Empty) Style)">
+    style="@(Sortable ? "cursor:pointer;" : string.Empty) @Style">
     @ChildContent @(Sortable ? GetSortIndicator() : string.Empty)
 </th>
 

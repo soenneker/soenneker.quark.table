@@ -1,12 +1,11 @@
 ﻿using Xunit;
 
-namespace Soenneker.Quark.Table.Tests
+namespace Soenneker.Quark.Table.Tests;
+
+public class QuarkTableTests
 {
-    public class QuarkTableTests
+    [Fact]
+    public void Default()
     {
-        [Fact]
-        public void Default()
-        {
-        }
     }
 }
