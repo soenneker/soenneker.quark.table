@@ -7,11 +7,11 @@ namespace Soenneker.Quark.Table.Demo.Dtos
     public class Employee
     {
         [JsonPropertyName("Id")]
-        [MapTo("Id")]
+        [MapTo("id")]
         public int Id { get; set; }
         
         [JsonPropertyName("Name")]
-        [MapTo("Name")]
+        [MapTo("contact.firstName")]
         public string Name { get; set; } = "";
         
         [JsonPropertyName("Email")]
