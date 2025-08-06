@@ -1,6 +1,5 @@
 @page "/paged-result-demo"
 @using Microsoft.Extensions.Logging
-@using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 @using Soenneker.Dtos.Results.Paged
@@ -63,10 +62,10 @@
                             </QuarkTbody>
                         </QuarkTableElement>
 
-                        <QuarkTableControls>
+                        <QuarkTableBottomBar>
                             <QuarkTableInfo />
                             <QuarkTablePagination />
-                        </QuarkTableControls>
+                        </QuarkTableBottomBar>
 
                     </QuarkTable>
                 </div>
@@ -136,8 +135,7 @@
 
     private readonly QuarkTableOptions _tableOptions = new()
     {
-        DefaultPageSize = 5, // Smaller page size to demonstrate paging
-        SearchPosition = SearchPosition.End
+        DefaultPageSize = 5 // Smaller page size to demonstrate paging
     };
 
     private string? _currentContinuationToken;

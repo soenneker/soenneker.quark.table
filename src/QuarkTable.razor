@@ -82,6 +82,20 @@
 
     public bool HasLoadedOnce { get; private set; }
 
+    public string? SearchTerm => _searchTerm;
+
+    public string? SortBy => _currentOrders.FirstOrDefault()?.Column switch
+    {
+        0 => _registeredColumns.Count > 0 ? _registeredColumns[0].Data : null,
+        1 => _registeredColumns.Count > 1 ? _registeredColumns[1].Data : null,
+        2 => _registeredColumns.Count > 2 ? _registeredColumns[2].Data : null,
+        3 => _registeredColumns.Count > 3 ? _registeredColumns[3].Data : null,
+        4 => _registeredColumns.Count > 4 ? _registeredColumns[4].Data : null,
+        _ => null
+    };
+
+    public string? SortDirection => _currentOrders.FirstOrDefault()?.Dir;
+
     private readonly Debouncer _debouncer = new();
     private readonly List<DataTableOrderRequest> _currentOrders = [];
     private readonly QuarkTableContinuationTokenPaging _continuationTokenPaging = new();
@@ -145,8 +159,8 @@
                 if (OnInteraction.HasDelegate)
                 {
                     if (Options.Debug)
-                        Logger.LogDebug("Calling HandleManualRequest for initial data load");
-                    await HandleManualRequest().NoSync();
+                        Logger.LogDebug("Calling OnInteractionInternal for initial data load");
+                    await OnInteractionInternal().NoSync();
                 }
 
                 _dataLoaded = true;
@@ -177,7 +191,7 @@
                 _continuationTokenPaging.Reset();
                 if (OnInteraction.HasDelegate)
                 {
-                    await HandleManualRequest().NoSync();
+                    await OnInteractionInternal().NoSync();
                 }
             }
 
@@ -198,10 +212,15 @@
         CurrentPage = page;
         // Clear continuation token when changing pages
         _continuationToken = null;
-        await HandleManualRequest(cancellationToken).NoSync();
+        await OnInteractionInternal(cancellationToken).NoSync();
 
         if (OnGoToPage.HasDelegate)
             await OnGoToPage.InvokeAsync(page).NoSync();
+    }
+
+    public async Task GoToPage(int page, CancellationToken cancellationToken = default)
+    {
+        await HandleGoToPage(page, cancellationToken).NoSync();
     }
 
     public async Task HandleSearch(string searchTerm, CancellationToken cancellationToken = default)
@@ -214,10 +233,8 @@
         _continuationTokenPaging.Reset(); // Reset continuation token paging when searching
         _continuationToken = null; // Clear continuation token when searching
 
-        await HandleManualRequest(cancellationToken).NoSync();
+        await OnInteractionInternal(cancellationToken).NoSync();
     }
-
-
 
     public List<DataTableOrderRequest> GetCurrentOrders()
     {
@@ -235,7 +252,7 @@
         CurrentPage = 1;
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await HandleManualRequest(cancellationToken).NoSync();
+        await OnInteractionInternal(cancellationToken).NoSync();
     }
 
     public string? GetSortDirection(int columnIndex)
@@ -300,7 +317,7 @@
         // Reset continuation token paging when sorting
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await HandleManualRequest(cancellationToken).NoSync();
+        await OnInteractionInternal(cancellationToken).NoSync();
 
         if (OnOrder.HasDelegate)
         {
@@ -361,13 +378,13 @@
         return columns;
     }
 
-    private async Task HandleManualRequest(CancellationToken cancellationToken = default)
+    private async Task OnInteractionInternal(CancellationToken cancellationToken = default)
     {
-        // Prevent multiple simultaneous calls to HandleManualRequest
+        // Prevent multiple simultaneous calls to OnInteractionInternal
         if (_isHandlingManualRequest)
         {
             if (Options.Debug)
-                Logger.LogDebug("HandleManualRequest called while already handling a request - skipping");
+                Logger.LogDebug("OnInteractionInternal called while already handling a request - skipping");
             return;
         }
 
@@ -375,18 +392,18 @@
         if (_manualRequestCount > 100)
         {
             if (Options.Debug)
-                Logger.LogWarning("HandleManualRequest called too many times ({Count}) - possible infinite loop detected", _manualRequestCount);
+                Logger.LogWarning("OnInteractionInternal called too many times ({Count}) - possible infinite loop detected", _manualRequestCount);
             return;
         }
 
         _manualRequestCount++;
         if (Options.Debug)
-            Logger.LogDebug("HandleManualRequest called (count: {Count}): Page={Page}, PageSize={PageSize}, SearchTerm='{SearchTerm}'", _manualRequestCount, CurrentPage, PageSize, _searchTerm);
+            Logger.LogDebug("OnInteractionInternal called (count: {Count}): Page={Page}, PageSize={PageSize}, SearchTerm='{SearchTerm}'", _manualRequestCount, CurrentPage, PageSize, _searchTerm);
 
         if (!OnInteraction.HasDelegate)
         {
             if (Options.Debug)
-                Logger.LogWarning("HandleManualRequest: No OnInteraction delegate");
+                Logger.LogWarning("OnInteractionInternal: No OnInteraction delegate");
             return;
         }
 
@@ -433,11 +450,11 @@
         catch (OperationCanceledException)
         {
             if (Options.Debug)
-                Logger.LogDebug("HandleManualRequest was cancelled");
+                Logger.LogDebug("OnInteractionInternal was cancelled");
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "HandleManualRequest error: {Message}", ex.Message);
+            Logger.LogError(ex, "OnInteractionInternal error: {Message}", ex.Message);
         }
         finally
         {
@@ -471,7 +488,7 @@
         _registeredColumns.Clear(); // Reset column registration
         _hasLoadedOnce = false; // Reset the loaded flag
         HasLoadedOnce = false;
-        await HandleManualRequest(cancellationToken).NoSync();
+        await OnInteractionInternal(cancellationToken).NoSync();
     }
 
     public async Task Reset(CancellationToken cancellationToken = default)
@@ -484,7 +501,7 @@
         _registeredColumns.Clear(); // Reset column registration
         _hasLoadedOnce = false; // Reset the loaded flag
         HasLoadedOnce = false;
-        await HandleManualRequest(cancellationToken).NoSync();
+        await OnInteractionInternal(cancellationToken).NoSync();
     }
 
     public async Task CancelOperationsAsync()

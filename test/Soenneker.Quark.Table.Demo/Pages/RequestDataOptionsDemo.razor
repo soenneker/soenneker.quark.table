@@ -5,7 +5,7 @@
 @using Soenneker.Quark.Table.Demo.Services
 @using Microsoft.Extensions.Logging
 @using Soenneker.Extensions.Task
-@using Soenneker.Quark.Table.Enums
+
 @inject EmployeeService EmployeeService
 @inject ILogger<RequestDataOptionsDemo> Logger
 
@@ -17,7 +17,7 @@
 <QuarkTable @ref="_table"
             Options="_tableOptions"
             TotalRecords="_totalRecords"
-            OnInteraction="HandleManualRequest"
+            OnInteraction="OnInteraction"
             OnInitialize="HandleInitialize" >
 
     <QuarkTableSearch></QuarkTableSearch>
@@ -61,9 +61,9 @@
         </QuarkTbody>
     </QuarkTableElement>
 
-    <QuarkTableControls>
+    <QuarkTableBottomBar>
         <QuarkTablePagination />
-    </QuarkTableControls>
+    </QuarkTableBottomBar>
 </QuarkTable>
 
 @if (_lastRequestDataOptions != null)
@@ -82,8 +82,7 @@
 
     private readonly QuarkTableOptions _tableOptions = new()
     {
-        DefaultPageSize = 10,
-        SearchPosition = SearchPosition.End
+        DefaultPageSize = 10
     };
 
     private int _totalRecords;
@@ -94,9 +93,9 @@
         Logger.LogInformation("RequestDataOptionsDemo: OnInitializedAsync - Initialized with {TotalRecords} total employee records", _totalRecords);
     }
 
-    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
+    private async Task OnInteraction(DataTableServerSideRequest serverSideRequest)
     {
-        Logger.LogInformation("RequestDataOptionsDemo: HandleManualRequest called: Request: Start={Start}, Length={Length}", serverSideRequest.Start, serverSideRequest.Length);
+        Logger.LogInformation("RequestDataOptionsDemo: OnInteraction called: Request: Start={Start}, Length={Length}", serverSideRequest.Start, serverSideRequest.Length);
 
         try
         {

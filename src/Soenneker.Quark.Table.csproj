@@ -52,7 +52,6 @@
         <PackageReference Include="Soenneker.Utils.Debounce" Version="3.0.4" />
         <PackageReference Include="Soenneker.Utils.Json" Version="3.0.2340" />
         <PackageReference Include="Soenneker.Blazor.Utils.ResourceLoader" Version="3.0.1485" />
-        <PackageReference Include="Intellenum" Version="1.0.6" />
     </ItemGroup>
 
     <ItemGroup>

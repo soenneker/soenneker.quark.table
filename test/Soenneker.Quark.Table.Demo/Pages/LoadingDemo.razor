@@ -56,17 +56,17 @@
                                     </QuarkTr>
                                 }
                             }
-                            else if (_hasLoadedOnce)
+                            else if (_tableRef.HasLoadedOnce)
                             {
                                 <QuarkTableNoData />
                             }
                         </QuarkTbody>
                     </QuarkTableElement>
 
-                    <QuarkTableControls>
+                    <QuarkTableBottomBar>
                         <QuarkTableInfo />
                         <QuarkTablePagination />
-                    </QuarkTableControls>
+                    </QuarkTableBottomBar>
                 </QuarkTable>
             </div>
         </div>
@@ -76,7 +76,6 @@
 @code {
     private QuarkTable? _tableRef;
     private List<Employee> _currentEmployees = new();
-    private bool _hasLoadedOnce = false;
     private int _totalRecords;
 
     private async Task HandleServerSideRequest(DataTableServerSideRequest request)
@@ -94,9 +93,6 @@
 
             // Update the current employees list
             _currentEmployees = employees;
-            _hasLoadedOnce = true;
-
-
 
             // Trigger UI update
             StateHasChanged();

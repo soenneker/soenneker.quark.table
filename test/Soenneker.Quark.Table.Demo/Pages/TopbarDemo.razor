@@ -1,0 +1,196 @@
+@page "/topbar"
+@using Microsoft.Extensions.Logging
+@using Soenneker.Extensions.Task
+@using Soenneker.Quark.Table.Demo.Services
+@using Soenneker.Quark.Table.Demo.Dtos
+
+@inject ILogger<TopbarDemo> Logger
+@inject EmployeeService EmployeeService
+
+<PageTitle>Topbar Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid" >
+    <div class="row" >
+        <div class="col-12" >
+            <h3>QuarkTableTopbar Demo</h3>
+            <p class="text-muted mb-4" >Demonstration of the new QuarkTableTopbar component with search on the left and custom controls on the right.</p>
+        </div>
+    </div>
+
+    <div class="row" >
+        <div class="col-12" >
+            <div class="card" >
+                <div class="card-body" >
+                    <QuarkTable @ref="_topbarTable"
+                                OnInteraction="OnInteraction"
+                                OnOrder="HandleOrder"
+                                OnInitialize="HandleInitialize"
+                                Options="_topbarTableOptions"
+                                TotalRecords="@_totalRecords" >
+
+                        <QuarkTableTopbar>
+                            <QuarkTableLeft>
+                                <QuarkTableSearch Placeholder="Search employees..." />
+                            </QuarkTableLeft>
+                            <QuarkTableRight>
+                                <select class="quark-table-pagination-btn" @onchange="HandleDepartmentFilter" >
+                                    <option value="" >All Departments</option>
+                                    <option value="Engineering" >Engineering</option>
+                                    <option value="Marketing" >Marketing</option>
+                                    <option value="Sales" >Sales</option>
+                                    <option value="HR" >HR</option>
+                                </select>
+                                <button class="quark-table-pagination-btn" @onclick="HandleExport" >
+                                    Export CSV
+                                </button>
+                                <button class="quark-table-pagination-btn" @onclick="HandleRefresh" >
+                                    Refresh
+                                </button>
+                            </QuarkTableRight>
+                        </QuarkTableTopbar>
+
+                        <QuarkTableElement>
+                            <QuarkThead>
+                                <QuarkTr>
+                                    <QuarkTh Data="Name" Sortable="true" Searchable="true" >Name</QuarkTh>
+                                    <QuarkTh Data="test.dept" Sortable="true" Searchable="true" >Department</QuarkTh>
+                                    <QuarkTh Data="Email" Sortable="true" Searchable="true" >Email</QuarkTh>
+                                    <QuarkTh Data="Salary" Sortable="true" Searchable="true" >Salary</QuarkTh>
+                                    <QuarkTh Data="HireDate" Sortable="true" Searchable="true" >Hire Date</QuarkTh>
+                                </QuarkTr>
+                            </QuarkThead>
+
+                            <QuarkTbody>
+                                @if (_employees != null)
+                                {
+                                    @foreach (Employee employee in _employees)
+                                    {
+                                        <QuarkTr>
+                                            <QuarkTd>@employee.Name</QuarkTd>
+                                            <QuarkTd>@employee.Department</QuarkTd>
+                                            <QuarkTd>@employee.Email</QuarkTd>
+                                            <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                            <QuarkTd>@employee.HireDate.ToString("MM/dd/yyyy")</QuarkTd>
+                                        </QuarkTr>
+                                    }
+                                }
+                            </QuarkTbody>
+                        </QuarkTableElement>
+                        <QuarkTableBottomBar>
+                            <QuarkTableRight>
+                                <QuarkTableInfo />
+                                <QuarkTablePagination />
+                            </QuarkTableRight>
+                        </QuarkTableBottomBar>
+
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private QuarkTable _topbarTable = null!;
+    private readonly QuarkTableOptions _topbarTableOptions = new();
+    private List<Employee>? _employees;
+    private int _totalRecords;
+    private string _selectedDepartment = string.Empty;
+
+    private async Task HandleInitialize()
+    {
+        Logger.LogInformation("QuarkTable initialized");
+        await LoadEmployees().NoSync();
+    }
+
+    private async Task OnInteraction()
+    {
+        Logger.LogInformation("Manual request triggered");
+        await LoadEmployees().NoSync();
+    }
+
+    private async Task HandleOrder()
+    {
+        Logger.LogInformation("Order changed");
+        await LoadEmployees().NoSync();
+    }
+
+    private async Task LoadEmployees()
+    {
+        var serverRequest = new DataTableServerSideRequest
+        {
+            Start = ((_topbarTable?.CurrentPage ?? 1) - 1) * (_topbarTable?.PageSize ?? 10),
+            Length = _topbarTable?.PageSize ?? 10,
+            Search = new DataTableSearchRequest {Value = _topbarTable?.SearchTerm ?? string.Empty},
+            Order = new List<DataTableOrderRequest>()
+        };
+
+        // Add sorting if available
+        if (!string.IsNullOrEmpty(_topbarTable?.SortBy))
+        {
+            var columnIndex = GetColumnIndex(_topbarTable.SortBy);
+            if (columnIndex >= 0)
+            {
+                serverRequest.Order.Add(new DataTableOrderRequest
+                {
+                    Column = columnIndex,
+                    Dir = _topbarTable?.SortDirection?.ToLower() == "desc" ? "desc" : "asc"
+                });
+            }
+        }
+
+        var pagedResult = await EmployeeService.GetEmployeesPaged(serverRequest).NoSync();
+
+        // Apply department filter if selected
+        _employees = pagedResult.Items;
+        if (!string.IsNullOrEmpty(_selectedDepartment))
+        {
+            _employees = _employees.Where(e => e.Department == _selectedDepartment).ToList();
+        }
+
+        _totalRecords = pagedResult.TotalCount ?? 0;
+
+        await InvokeAsync(StateHasChanged).NoSync();
+    }
+
+    private static int GetColumnIndex(string sortBy)
+    {
+        return sortBy.ToLower() switch
+        {
+            "name" => 0,
+            "test.dept" => 1,
+            "email" => 2,
+            "salary" => 3,
+            "hiredate" => 4,
+            _ => 0
+        };
+    }
+
+    private async Task HandleDepartmentFilter(ChangeEventArgs e)
+    {
+        _selectedDepartment = e.Value?.ToString() ?? string.Empty;
+        Logger.LogInformation($"Department filter changed to: {_selectedDepartment}");
+
+        if (_topbarTable != null)
+        {
+            await _topbarTable.GoToPage(1).NoSync(); // Reset to first page when filtering
+        }
+
+        await LoadEmployees().NoSync();
+    }
+
+    private async Task HandleExport()
+    {
+        Logger.LogInformation("Export button clicked");
+        // Here you would implement your CSV export logic
+        await Task.Delay(500); // Simulate export delay
+        // For demo purposes, just log the action
+    }
+
+    private async Task HandleRefresh()
+    {
+        Logger.LogInformation("Refresh button clicked");
+        await LoadEmployees().NoSync();
+    }
+
+}

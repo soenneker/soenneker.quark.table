@@ -1,6 +1,4 @@
 using System.Text.Json.Serialization;
-using Soenneker.Quark.Table.Enums;
-using System.Linq;
 
 namespace Soenneker.Quark.Table.Options;
 
@@ -9,31 +7,17 @@ namespace Soenneker.Quark.Table.Options;
 /// </summary>
 public sealed class QuarkTableOptions
 {
-
-
     /// <summary>
     /// Gets or sets the default page size
     /// </summary>
     [JsonPropertyName("defaultPageSize")]
     public int DefaultPageSize { get; set; } = 10;
 
-
-
     /// <summary>
     /// Gets or sets the search debounce delay in milliseconds
     /// </summary>
     [JsonPropertyName("searchDebounceMs")]
     public int SearchDebounceMs { get; set; } = 300;
-
-    /// <summary>
-    /// Gets or sets the position of the search box
-    /// </summary>
-    [JsonPropertyName("searchPosition")]
-    public SearchPosition SearchPosition { get; set; } = SearchPosition.End;
-
-
-
-
 
     /// <summary>
     /// Gets or sets whether to enable debug logging
@@ -51,7 +35,6 @@ public sealed class QuarkTableOptions
         {
             DefaultPageSize = this.DefaultPageSize,
             SearchDebounceMs = this.SearchDebounceMs,
-            SearchPosition = this.SearchPosition,
             Debug = this.Debug
         };
     }
@@ -68,7 +51,6 @@ public sealed class QuarkTableOptions
 
         return DefaultPageSize == other.DefaultPageSize &&
                SearchDebounceMs == other.SearchDebounceMs &&
-               SearchPosition == other.SearchPosition &&
                Debug == other.Debug;
     }
 
@@ -83,7 +65,6 @@ public sealed class QuarkTableOptions
             var hash = 17;
             hash = hash * 23 + DefaultPageSize.GetHashCode();
             hash = hash * 23 + SearchDebounceMs.GetHashCode();
-            hash = hash * 23 + SearchPosition.GetHashCode();
             hash = hash * 23 + Debug.GetHashCode();
             return hash;
         }

@@ -38,6 +38,21 @@ public interface IQuarkTable : IAsyncDisposable
     bool HasLoadedOnce { get; }
 
     /// <summary>
+    /// Gets the current search term
+    /// </summary>
+    string? SearchTerm { get; }
+
+    /// <summary>
+    /// Gets the current sort by field
+    /// </summary>
+    string? SortBy { get; }
+
+    /// <summary>
+    /// Gets the current sort direction
+    /// </summary>
+    string? SortDirection { get; }
+
+    /// <summary>
     /// Gets the table options
     /// </summary>
     QuarkTableOptions Options { get; }
@@ -69,6 +84,13 @@ public interface IQuarkTable : IAsyncDisposable
     /// <param name="page">The page number to navigate to</param>
     /// <param name="cancellationToken">A token to cancel the operation</param>
     Task HandleGoToPage(int page, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Navigates to a specific page
+    /// </summary>
+    /// <param name="page">The page number to navigate to</param>
+    /// <param name="cancellationToken">A token to cancel the operation</param>
+    Task GoToPage(int page, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears all current sorting and resets to first page

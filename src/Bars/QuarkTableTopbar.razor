@@ -1,0 +1,12 @@
+@inherits ComponentBase
+
+<div class="quark-table-topbar-wrapper">
+    <div class="quark-table-topbar">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

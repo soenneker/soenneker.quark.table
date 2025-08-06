@@ -1,6 +1,5 @@
 @page "/modern-demo"
 @using Microsoft.Extensions.Logging
-@using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 @using Soenneker.Extensions.Task
@@ -95,8 +94,8 @@
     }
 </style>
 
-<QuarkTable @ref="_modernTable"
-            OnInteraction="HandleManualRequest"
+<QuarkTable @ref="_tableRef"
+            OnInteraction="OnInteraction"
             OnOrder="HandleOrder"
             OnInitialize="HandleInitialize"
             Options="_modernTableOptions"
@@ -131,7 +130,7 @@
                     </QuarkTr>
                 }
             }
-            else if (_hasLoadedOnce)
+            else if (_tableRef.HasLoadedOnce)
             {
                 <QuarkTableNoData>
                     <div class="no-data" >
@@ -143,20 +142,18 @@
         </QuarkTbody>
     </QuarkTableElement>
 
-    <QuarkTableControls>
+    <QuarkTableBottomBar>
         <QuarkTablePagination />
-    </QuarkTableControls>
+    </QuarkTableBottomBar>
 </QuarkTable>
 
 @code {
-    private QuarkTable? _modernTable;
+    private QuarkTable? _tableRef;
     private List<Employee> _currentEmployees = new();
-    private bool _hasLoadedOnce = false;
 
     private readonly QuarkTableOptions _modernTableOptions = new()
     {
-        DefaultPageSize = 10,
-        SearchPosition = SearchPosition.End
+        DefaultPageSize = 10
     };
 
     private int _totalRecords;
@@ -168,9 +165,9 @@
         Logger.LogInformation("ModernDemo: OnInitializedAsync - Initialized with {TotalRecords} total employee records", _totalRecords);
     }
 
-    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
+    private async Task OnInteraction(DataTableServerSideRequest serverSideRequest)
     {
-        Logger.LogInformation("ModernDemo: HandleManualRequest called: Request: Start={Start}, Length={Length}", serverSideRequest.Start, serverSideRequest.Length);
+        Logger.LogInformation("ModernDemo: OnInteraction called: Request: Start={Start}, Length={Length}", serverSideRequest.Start, serverSideRequest.Length);
 
         try
         {
@@ -181,7 +178,6 @@
 
             // Update the current employees list
             _currentEmployees = employees;
-            _hasLoadedOnce = true;
 
             // Update the total records count
             _totalRecords = EmployeeService.GetTotalCount();

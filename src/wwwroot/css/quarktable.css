@@ -54,8 +54,6 @@
 .quark-table-with-search .quark-table-search {
     background-color: var(--qt-surface-2);
     padding: 0.75rem;
-    border: 1px solid var(--qt-border);
-    border-radius: 0.375rem 0.375rem 0 0;
     border-bottom: none;
     margin-bottom: 0;
     display: block;
@@ -74,9 +72,6 @@
 .quark-table-with-search thead:first-child .quark-table-search {
     background-color: var(--qt-surface-2);
     padding: 0.75rem;
-    border: 1px solid var(--qt-border);
-    border-radius: 0.375rem 0.375rem 0 0;
-    border-bottom: none;
     margin-bottom: 0;
     display: block;
     position: relative;
@@ -99,9 +94,6 @@
 .quark-table-with-search .quark-table-search {
     background-color: var(--qt-surface-2);
     padding: 0.5rem;
-    border: 1px solid var(--qt-border);
-    border-radius: 0.375rem 0.375rem 0 0;
-    border-bottom: none;
     margin-bottom: 0;
     display: block;
     position: static;
@@ -201,8 +193,21 @@
         }
 
 /*------------------------------------------------------------*
-  Controls (pagination, page size, etc.)
+  Bottom Bar (pagination, page size, etc.)
 *------------------------------------------------------------*/
+.quark-table-bottombar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: var(--qt-surface-2);
+    border-top: 1px solid var(--qt-border);
+    border-radius: 0 0 0.375rem 0.375rem;
+}
+
+/* Legacy support for old class name */
 .quark-table-controls {
     display: flex;
     flex-wrap: wrap;
@@ -310,8 +315,72 @@
     }
 
 /*------------------------------------------------------------*
-  Controls wrapper and layout
+  Left/Right components
 *------------------------------------------------------------*/
+.quark-table-left {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0; /* Allow shrinking */
+    gap: 0.5rem;
+}
+
+.quark-table-right {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+    margin-left: auto; /* Push right content to the right */
+}
+
+/*------------------------------------------------------------*
+  Bottom Bar wrapper and layout
+*------------------------------------------------------------*/
+.quark-table-bottombar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: var(--qt-surface-2);
+    border-top: 1px solid var(--qt-border);
+    border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.quark-table-bottombar.InfoLeftPaginationRight {
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.quark-table-bottombar.InfoLeftPaginationRight .quark-table-info {
+    flex: 0 0 auto;
+}
+
+.quark-table-bottombar.InfoLeftPaginationRight .quark-table-pagination {
+    flex: 0 0 auto;
+}
+
+.quark-table-bottombar.InfoRightPaginationLeft {
+    justify-content: flex-start;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 1rem;
+}
+
+.quark-table-bottombar.Centered {
+    justify-content: center;
+    gap: 1rem;
+    align-items: center;
+}
+
+.quark-table-bottombar.Stacked {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Legacy controls wrapper support */
 .quark-table-controls {
     display: flex;
     flex-wrap: wrap;
@@ -324,7 +393,7 @@
 }
 
 .quark-table-controls.InfoLeftPaginationRight {
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     gap: 1rem;
 }
@@ -357,12 +426,14 @@
 }
 
 /* Helper classes for child components */
+.quark-table-bottombar .quark-table-info,
 .quark-table-controls .quark-table-info {
     margin: 0;
     display: flex;
     align-items: center;
 }
 
+.quark-table-bottombar .quark-table-pagination,
 .quark-table-controls .quark-table-pagination {
     margin: 0;
     display: flex;
@@ -672,6 +743,78 @@
         .quark-table th {
             background-color: #f0f0f0 !important;
         }
+}
+
+/*------------------------------------------------------------*
+  Topbar component
+*------------------------------------------------------------*/
+.quark-table-topbar-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.quark-table-topbar {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: var(--qt-surface-2);
+    border: 1px solid var(--qt-border);
+    border-radius: 0.375rem 0.375rem 0 0;
+    border-bottom: none;
+    margin-bottom: 0;
+    gap: 1rem;
+}
+
+/* Legacy support for old topbar left/right classes */
+.quark-table-topbar-left {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0; /* Allow shrinking */
+}
+
+.quark-table-topbar-right {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+    margin-left: auto; /* Push right content to the right */
+}
+
+/* Bar controls component */
+.quark-table-bar-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Search within topbar should be full width */
+.quark-table-topbar-left .quark-table-search {
+    flex: 1;
+    max-width: 400px; /* Prevent search from taking too much space */
+}
+
+/* Responsive behavior for topbar and bottombar */
+@media (max-width: 640px) {
+    .quark-table-topbar,
+    .quark-table-bottombar {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    
+    .quark-table-left,
+    .quark-table-right,
+    .quark-table-topbar-left,
+    .quark-table-topbar-right {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+    
+    .quark-table-left .quark-table-search,
+    .quark-table-topbar-left .quark-table-search {
+        max-width: none;
+    }
 }
 
 /*------------------------------------------------------------*

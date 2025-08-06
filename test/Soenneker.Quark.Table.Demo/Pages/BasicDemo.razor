@@ -1,7 +1,6 @@
 @page "/basic"
 @using Microsoft.Extensions.Logging
 @using Soenneker.Extensions.Task
-@using Soenneker.Quark.Table.Enums
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 
@@ -23,7 +22,7 @@
             <div class="card">
                 <div class="card-body">
                     <QuarkTable @ref="_basicTable"
-                                OnInteraction="HandleManualRequest"
+                                OnInteraction="OnInteraction"
                                 OnOrder="HandleOrder"
                                 OnInitialize="HandleInitialize"
                                 Options="_basicTableOptions"
@@ -58,7 +57,7 @@
                                         </QuarkTr>
                                     }
                                 }
-                                else if (_hasLoadedOnce)
+                                else if (_basicTable.HasLoadedOnce)
                                 {
                                     <QuarkTableNoData>
                                         <div style="text-align: center; padding: 2rem;">
@@ -70,10 +69,10 @@
                             </QuarkTbody>
                         </QuarkTableElement>
                         
-                        <QuarkTableControls>
+                        <QuarkTableBottomBar>
                             <QuarkTableInfo />
                             <QuarkTablePagination />
-                        </QuarkTableControls>
+                        </QuarkTableBottomBar>
                     </QuarkTable>
                 </div>
             </div>
@@ -84,12 +83,10 @@
 @code {
     private QuarkTable? _basicTable;
     private List<Employee> _currentEmployees = new();
-    private bool _hasLoadedOnce = false;
 
     private readonly QuarkTableOptions _basicTableOptions = new()
     {
-        DefaultPageSize = 10,
-        SearchPosition = SearchPosition.End
+        DefaultPageSize = 10
     };
 
     private int _totalRecords;
@@ -105,9 +102,9 @@
         Logger.LogInformation("BasicDemo: OnInitializedAsync - EmployeeService.GetAllEmployees() returned {Count} employees", testEmployees.Count);
     }
 
-    private async Task HandleManualRequest(DataTableServerSideRequest serverSideRequest)
+    private async Task OnInteraction(DataTableServerSideRequest serverSideRequest)
     {
-        Logger.LogInformation("BasicDemo: HandleManualRequest called: basicTable is {IsNull}, Request: Start={Start}, Length={Length}", _basicTable == null ? "null" : "not null", serverSideRequest.Start, serverSideRequest.Length);
+        Logger.LogInformation("BasicDemo: OnInteraction called: basicTable is {IsNull}, Request: Start={Start}, Length={Length}", _basicTable == null ? "null" : "not null", serverSideRequest.Start, serverSideRequest.Length);
         
         // Log columns information if available
         if (serverSideRequest.Columns != null && serverSideRequest.Columns.Count > 0)
@@ -133,7 +130,6 @@
 
             // Update the current employees list
             _currentEmployees = employees;
-            _hasLoadedOnce = true;
 
             // Update the total records count
             _totalRecords = EmployeeService.GetTotalCount();
