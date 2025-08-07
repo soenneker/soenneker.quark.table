@@ -4,16 +4,16 @@
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 
-@inject ILogger<TopbarDemo> Logger
+@inject ILogger<TopBarDemo> Logger
 @inject EmployeeService EmployeeService
 
-<PageTitle>Topbar Demo - QuarkTable</PageTitle>
+<PageTitle>TopBar Demo - QuarkTable</PageTitle>
 
 <div class="container-fluid" >
     <div class="row" >
         <div class="col-12" >
-            <h3>QuarkTableTopbar Demo</h3>
-            <p class="text-muted mb-4" >Demonstration of the new QuarkTableTopbar component with search on the left and custom controls on the right.</p>
+            <h3>QuarkTableTopBar Demo</h3>
+            <p class="text-muted mb-4" >Demonstration of the new QuarkTableTopBar component with search on the left and custom controls on the right.</p>
         </div>
     </div>
 
@@ -28,7 +28,7 @@
                                 Options="_topbarTableOptions"
                                 TotalRecords="@_totalRecords" >
 
-                        <QuarkTableTopbar>
+                        <QuarkTableTopBar>
                             <QuarkTableLeft>
                                 <QuarkTableSearch Placeholder="Search employees..." />
                             </QuarkTableLeft>
@@ -47,7 +47,7 @@
                                     Refresh
                                 </button>
                             </QuarkTableRight>
-                        </QuarkTableTopbar>
+                        </QuarkTableTopBar>
 
                         <QuarkTableElement>
                             <QuarkThead>

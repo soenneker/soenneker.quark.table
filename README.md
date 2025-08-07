@@ -34,7 +34,7 @@ A modern, component-driven Blazor table library that provides complete control o
 - **QuarkTablePagination**: Pagination controls component
 - **QuarkTableInfo**: Information display component (shows "x-y of z" format)
 - **QuarkTableBottomBar**: Bottom bar layout wrapper for info and pagination components
-- **QuarkTableTopbar**: Top bar layout component for header content
+- **QuarkTableTopBar**: Top bar layout component for header content
 - **QuarkTableLeft**: Left-aligned container component for use in topbar/bottombar
 - **QuarkTableRight**: Right-aligned container component for use in topbar/bottombar
 - **QuarkTableBarControls**: Container for buttons and custom controls
