@@ -2,7 +2,7 @@
     /* Core tones */
     --qt-bg: #212429; /* main page bg */
     --qt-surface: #26292f; /* table surface */
-    --qt-surface-2: #26292f; /* header surface - now matches table */
+    --qt-surface-2: #26292f; /* header surface – matches table */
     --qt-border: #343a40; /* separators */
     --qt-row-alt: #24272d; /* zebra alt */
     --qt-hover: #33373f; /* row/btn hover */
@@ -16,50 +16,61 @@
     --qt-focus-ring: rgba(173,181,189,.35);
 }
 
-/*------------------------------------------------------------*
-  Layout wrapper
-*------------------------------------------------------------*/
+/*------------------------------------------------*
+  Layout wrapper + root table element
+*------------------------------------------------*/
 .quark-table-wrapper {
     position: relative;
     width: 100%;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 0.875rem;
-    line-height: 1.4;
+    font: 400 0.875rem/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
     color: var(--qt-text);
-    background-color: var(--qt-bg);
-    padding: 0.25rem;
+    background: var(--qt-bg);
+    padding: .25rem;
     animation: qt-fade-in .25s ease-out;
 }
 
-/*------------------------------------------------------------*
-  Table element
-*------------------------------------------------------------*/
 .quark-table {
     width: 100%;
     border-collapse: collapse;
     border: 1px solid var(--qt-border);
-    border-radius: 0.375rem;
+    border-radius: .375rem;
     overflow: hidden;
-    background-color: var(--qt-surface);
+    background: var(--qt-surface);
     box-shadow: 0 2px 4px rgba(0,0,0,.25);
 }
 
-/*------------------------------------------------------------*
-  Search positioning within QuarkTable
-*------------------------------------------------------------*/
+/*------------------------------------------------*
+  Search positioning
+*------------------------------------------------*/
 .quark-table-with-search {
     position: relative;
 }
 
-.quark-table-with-search .quark-table-search {
-    background-color: var(--qt-surface-2);
-    padding: 0.75rem;
-    border-bottom: none;
-    margin-bottom: 0;
-    display: block;
-    position: static;
+.quark-table-search {
+    /* reset any absolute positioning that QuarkTable injects */
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    flex: 1 1 16rem;
+}
+
+.quark-table-with-search .quark-table-search,
+.quark-table-with-search thead:first-child .quark-table-search {
+    background: var(--qt-surface-2);
+    padding: .75rem;
+    margin: 0;
     width: 100%;
     box-sizing: border-box;
+}
+
+.quark-table-with-search thead:first-child .quark-table-search {
+    position: relative;
+    z-index: 1;
 }
 
 .quark-table-with-search .quark-table {
@@ -68,176 +79,152 @@
     margin-top: 0;
 }
 
-/* When search is inside the table, position it above headers */
-.quark-table-with-search thead:first-child .quark-table-search {
-    background-color: var(--qt-surface-2);
-    padding: 0.75rem;
-    margin-bottom: 0;
-    display: block;
-    position: relative;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1;
-}
-
-/* Remove absolute positioning for search components */
-.quark-table-search {
-    position: static !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    z-index: auto !important;
-}
-
-/* Position search above table headers when inside table */
-.quark-table-with-search .quark-table-search {
-    background-color: var(--qt-surface-2);
-    padding: 0.5rem;
-    margin-bottom: 0;
-    display: block;
-    position: static;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Create a search row that sits above the table headers */
-.quark-table-search-row {
-    background-color: var(--qt-surface-2);
+/* search row helpers */
+.quark-table-search-row,
+.quark-table-search-cell {
+    background: var(--qt-surface-2);
     border-bottom: 1px solid var(--qt-border);
 }
 
 .quark-table-search-cell {
-    padding: 0.75rem;
+    padding: .75rem;
     border: none;
 }
 
-    /*------------------------------------------------------------*
-  Search row positioned above headers
-*------------------------------------------------------------*/
-    .quark-table-search-row {
-        background-color: var(--qt-surface-2);
-        border-bottom: 1px solid var(--qt-border);
-    }
-
-    .quark-table-search-cell {
-        padding: 0.75rem;
-        border: none;
-    }
-
-    /*------------------------------------------------------------*
+/*------------------------------------------------*
   Head cells
-*------------------------------------------------------------*/
-    .quark-table th {
-        padding: 0.5rem 0.75rem;
-        background-color: var(--qt-surface-2);
-        color: var(--qt-heading);
-        font-weight: 600;
-        white-space: nowrap;
-        border-bottom: 1px solid var(--qt-border);
-        user-select: none;
-    }
-
-        /* Sortable indicator */
-        .quark-table th.quark-table-sortable {
-            position: relative;
-            cursor: pointer;
-            transition: background .15s ease;
-        }
-
-            .quark-table th.quark-table-sortable:hover {
-                background-color: var(--qt-hover);
-            }
-
-            .quark-table th.quark-table-sortable::after {
-                content: ""; /* No arrow for unsorted */
-                font-size: 0.65em;
-                margin-left: 0.3rem;
-                color: var(--qt-muted);
-            }
-
-        .quark-table th.quark-table-sorted-asc::after {
-            content: "\2191"; /* ↑ */
-            color: var(--qt-accent);
-        }
-
-        .quark-table th.quark-table-sorted-desc::after {
-            content: "\2193"; /* ↓ */
-            color: var(--qt-accent);
-        }
-
-    /*------------------------------------------------------------*
-  Body cells & rows
-*------------------------------------------------------------*/
-    .quark-table td {
-        padding: 0.5rem 0.75rem;
-        border-bottom: 1px solid var(--qt-border);
-    }
-
-    /* Zebra striping */
-    .quark-table tbody tr:nth-child(even) {
-        background-color: var(--qt-row-alt);
-    }
-
-    .quark-table tbody tr {
-        transition: background .15s ease;
-    }
-
-        .quark-table tbody tr:hover {
-            background-color: var(--qt-hover);
-        }
-
-        .quark-table tbody tr.selected {
-            background-color: var(--qt-accent);
-            color: var(--qt-heading);
-        }
-
-/*------------------------------------------------------------*
-  Bottom Bar (pagination, page size, etc.)
-*------------------------------------------------------------*/
-.quark-table-bottombar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: var(--qt-surface-2);
-    border-top: 1px solid var(--qt-border);
-    border-radius: 0 0 0.375rem 0.375rem;
+*------------------------------------------------*/
+.quark-table th {
+    padding: .5rem .75rem;
+    background: var(--qt-surface-2);
+    color: var(--qt-heading);
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--qt-border);
+    user-select: none;
 }
 
-/* Legacy support for old class name */
+    .quark-table th.quark-table-sortable {
+        position: relative;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+        .quark-table th.quark-table-sortable:hover {
+            background: var(--qt-hover);
+        }
+
+        .quark-table th.quark-table-sortable::after {
+            content: "";
+            font-size: .65em;
+            margin-left: .3rem;
+            color: var(--qt-muted);
+        }
+
+    .quark-table th.quark-table-sorted-asc::after {
+        content: "\2191";
+        color: var(--qt-accent);
+    }
+
+    .quark-table th.quark-table-sorted-desc::after {
+        content: "\2193";
+        color: var(--qt-accent);
+    }
+
+/*------------------------------------------------*
+  Body rows & cells
+*------------------------------------------------*/
+.quark-table td {
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--qt-border);
+}
+
+.quark-table tbody tr:nth-child(even) {
+    background: var(--qt-row-alt);
+}
+
+.quark-table tbody tr {
+    transition: background .15s;
+}
+
+    .quark-table tbody tr:hover {
+        background: var(--qt-hover);
+    }
+
+    .quark-table tbody tr.selected {
+        background: var(--qt-accent);
+        color: var(--qt-heading);
+    }
+
+/*------------------------------------------------*
+  Bottom-bar & legacy controls
+*------------------------------------------------*/
+.quark-table-bottombar,
 .quark-table-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: .5rem;
+    align-items: center;
+    padding: .5rem;
+    background: var(--qt-surface-2);
+}
+
+.quark-table-bottombar {
     justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: var(--qt-surface-2);
+}
+
+.quark-table-controls {
     border-top: 1px solid var(--qt-border);
-    border-radius: 0 0 0.375rem 0.375rem;
+    border-radius: 0 0 .375rem .375rem;
 }
 
-/*------------------------------------------------------------*
-  Search component
-*------------------------------------------------------------*/
-.quark-table-search {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    flex: 1 1 16rem;
-}
+    /* layout modifiers */
+    .quark-table-bottombar.InfoLeftPaginationRight,
+    .quark-table-controls.InfoLeftPaginationRight {
+        justify-content: space-between;
+        gap: 1rem;
+    }
 
+    .quark-table-bottombar.InfoRightPaginationLeft,
+    .quark-table-controls.InfoRightPaginationLeft {
+        flex-direction: row-reverse;
+        gap: 1rem;
+    }
+
+    .quark-table-bottombar.Centered,
+    .quark-table-controls.Centered {
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .quark-table-bottombar.Stacked,
+    .quark-table-controls.Stacked {
+        flex-direction: column;
+        gap: .75rem;
+        align-items: center;
+    }
+
+    /* helper children */
+    .quark-table-bottombar .quark-table-info,
+    .quark-table-controls .quark-table-info,
+    .quark-table-bottombar .quark-table-pagination,
+    .quark-table-controls .quark-table-pagination {
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+/*------------------------------------------------*
+  Search input
+*------------------------------------------------*/
 .quark-table-search-input {
     flex: 1;
-    padding: 0.375rem 0.5rem;
+    padding: .375rem .5rem;
     background: var(--qt-surface);
     border: 1px solid var(--qt-border);
-    border-radius: 0.25rem;
+    border-radius: .25rem;
     color: var(--qt-text);
-    transition: border .15s ease, box-shadow .15s ease;
+    transition: border .15s,box-shadow .15s;
 }
 
     .quark-table-search-input::placeholder {
@@ -250,62 +237,18 @@
         box-shadow: 0 0 0 2px var(--qt-focus-ring);
     }
 
-/* Search position variants */
-.quark-table-controls.search-start {
-    justify-content: flex-start;
-}
-
-.quark-table-controls.search-start .quark-table-search {
-    order: 1;
-    flex: 0 1 auto;
-    margin-right: auto;
-}
-
-.quark-table-controls.search-start .quark-table-page-size {
-    order: 2;
-}
-
-.quark-table-controls.search-center {
-    justify-content: center;
-    position: relative;
-}
-
-.quark-table-controls.search-center .quark-table-search {
-    order: 1;
-    flex: 0 1 auto;
-    min-width: 20rem;
-}
-
-.quark-table-controls.search-center .quark-table-page-size {
-    order: 2;
-    position: absolute;
-    right: 0.75rem;
-}
-
-.quark-table-controls.search-end {
-    justify-content: flex-end;
-}
-
-.quark-table-controls.search-end .quark-table-search {
-    order: 2;
-    flex: 0 1 auto;
-    margin-left: auto;
-}
-
-.quark-table-controls.search-end .quark-table-page-size {
-    order: 1;
-}
-
-/* Page-size selector */
+/*------------------------------------------------*
+  Page-size selector
+*------------------------------------------------*/
 .quark-table-page-size select {
     min-width: 3.5rem;
-    padding: 0.25rem 0.375rem;
+    padding: .25rem .375rem;
     cursor: pointer;
     background: var(--qt-surface);
     color: var(--qt-text);
     border: 1px solid var(--qt-border);
-    border-radius: 0.25rem;
-    transition: border .15s ease, box-shadow .15s ease;
+    border-radius: .25rem;
+    transition: border .15s,box-shadow .15s;
 }
 
     .quark-table-page-size select:focus {
@@ -314,173 +257,43 @@
         box-shadow: 0 0 0 2px var(--qt-focus-ring);
     }
 
-/*------------------------------------------------------------*
-  Left/Right components
-*------------------------------------------------------------*/
-.quark-table-left {
-    display: flex;
-    align-items: center;
-    flex: 1 1 auto;
-    min-width: 0; /* Allow shrinking */
-    gap: 0.5rem;
-}
-
-.quark-table-right {
-    display: flex;
-    align-items: center;
-    flex: 0 0 auto;
-    gap: 0.5rem;
-    margin-left: auto; /* Push right content to the right */
-}
-
-/*------------------------------------------------------------*
-  Bottom Bar wrapper and layout
-*------------------------------------------------------------*/
-.quark-table-bottombar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: var(--qt-surface-2);
-    border-top: 1px solid var(--qt-border);
-    border-radius: 0 0 0.375rem 0.375rem;
-}
-
-.quark-table-bottombar.InfoLeftPaginationRight {
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
-
-.quark-table-bottombar.InfoLeftPaginationRight .quark-table-info {
-    flex: 0 0 auto;
-}
-
-.quark-table-bottombar.InfoLeftPaginationRight .quark-table-pagination {
-    flex: 0 0 auto;
-}
-
-.quark-table-bottombar.InfoRightPaginationLeft {
-    justify-content: flex-start;
-    flex-direction: row-reverse;
-    align-items: center;
-    gap: 1rem;
-}
-
-.quark-table-bottombar.Centered {
-    justify-content: center;
-    gap: 1rem;
-    align-items: center;
-}
-
-.quark-table-bottombar.Stacked {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-/* Legacy controls wrapper support */
-.quark-table-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: var(--qt-surface-2);
-    border-top: 1px solid var(--qt-border);
-    border-radius: 0 0 0.375rem 0.375rem;
-}
-
-.quark-table-controls.InfoLeftPaginationRight {
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
-
-.quark-table-controls.InfoLeftPaginationRight .quark-table-info {
-    flex: 0 0 auto;
-}
-
-.quark-table-controls.InfoLeftPaginationRight .quark-table-pagination {
-    flex: 0 0 auto;
-}
-
-.quark-table-controls.InfoRightPaginationLeft {
-    justify-content: flex-start;
-    flex-direction: row-reverse;
-    align-items: center;
-    gap: 1rem;
-}
-
-.quark-table-controls.Centered {
-    justify-content: center;
-    gap: 1rem;
-    align-items: center;
-}
-
-.quark-table-controls.Stacked {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-/* Helper classes for child components */
-.quark-table-bottombar .quark-table-info,
-.quark-table-controls .quark-table-info {
-    margin: 0;
-    display: flex;
-    align-items: center;
-}
-
-.quark-table-bottombar .quark-table-pagination,
-.quark-table-controls .quark-table-pagination {
-    margin: 0;
-    display: flex;
-    align-items: center;
-}
-
-/*------------------------------------------------------------*
+/*------------------------------------------------*
   Pagination footer
-*------------------------------------------------------------*/
+*------------------------------------------------*/
 .quark-table-pagination {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: .5rem;
     justify-content: center;
     align-items: center;
-    padding: 0;
-    background-color: transparent;
+    background: transparent;
     border: none;
-    border-radius: 0;
 }
 
 .quark-table-info {
     color: var(--qt-muted);
-    font-size: 0.875rem;
+    font: .875rem/1.5 system-ui;
     font-weight: 500;
-    padding: 0.25rem 0;
-    display: flex;
-    align-items: center;
+    padding: .25rem 0;
 }
 
 .quark-table-pagination-controls {
     display: flex;
-    gap: 0.25rem;
+    gap: .25rem;
     align-items: center;
 }
 
 .quark-table-pagination-btn {
     min-width: 2rem;
     height: 2rem;
-    padding: 0 0.75rem;
+    padding: 0 .75rem;
     border: 1px solid var(--qt-border);
     background: var(--qt-surface);
     color: var(--qt-text);
-    border-radius: 0.375rem;
+    border-radius: .375rem;
     cursor: pointer;
-    transition: all .15s ease;
-    font-size: 0.875rem;
+    transition: all .15s;
+    font: .875rem/2rem system-ui;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -488,97 +301,31 @@
 }
 
     .quark-table-pagination-btn:hover:not([disabled]) {
-        background-color: var(--qt-hover);
+        background: var(--qt-hover);
         border-color: var(--qt-accent);
     }
 
     .quark-table-pagination-btn:active:not([disabled]) {
-        background-color: var(--qt-accent);
+        background: var(--qt-accent);
     }
 
     .quark-table-pagination-btn.active {
-        background-color: var(--qt-accent);
+        background: var(--qt-accent);
         border-color: var(--qt-accent);
         color: var(--qt-heading);
     }
 
     .quark-table-pagination-btn[disabled] {
-        opacity: 0.5;
+        opacity: .5;
         cursor: not-allowed;
-        background-color: var(--qt-surface);
+        background: var(--qt-surface);
         border-color: var(--qt-border);
     }
 
-/*------------------------------------------------------------*
-  Animations
-*------------------------------------------------------------*/
-@keyframes qt-fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(-0.5rem);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/*------------------------------------------------------------*
-  Loading states
-*------------------------------------------------------------*/
-.quark-table-loading-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    color: var(--qt-muted);
-    background-color: var(--qt-surface);
-    border-radius: 0.375rem;
-    min-height: 8rem;
-}
-
-.quark-table-loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(38, 41, 47, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    border-radius: 0.375rem;
-}
-
-.quark-table-container.loading .quark-table {
-    position: relative;
-}
-
-.quark-table-container {
-    position: relative;
-}
-
-.quark-table-loading-content {
-    color: var(--qt-text);
-    text-align: center;
-}
-
-/*------------------------------------------------------------*
-  QuarkTableLoader component styles
-*------------------------------------------------------------*/
-.quark-table-loader {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-}
-
-/* Make the loader only cover the table content area, not the controls */
+/*------------------------------------------------*
+  Loader & loading states
+*------------------------------------------------*/
+.quark-table-loader,
 .quark-table-with-search .quark-table-loader {
     position: absolute;
     top: 0;
@@ -590,67 +337,29 @@
     z-index: 10;
 }
 
-/* Position the loader to only cover the table element area */
-.quark-table-with-search .quark-table-element {
-    position: relative;
-}
-
-/* Make the loader non-blocking for table interactions */
 .quark-table-with-search .quark-table-loader {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
     pointer-events: none;
 }
 
-.quark-table-with-search .quark-table-loader .quark-table-loader-overlay {
-    pointer-events: auto;
-}
-
-/* Allow table interactions to pass through the loader */
-.quark-table-with-search .quark-table {
-    position: relative;
-    z-index: 1;
-}
-
-.quark-table-with-search .quark-table tbody {
-    position: relative;
-    z-index: 2;
-}
+    .quark-table-with-search .quark-table-loader .quark-table-loader-overlay {
+        pointer-events: auto;
+    }
 
 .quark-table-loader-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(38, 41, 47, 0.95);
+    transform: translate(-50%,-50%);
+    background: rgba(38,41,47,.95);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
-    border-radius: 0.5rem;
+    border-radius: .5rem;
     backdrop-filter: blur(2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,.3);
     padding: 1.5rem;
     min-width: 120px;
     min-height: 80px;
-}
-
-.quark-table-loader-content {
-    color: var(--qt-text);
-    text-align: center;
-}
-
-.quark-table-loader-default {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
 }
 
 .quark-table-spinner {
@@ -663,23 +372,35 @@
 }
 
 @keyframes quark-table-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-/*------------------------------------------------------------*
-  Responsive design
-*------------------------------------------------------------*/
+.quark-table-loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: var(--qt-muted);
+    background: var(--qt-surface);
+    border-radius: .375rem;
+    min-height: 8rem;
+}
+
+/*------------------------------------------------*
+  Responsive
+*------------------------------------------------*/
 .quark-table-responsive {
     overflow-x: auto;
-    border-radius: 0.375rem;
+    border-radius: .375rem;
 }
 
-@media (max-width: 640px) {
+@media(max-width:640px) {
     .quark-table-controls,
     .quark-table-pagination {
         flex-direction: column;
-        gap: 0.5rem;
+        gap: .5rem;
         align-items: stretch;
     }
 
@@ -692,38 +413,39 @@
     }
 }
 
+/* custom scrollbar */
 .quark-table-responsive::-webkit-scrollbar {
-    height: 0.5rem;
+    height: .5rem;
 }
 
 .quark-table-responsive::-webkit-scrollbar-track {
     background: var(--qt-surface);
-    border-radius: 0.25rem;
+    border-radius: .25rem;
 }
 
 .quark-table-responsive::-webkit-scrollbar-thumb {
     background: var(--qt-border);
-    border-radius: 0.25rem;
+    border-radius: .25rem;
 }
 
     .quark-table-responsive::-webkit-scrollbar-thumb:hover {
         background: var(--qt-accent);
     }
 
-/*------------------------------------------------------------*
-  Accessibility & reduced motion
-*------------------------------------------------------------*/
-@media (prefers-reduced-motion: reduce) {
+/*------------------------------------------------*
+  Prefers-reduced-motion
+*------------------------------------------------*/
+@media(prefers-reduced-motion:reduce) {
     *, *::before, *::after {
-        animation-duration: 0.01ms !important;
+        animation-duration: .01ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        transition-duration: .01ms !important;
     }
 }
 
-/*------------------------------------------------------------*
-  Print styles
-*------------------------------------------------------------*/
+/*------------------------------------------------*
+  Print
+*------------------------------------------------*/
 @media print {
     .quark-table-controls,
     .quark-table-pagination {
@@ -741,13 +463,13 @@
         }
 
         .quark-table th {
-            background-color: #f0f0f0 !important;
+            background: #f0f0f0 !important;
         }
 }
 
-/*------------------------------------------------------------*
-  TopBar component
-*------------------------------------------------------------*/
+/*------------------------------------------------*
+  TopBar
+*------------------------------------------------*/
 .quark-table-topbar-wrapper {
     position: relative;
     width: 100%;
@@ -756,53 +478,45 @@
 .quark-table-topbar {
     display: flex;
     align-items: center;
-    padding: 0.75rem;
-    background-color: var(--qt-surface-2);
-    border: 1px solid var(--qt-border);
-    border-radius: 0.375rem 0.375rem 0 0;
-    border-bottom: none;
-    margin-bottom: 0;
     gap: 1rem;
+    background: var(--qt-surface-2);
+    border-bottom: none;
+    margin: 0;
 }
 
-/* Legacy support for old topbar left/right classes */
 .quark-table-topbar-left {
     display: flex;
     align-items: center;
     flex: 1 1 auto;
-    min-width: 0; /* Allow shrinking */
+    min-width: 0;
 }
 
 .quark-table-topbar-right {
     display: flex;
     align-items: center;
-    flex: 0 0 auto;
-    gap: 0.5rem;
-    margin-left: auto; /* Push right content to the right */
+    gap: .5rem;
+    margin-left: auto;
 }
 
-/* Bar controls component */
 .quark-table-bar-controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: .5rem;
 }
 
-/* Search within topbar should be full width */
 .quark-table-topbar-left .quark-table-search {
     flex: 1;
-    max-width: 400px; /* Prevent search from taking too much space */
+    max-width: 400px;
 }
 
-/* Responsive behavior for topbar and bottombar */
-@media (max-width: 640px) {
+@media(max-width:640px) {
     .quark-table-topbar,
     .quark-table-bottombar {
         flex-direction: column;
-        gap: 0.75rem;
+        gap: .75rem;
         align-items: stretch;
     }
-    
+
     .quark-table-left,
     .quark-table-right,
     .quark-table-topbar-left,
@@ -810,25 +524,25 @@
         flex: 1 1 100%;
         justify-content: center;
     }
-    
-    .quark-table-left .quark-table-search,
-    .quark-table-topbar-left .quark-table-search {
-        max-width: none;
-    }
+
+        .quark-table-left .quark-table-search,
+        .quark-table-topbar-left .quark-table-search {
+            max-width: none;
+        }
 }
 
-/*------------------------------------------------------------*
-  No Data component
-*------------------------------------------------------------*/
+/*------------------------------------------------*
+  No-data component
+*------------------------------------------------*/
 .quark-table-no-data {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 3rem 1rem;
-    background-color: var(--qt-surface);
+    background: var(--qt-surface);
     border: 1px solid var(--qt-border);
-    border-radius: 0.375rem;
-    margin: 0.5rem 0;
+    border-radius: .375rem;
+    margin: .5rem 0;
 }
 
 .quark-table-no-data-content {
@@ -842,7 +556,7 @@
 
 .quark-table-no-data-icon {
     color: var(--qt-muted);
-    opacity: 0.6;
+    opacity: .6;
 }
 
 .quark-table-no-data-text h4 {
@@ -855,6 +569,21 @@
 .quark-table-no-data-text p {
     margin: 0;
     color: var(--qt-muted);
-    font-size: 0.875rem;
+    font-size: .875rem;
     line-height: 1.5;
+}
+
+/*------------------------------------------------*
+  Fade-in animation keyframes
+*------------------------------------------------*/
+@keyframes qt-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-.5rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
