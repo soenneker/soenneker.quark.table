@@ -8,67 +8,85 @@
 @inject ILogger<LoadingDemo> Logger
 @inject EmployeeService EmployeeService
 
-<h3>Loading Behavior Demo</h3>
+<PageTitle>Loading Demo - QuarkTable</PageTitle>
 
-<p>This demo showcases the improved loading behavior. The table content stays visible while a loading overlay appears, preventing the jarring flickering effect.</p>
-
-<div class="row" >
-    <div class="col-12" >
-        <div class="card" >
-            <div class="card-header" >
-                <h4>Employee Directory</h4>
-                <p class="text-muted mb-0" >Try searching, sorting, or changing pages to see the smooth loading overlay</p>
+<div class="demo-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="hero-content">
+                    <div class="demo-icon">⚡</div>
+                    <h1 class="demo-title">Loading Behavior Demo</h1>
+                    <p class="demo-subtitle">Smooth loading behavior with overlay that prevents jarring flickering effects.</p>
+                </div>
             </div>
-            <div class="card-body" >
-                <QuarkTable @ref="_tableRef"
-                            TotalRecords="@_totalRecords"
-                            OnInteraction="HandleServerSideRequest" >
+        </div>
+    </div>
+</div>
 
-                    <QuarkTableSearch Placeholder="Search employees..." />
-
-                    <QuarkTableLoader>
-                    </QuarkTableLoader>
-
-                    <QuarkTableElement>
-                        <QuarkThead>
-                            <QuarkTr>
-                                <QuarkTh Sortable="true" Searchable="true" >Name</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true" >Department</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true" >Email</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true" >Salary</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true" >Hire Date</QuarkTh>
-                                <QuarkTh Sortable="true" Searchable="true" >Status</QuarkTh>
-                            </QuarkTr>
-                        </QuarkThead>
-
-                        <QuarkTbody>
-                            @if (_currentEmployees is {Count: > 0})
-                            {
-                                @foreach (Employee employee in _currentEmployees)
-                                {
-                                    <QuarkTr Key="@employee.Id" >
-                                        <QuarkTd>@employee.Name</QuarkTd>
-                                        <QuarkTd>@employee.Department</QuarkTd>
-                                        <QuarkTd>@employee.Email</QuarkTd>
-                                        <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
-                                        <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
-                                        <QuarkTd>@employee.Status</QuarkTd>
-                                    </QuarkTr>
-                                }
-                            }
-                            else if (_tableRef.HasLoadedOnce)
-                            {
-                                <QuarkTableNoData />
-                            }
-                        </QuarkTbody>
-                    </QuarkTableElement>
-
-                    <QuarkTableBottomBar>
-                        <QuarkTableInfo />
-                        <QuarkTablePagination />
-                    </QuarkTableBottomBar>
-                </QuarkTable>
+<div class="container">
+    <div class="demo-card">
+        <div class="card-header">
+            <div class="card-header-content">
+                <h3><i class="fas fa-spinner me-2"></i>Employee Directory</h3>
+                <p class="text-muted mb-0">Try searching, sorting, or changing pages to see the smooth loading overlay</p>
             </div>
+        </div>
+        <div class="card-body">
+            <QuarkTable @ref="_tableRef"
+                        TotalRecords="@_totalRecords"
+                        OnInteraction="HandleServerSideRequest" >
+
+                <QuarkTableSearch Placeholder="Search employees..." />
+
+                <QuarkTableLoader>
+                </QuarkTableLoader>
+
+                <QuarkTableElement>
+                    <QuarkThead>
+                        <QuarkTr>
+                            <QuarkTh Sortable="true" Searchable="true" >Name</QuarkTh>
+                            <QuarkTh Sortable="true" Searchable="true" >Department</QuarkTh>
+                            <QuarkTh Sortable="true" Searchable="true" >Email</QuarkTh>
+                            <QuarkTh Sortable="true" Searchable="true" >Salary</QuarkTh>
+                            <QuarkTh Sortable="true" Searchable="true" >Hire Date</QuarkTh>
+                            <QuarkTh Sortable="true" Searchable="true" >Status</QuarkTh>
+                        </QuarkTr>
+                    </QuarkThead>
+
+                    <QuarkTbody>
+                        @if (_currentEmployees is {Count: > 0})
+                        {
+                            @foreach (Employee employee in _currentEmployees)
+                            {
+                                <QuarkTr Key="@employee.Id" >
+                                    <QuarkTd>@employee.Name</QuarkTd>
+                                    <QuarkTd>@employee.Department</QuarkTd>
+                                    <QuarkTd>@employee.Email</QuarkTd>
+                                    <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                    <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
+                                    <QuarkTd>@employee.Status</QuarkTd>
+                                </QuarkTr>
+                            }
+                        }
+                        else if (_tableRef.HasLoadedOnce)
+                        {
+                            <QuarkTableNoData>
+                                <div class="no-data-content">
+                                    <div class="no-data-icon">⚡</div>
+                                    <h4>No employees found</h4>
+                                    <p>Try adjusting your search criteria or filters.</p>
+                                </div>
+                            </QuarkTableNoData>
+                        }
+                    </QuarkTbody>
+                </QuarkTableElement>
+
+                <QuarkTableBottomBar>
+                    <QuarkTableInfo />
+                    <QuarkTablePagination />
+                </QuarkTableBottomBar>
+            </QuarkTable>
         </div>
     </div>
 </div>

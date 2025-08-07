@@ -84,15 +84,19 @@
 
     public string? SearchTerm => _searchTerm;
 
-    public string? SortBy => _currentOrders.FirstOrDefault()?.Column switch
+    public string? SortBy
     {
-        0 => _registeredColumns.Count > 0 ? _registeredColumns[0].Data : null,
-        1 => _registeredColumns.Count > 1 ? _registeredColumns[1].Data : null,
-        2 => _registeredColumns.Count > 2 ? _registeredColumns[2].Data : null,
-        3 => _registeredColumns.Count > 3 ? _registeredColumns[3].Data : null,
-        4 => _registeredColumns.Count > 4 ? _registeredColumns[4].Data : null,
-        _ => null
-    };
+        get
+        {
+            DataTableOrderRequest? firstOrder = _currentOrders.FirstOrDefault();
+
+            if (firstOrder == null)
+                return null;
+
+            QuarkTh? column = GetColumn(firstOrder.Column);
+            return column?.Data;
+        }
+    }
 
     public string? SortDirection => _currentOrders.FirstOrDefault()?.Dir;
 
@@ -114,8 +118,6 @@
     private bool _isHandlingManualRequest; // Flag to prevent multiple simultaneous manual requests
     private int _manualRequestCount = 0; // Counter to track manual request calls
     private QuarkTableOptions? _previousOptions;
-
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -205,7 +207,7 @@
         await base.OnParametersSetAsync().NoSync();
     }
 
-    public async Task HandleGoToPage(int page, CancellationToken cancellationToken = default)
+    public async ValueTask HandleGoToPage(int page, CancellationToken cancellationToken = default)
     {
         if (page < 1 || page > TotalPages) return;
 
@@ -218,12 +220,12 @@
             await OnGoToPage.InvokeAsync(page).NoSync();
     }
 
-    public async Task GoToPage(int page, CancellationToken cancellationToken = default)
+    public async ValueTask GoToPage(int page, CancellationToken cancellationToken = default)
     {
         await HandleGoToPage(page, cancellationToken).NoSync();
     }
 
-    public async Task HandleSearch(string searchTerm, CancellationToken cancellationToken = default)
+    public async ValueTask HandleSearch(string searchTerm, CancellationToken cancellationToken = default)
     {
         if (Options.Debug)
             Logger.LogDebug("HandleSearch called with term: {SearchTerm}", searchTerm);
@@ -241,7 +243,7 @@
         return _currentOrders.ToList();
     }
 
-    public async Task SetOrders(List<DataTableOrderRequest> orders, CancellationToken cancellationToken = default)
+    public async ValueTask SetOrders(List<DataTableOrderRequest> orders, CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
         if (orders != null)
@@ -257,6 +259,14 @@
 
     public string? GetSortDirection(int columnIndex)
     {
+        // Validate that the column index is valid
+        if (GetColumn(columnIndex) == null)
+        {
+            if (Options.Debug)
+                Logger.LogWarning("GetSortDirection: Invalid column index {ColumnIndex}", columnIndex);
+            return null;
+        }
+
         DataTableOrderRequest? order = _currentOrders.FirstOrDefault(o => o.Column == columnIndex);
         return order?.Dir;
     }
@@ -283,7 +293,7 @@
         };
     }
 
-    public async Task HandleColumnSort(int columnIndex, CancellationToken cancellationToken = default)
+    public async ValueTask HandleColumnSort(int columnIndex, CancellationToken cancellationToken = default)
     {
         if (!IsColumnSortable(columnIndex)) return;
 
@@ -344,16 +354,31 @@
     }
 
     /// <summary>
+    /// Safely gets a column at the specified index
+    /// </summary>
+    /// <param name="columnIndex">The column index</param>
+    /// <returns>The column if valid, null otherwise</returns>
+    private QuarkTh? GetColumn(int columnIndex)
+    {
+        if (columnIndex < 0 || columnIndex >= _registeredColumns.Count)
+        {
+            if (Options.Debug)
+                Logger.LogWarning("GetColumn: Column index {ColumnIndex} is out of bounds for registered columns count {Count}", columnIndex, _registeredColumns.Count);
+            return null;
+        }
+
+        return _registeredColumns[columnIndex];
+    }
+
+    /// <summary>
     /// Checks if a column at the given index is sortable
     /// </summary>
     /// <param name="columnIndex">The column index to check</param>
     /// <returns>True if the column is sortable, false otherwise</returns>
     private bool IsColumnSortable(int columnIndex)
     {
-        if (columnIndex < 0 || columnIndex >= _registeredColumns.Count)
-            return false;
-        
-        return _registeredColumns[columnIndex].Sortable;
+        QuarkTh? column = GetColumn(columnIndex);
+        return column?.Sortable ?? false;
     }
 
     /// <summary>
@@ -363,8 +388,8 @@
     private List<DataTableColumnRequest> BuildColumns()
     {
         var columns = new List<DataTableColumnRequest>();
-        
-        foreach (var column in _registeredColumns)
+
+        foreach (QuarkTh column in _registeredColumns)
         {
             columns.Add(new DataTableColumnRequest
             {
@@ -374,11 +399,11 @@
                 Orderable = column.Sortable
             });
         }
-        
+
         return columns;
     }
 
-    private async Task OnInteractionInternal(CancellationToken cancellationToken = default)
+    private async ValueTask OnInteractionInternal(CancellationToken cancellationToken = default)
     {
         // Prevent multiple simultaneous calls to OnInteractionInternal
         if (_isHandlingManualRequest)
@@ -437,7 +462,7 @@
                 Logger.LogDebug("Sending request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", request.Start, request.Length, request.Search?.Value ?? "null", request.ContinuationToken ?? "null");
 
             await OnInteraction.InvokeAsync(request).NoSync();
-            
+
             // Mark that we've loaded data at least once after a successful request
             if (!_hasLoadedOnce)
             {
@@ -478,7 +503,7 @@
         return shouldRender;
     }
 
-    public async Task ClearSorting(CancellationToken cancellationToken = default)
+    public async ValueTask ClearSorting(CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
         CurrentPage = 1;
@@ -491,7 +516,7 @@
         await OnInteractionInternal(cancellationToken).NoSync();
     }
 
-    public async Task Reset(CancellationToken cancellationToken = default)
+    public async ValueTask Reset(CancellationToken cancellationToken = default)
     {
         _currentOrders.Clear();
         CurrentPage = 1;
@@ -501,10 +526,11 @@
         _registeredColumns.Clear(); // Reset column registration
         _hasLoadedOnce = false; // Reset the loaded flag
         HasLoadedOnce = false;
+
         await OnInteractionInternal(cancellationToken).NoSync();
     }
 
-    public async Task CancelOperationsAsync()
+    public async ValueTask CancelOperations()
     {
         if (Options.Debug)
             Logger.LogDebug("Cancelling ongoing operations");
@@ -548,8 +574,8 @@
     public async ValueTask DisposeAsync()
     {
         await _debouncer.DisposeAsync().NoSync();
-        
-        await _cancellationTokenSource.CancelAsync();
+
+        await _cancellationTokenSource.CancelAsync().NoSync();
         _cancellationTokenSource.Dispose();
     }
 

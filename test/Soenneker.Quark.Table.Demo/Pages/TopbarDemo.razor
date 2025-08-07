@@ -1,6 +1,9 @@
 @page "/topbar"
+@using System.Threading
 @using Microsoft.Extensions.Logging
+@using Soenneker.Dtos.Results.Paged
 @using Soenneker.Extensions.Task
+@using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 
@@ -9,86 +12,242 @@
 
 <PageTitle>TopBar Demo - QuarkTable</PageTitle>
 
-<div class="container-fluid" >
-    <div class="row" >
-        <div class="col-12" >
-            <h3>QuarkTableTopBar Demo</h3>
-            <p class="text-muted mb-4" >Demonstration of the new QuarkTableTopBar component with search on the left and custom controls on the right.</p>
-        </div>
-    </div>
-
-    <div class="row" >
-        <div class="col-12" >
-            <div class="card" >
-                <div class="card-body" >
-                    <QuarkTable @ref="_topbarTable"
-                                OnInteraction="OnInteraction"
-                                OnOrder="HandleOrder"
-                                OnInitialize="HandleInitialize"
-                                Options="_topbarTableOptions"
-                                TotalRecords="@_totalRecords" >
-
-                        <QuarkTableTopBar>
-                            <QuarkTableLeft>
-                                <QuarkTableSearch Placeholder="Search employees..." />
-                            </QuarkTableLeft>
-                            <QuarkTableRight>
-                                <select class="quark-table-pagination-btn" @onchange="HandleDepartmentFilter" >
-                                    <option value="" >All Departments</option>
-                                    <option value="Engineering" >Engineering</option>
-                                    <option value="Marketing" >Marketing</option>
-                                    <option value="Sales" >Sales</option>
-                                    <option value="HR" >HR</option>
-                                </select>
-                                <button class="quark-table-pagination-btn" @onclick="HandleExport" >
-                                    Export CSV
-                                </button>
-                                <button class="quark-table-pagination-btn" @onclick="HandleRefresh" >
-                                    Refresh
-                                </button>
-                            </QuarkTableRight>
-                        </QuarkTableTopBar>
-
-                        <QuarkTableElement>
-                            <QuarkThead>
-                                <QuarkTr>
-                                    <QuarkTh Data="Name" Sortable="true" Searchable="true" >Name</QuarkTh>
-                                    <QuarkTh Data="test.dept" Sortable="true" Searchable="true" >Department</QuarkTh>
-                                    <QuarkTh Data="Email" Sortable="true" Searchable="true" >Email</QuarkTh>
-                                    <QuarkTh Data="Salary" Sortable="true" Searchable="true" >Salary</QuarkTh>
-                                    <QuarkTh Data="HireDate" Sortable="true" Searchable="true" >Hire Date</QuarkTh>
-                                </QuarkTr>
-                            </QuarkThead>
-
-                            <QuarkTbody>
-                                @if (_employees != null)
-                                {
-                                    @foreach (Employee employee in _employees)
-                                    {
-                                        <QuarkTr>
-                                            <QuarkTd>@employee.Name</QuarkTd>
-                                            <QuarkTd>@employee.Department</QuarkTd>
-                                            <QuarkTd>@employee.Email</QuarkTd>
-                                            <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
-                                            <QuarkTd>@employee.HireDate.ToString("MM/dd/yyyy")</QuarkTd>
-                                        </QuarkTr>
-                                    }
-                                }
-                            </QuarkTbody>
-                        </QuarkTableElement>
-                        <QuarkTableBottomBar>
-                            <QuarkTableRight>
-                                <QuarkTableInfo />
-                                <QuarkTablePagination />
-                            </QuarkTableRight>
-                        </QuarkTableBottomBar>
-
-                    </QuarkTable>
+<div class="demo-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="hero-content">
+                    <div class="demo-icon">🎛️</div>
+                    <h1 class="demo-title">TopBar QuarkTable Demo</h1>
+                    <p class="demo-subtitle">Custom topbar with search and controls layout for enhanced user experience.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="container">
+    <div class="demo-card">
+        <div class="card-header">
+            <div class="card-header-content">
+                <h3><i class="fas fa-sliders-h me-2"></i>Advanced Employee Directory</h3>
+                <p class="text-muted mb-0">Custom controls with department filtering and export functionality</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <QuarkTable @ref="_topbarTable"
+                        OnInteraction="OnInteraction"
+                        OnOrder="HandleOrder"
+                        OnInitialize="HandleInitialize"
+                        Options="_topbarTableOptions"
+                        TotalRecords="@_totalRecords" >
+
+                <QuarkTableTopBar>
+                    <QuarkTableLeft>
+                        <QuarkTableSearch Placeholder="Search employees..." />
+                    </QuarkTableLeft>
+                    <QuarkTableRight>
+                        <select class="custom-select" @onchange="HandleDepartmentFilter" >
+                            <option value="" >All Departments</option>
+                            <option value="Engineering" >Engineering</option>
+                            <option value="Marketing" >Marketing</option>
+                            <option value="Sales" >Sales</option>
+                            <option value="HR" >HR</option>
+                        </select>
+                        <button class="custom-btn export-btn" @onclick="HandleExport" >
+                            <i class="fas fa-download me-1"></i>Export CSV
+                        </button>
+                        <button class="custom-btn refresh-btn" @onclick="HandleRefresh" >
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </QuarkTableRight>
+                </QuarkTableTopBar>
+
+                <QuarkTableElement>
+                    <QuarkThead>
+                        <QuarkTr>
+                            <QuarkTh Data="Name" Sortable="true" Searchable="true" >Name</QuarkTh>
+                            <QuarkTh Data="test.dept" Sortable="true" Searchable="true" >Department</QuarkTh>
+                            <QuarkTh Data="Email" Sortable="true" Searchable="true" >Email</QuarkTh>
+                            <QuarkTh Data="Salary" Sortable="true" Searchable="true" >Salary</QuarkTh>
+                            <QuarkTh Data="HireDate" Sortable="true" Searchable="true" >Hire Date</QuarkTh>
+                        </QuarkTr>
+                    </QuarkThead>
+
+                    <QuarkTbody>
+                        @if (_employees != null)
+                        {
+                            @foreach (Employee employee in _employees)
+                            {
+                                <QuarkTr>
+                                    <QuarkTd>@employee.Name</QuarkTd>
+                                    <QuarkTd>@employee.Department</QuarkTd>
+                                    <QuarkTd>@employee.Email</QuarkTd>
+                                    <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                    <QuarkTd>@employee.HireDate.ToString("MM/dd/yyyy")</QuarkTd>
+                                </QuarkTr>
+                            }
+                        }
+                    </QuarkTbody>
+                </QuarkTableElement>
+                <QuarkTableBottomBar>
+                    <QuarkTableRight>
+                        <QuarkTableInfo />
+                        <QuarkTablePagination />
+                    </QuarkTableRight>
+                </QuarkTableBottomBar>
+
+            </QuarkTable>
+        </div>
+    </div>
+</div>
+
+<style>
+    .demo-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .demo-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .demo-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .demo-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #fff, #f8f9fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .demo-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .demo-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: none;
+        margin-bottom: 3rem;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 1px solid #dee2e6;
+        padding: 2rem;
+    }
+
+    .card-header-content h3 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    /* Custom controls styling */
+    .custom-select {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        color: #495057;
+        transition: all 0.3s ease;
+        margin-right: 0.5rem;
+    }
+
+    .custom-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+
+    .custom-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        margin-left: 0.5rem;
+        cursor: pointer;
+    }
+
+    .export-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .export-btn:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+
+    .refresh-btn {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+    }
+
+    .refresh-btn:hover {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    @@media (max-width: 768px) {
+        .demo-title {
+            font-size: 2rem;
+        }
+        
+        .demo-subtitle {
+            font-size: 1rem;
+        }
+        
+        .card-header,
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .custom-select,
+        .custom-btn {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+    }
+</style>
 
 @code {
     private QuarkTable _topbarTable = null!;
@@ -128,7 +287,7 @@
         // Add sorting if available
         if (!string.IsNullOrEmpty(_topbarTable?.SortBy))
         {
-            var columnIndex = GetColumnIndex(_topbarTable.SortBy);
+            int columnIndex = GetColumnIndex(_topbarTable.SortBy);
             if (columnIndex >= 0)
             {
                 serverRequest.Order.Add(new DataTableOrderRequest
@@ -139,7 +298,7 @@
             }
         }
 
-        var pagedResult = await EmployeeService.GetEmployeesPaged(serverRequest).NoSync();
+        PagedResult<Employee> pagedResult = await EmployeeService.GetEmployeesPaged(serverRequest, CancellationToken.None).NoSync();
 
         // Apply department filter if selected
         _employees = pagedResult.Items;

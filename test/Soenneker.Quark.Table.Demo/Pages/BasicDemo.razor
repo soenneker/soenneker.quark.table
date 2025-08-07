@@ -9,76 +9,194 @@
 
 <PageTitle>Basic Demo - QuarkTable</PageTitle>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h3>Basic QuarkTable Demo</h3>
-            <p class="text-muted mb-4">A simple demonstration of QuarkTable with basic features including search, sorting, and pagination.</p>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <QuarkTable @ref="_basicTable"
-                                OnInteraction="OnInteraction"
-                                OnOrder="HandleOrder"
-                                OnInitialize="HandleInitialize"
-                                Options="_basicTableOptions"
-                                TotalRecords="@_totalRecords">
-
-                        <QuarkTableSearch Placeholder="Search employees..."></QuarkTableSearch>
-
-                        <QuarkTableElement>
-                            <QuarkThead>
-                                <QuarkTr>
-                                    <QuarkTh Data="Name" Sortable="true" Searchable="true">Name</QuarkTh>
-                                    <QuarkTh Data="test.dept" Sortable="true" Searchable="true">Department</QuarkTh>
-                                    <QuarkTh Data="Email" Sortable="true" Searchable="true">Email</QuarkTh>
-                                    <QuarkTh Data="Salary" Sortable="true" Searchable="true">Salary</QuarkTh>
-                                    <QuarkTh Data="HireDate" Sortable="true" Searchable="true">Hire Date</QuarkTh>
-                                    <QuarkTh Data="Status" Sortable="true" Searchable="true">Status</QuarkTh>
-                                </QuarkTr>
-                            </QuarkThead>
-
-                            <QuarkTbody>
-                                @if (_currentEmployees is {Count: > 0})
-                                {
-                                    @foreach (Employee employee in _currentEmployees)
-                                    {
-                                        <QuarkTr Key="@employee.Id">
-                                            <QuarkTd>@employee.Name</QuarkTd>
-                                            <QuarkTd>@employee.Department</QuarkTd>
-                                            <QuarkTd>@employee.Email</QuarkTd>
-                                            <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
-                                            <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
-                                            <QuarkTd>@employee.Status</QuarkTd>
-                                        </QuarkTr>
-                                    }
-                                }
-                                else if (_basicTable.HasLoadedOnce)
-                                {
-                                    <QuarkTableNoData>
-                                        <div style="text-align: center; padding: 2rem;">
-                                            <h4>No employees found</h4>
-                                            <p>Try adjusting your search criteria or filters.</p>
-                                        </div>
-                                    </QuarkTableNoData>
-                                }
-                            </QuarkTbody>
-                        </QuarkTableElement>
-                        
-                        <QuarkTableBottomBar>
-                            <QuarkTableInfo />
-                            <QuarkTablePagination />
-                        </QuarkTableBottomBar>
-                    </QuarkTable>
+<div class="demo-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="hero-content">
+                    <div class="demo-icon">📊</div>
+                    <h1 class="demo-title">Basic QuarkTable Demo</h1>
+                    <p class="demo-subtitle">A simple demonstration of QuarkTable with basic features including search, sorting, and pagination.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="container">
+    <div class="demo-card">
+        <div class="card-header">
+            <div class="card-header-content">
+                <h3><i class="fas fa-users me-2"></i>Employee Directory</h3>
+                <p class="text-muted mb-0">Search, sort, and paginate through employee data with ease</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <QuarkTable @ref="_basicTable"
+                        OnInteraction="OnInteraction"
+                        OnOrder="HandleOrder"
+                        OnInitialize="HandleInitialize"
+                        Options="_basicTableOptions"
+                        TotalRecords="@_totalRecords">
+
+                <QuarkTableSearch Placeholder="Search employees..."></QuarkTableSearch>
+
+                <QuarkTableElement>
+                    <QuarkThead>
+                        <QuarkTr>
+                            <QuarkTh Data="Name" Sortable="true" Searchable="true">Name</QuarkTh>
+                            <QuarkTh Data="test.dept" Sortable="true" Searchable="true">Department</QuarkTh>
+                            <QuarkTh Data="Email" Sortable="true" Searchable="true">Email</QuarkTh>
+                            <QuarkTh Data="Salary" Sortable="true" Searchable="true">Salary</QuarkTh>
+                            <QuarkTh Data="HireDate" Sortable="true" Searchable="true">Hire Date</QuarkTh>
+                            <QuarkTh Data="Status" Sortable="true" Searchable="true">Status</QuarkTh>
+                        </QuarkTr>
+                    </QuarkThead>
+
+                    <QuarkTbody>
+                        @if (_currentEmployees is {Count: > 0})
+                        {
+                            @foreach (Employee employee in _currentEmployees)
+                            {
+                                <QuarkTr Key="@employee.Id">
+                                    <QuarkTd>@employee.Name</QuarkTd>
+                                    <QuarkTd>@employee.Department</QuarkTd>
+                                    <QuarkTd>@employee.Email</QuarkTd>
+                                    <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                    <QuarkTd>@employee.HireDate.ToString("MMM dd, yyyy")</QuarkTd>
+                                    <QuarkTd>@employee.Status</QuarkTd>
+                                </QuarkTr>
+                            }
+                        }
+                        else if (_basicTable.HasLoadedOnce)
+                        {
+                            <QuarkTableNoData>
+                                <div class="no-data-content">
+                                    <div class="no-data-icon">🔍</div>
+                                    <h4>No employees found</h4>
+                                    <p>Try adjusting your search criteria or filters.</p>
+                                </div>
+                            </QuarkTableNoData>
+                        }
+                    </QuarkTbody>
+                </QuarkTableElement>
+                
+                <QuarkTableBottomBar>
+                    <QuarkTableInfo />
+                    <QuarkTablePagination />
+                </QuarkTableBottomBar>
+            </QuarkTable>
+        </div>
+    </div>
+</div>
+
+<style>
+    .demo-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .demo-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .demo-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .demo-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #fff, #f8f9fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .demo-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .demo-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: none;
+        margin-bottom: 3rem;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 1px solid #dee2e6;
+        padding: 2rem;
+    }
+
+    .card-header-content h3 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .no-data-content {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6c757d;
+    }
+
+    .no-data-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .no-data-content h4 {
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    @@media (max-width: 768px) {
+        .demo-title {
+            font-size: 2rem;
+        }
+        
+        .demo-subtitle {
+            font-size: 1rem;
+        }
+        
+        .card-header,
+        .card-body {
+            padding: 1.5rem;
+        }
+    }
+</style>
 
 @code {
     private QuarkTable? _basicTable;
@@ -110,7 +228,7 @@
         if (serverSideRequest.Columns != null && serverSideRequest.Columns.Count > 0)
         {
             Logger.LogInformation("BasicDemo: Request includes {ColumnCount} columns:", serverSideRequest.Columns.Count);
-            foreach (var column in serverSideRequest.Columns)
+            foreach (DataTableColumnRequest column in serverSideRequest.Columns)
             {
                 Logger.LogInformation("  Column: Data='{Data}', Name='{Name}', Searchable={Searchable}, Orderable={Orderable}", 
                     column.Data ?? "null", column.Name ?? "null", column.Searchable, column.Orderable);

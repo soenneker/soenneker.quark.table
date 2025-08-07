@@ -8,6 +8,7 @@ using Soenneker.Utils.AutoBogus;
 using Soenneker.Utils.Delay;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.Extensions.Task;
 
@@ -36,7 +37,7 @@ public class EmployeeService
         _logger.LogInformation("EmployeeService initialized with {Count} employee records", _employees.Count);
     }
 
-    public async Task<DataTableServerResponse> GetEmployees(DataTableServerSideRequest serverSideRequest)
+    public async Task<DataTableServerResponse> GetEmployees(DataTableServerSideRequest serverSideRequest, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Server-side request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", 
             serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.Search?.Value, serverSideRequest.ContinuationToken ?? "null");
@@ -117,12 +118,12 @@ public class EmployeeService
             ]);
         }
 
-        await DelayUtil.Delay(500, _logger).NoSync();
+        await DelayUtil.Delay(500, _logger, cancellationToken).NoSync();
 
         return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
     }
 
-    public async Task<List<Employee>> GetFilteredEmployees(DataTableServerSideRequest serverSideRequest)
+    public async Task<List<Employee>> GetFilteredEmployees(DataTableServerSideRequest serverSideRequest, CancellationToken cancellationToken = default)
     {
         IEnumerable<Employee> filteredData = _employees.AsEnumerable();
 
@@ -183,7 +184,7 @@ public class EmployeeService
         return _employees.ToList();
     }
 
-    public async Task<PagedResult<Employee>> GetEmployeesPaged(DataTableServerSideRequest serverSideRequest)
+    public async Task<PagedResult<Employee>> GetEmployeesPaged(DataTableServerSideRequest serverSideRequest, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("GetEmployeesPaged: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", 
             serverSideRequest.Start, serverSideRequest.Length, serverSideRequest.Search?.Value, serverSideRequest.ContinuationToken ?? "null");
@@ -235,7 +236,7 @@ public class EmployeeService
         }
 
         int totalRecords = filteredData.Count();
-        var pagedData = filteredData.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
+        List<Employee> pagedData = filteredData.Skip(serverSideRequest.Start).Take(serverSideRequest.Length).ToList();
 
         // Simulate continuation token logic
         string? continuationToken = null;
@@ -245,7 +246,7 @@ public class EmployeeService
             continuationToken = $"page_{serverSideRequest.Start + serverSideRequest.Length}_{serverSideRequest.Length}";
         }
 
-        await DelayUtil.Delay(500, _logger).NoSync();
+        await DelayUtil.Delay(500, _logger, cancellationToken).NoSync();
 
         return new PagedResult<Employee>
         {

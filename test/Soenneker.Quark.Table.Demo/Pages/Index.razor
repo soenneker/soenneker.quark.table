@@ -10,13 +10,19 @@
         <div class="row align-items-center min-vh-75">
             <div class="col-lg-8 mx-auto text-center">
                 <div class="hero-content">
-                    <h1 class="display-4 fw-bold text-gradient mb-3">Soenneker.Quark.Table</h1>
-                    <p class="lead fs-5 text-muted mb-4">Modern, component-driven data tables for Blazor with server-side processing, real-time search, sorting, and pagination.</p>
-                    
+                    <h1 class="display-4 fw-bold text-gradient mb-3 mt-4">
+                        Soenneker.Quark.Table
+                    </h1>
+                    <p class="lead fs-5 text-muted mb-4">
+                        Modern, component-driven data tables for Blazor with server-side processing, real-time search, sorting, and pagination.
+                    </p>
+
                     <div class="demo-grid mt-5">
                         <div class="row g-4">
+
+                            <!-- Basic Demo -->
                             <div class="col-md-4">
-                                <a href="/basic" class="demo-card">
+                                <NavLink href="basic" class="demo-card">
                                     <div class="demo-card-content">
                                         <div class="demo-icon">📊</div>
                                         <h3>Basic Demo</h3>
@@ -27,10 +33,12 @@
                                             <span class="badge">Pagination</span>
                                         </div>
                                     </div>
-                                </a>
+                                </NavLink>
                             </div>
+
+                            <!-- TopBar Demo -->
                             <div class="col-md-4">
-                                <a href="/topbar" class="demo-card">
+                                <NavLink href="topbar" class="demo-card">
                                     <div class="demo-card-content">
                                         <div class="demo-icon">🎛️</div>
                                         <h3>TopBar Demo</h3>
@@ -41,10 +49,12 @@
                                             <span class="badge">Layout</span>
                                         </div>
                                     </div>
-                                </a>
+                                </NavLink>
                             </div>
+
+                            <!-- PagedResult Demo -->
                             <div class="col-md-4">
-                                <a href="/paged-result-demo" class="demo-card">
+                                <NavLink href="paged-result-demo" class="demo-card">
                                     <div class="demo-card-content">
                                         <div class="demo-icon">✨</div>
                                         <h3>PagedResult Demo</h3>
@@ -55,10 +65,12 @@
                                             <span class="badge">Debug Info</span>
                                         </div>
                                     </div>
-                                </a>
+                                </NavLink>
                             </div>
+
+                            <!-- Loading Demo -->
                             <div class="col-md-4">
-                                <a href="/loading-demo" class="demo-card">
+                                <NavLink href="loading-demo" class="demo-card">
                                     <div class="demo-card-content">
                                         <div class="demo-icon">⚡</div>
                                         <h3>Loading Demo</h3>
@@ -69,10 +81,12 @@
                                             <span class="badge">Smooth UX</span>
                                         </div>
                                     </div>
-                                </a>
+                                </NavLink>
                             </div>
+
+                            <!-- Modern Demo -->
                             <div class="col-md-4">
-                                <a href="/modern-demo" class="demo-card">
+                                <NavLink href="modern-demo" class="demo-card">
                                     <div class="demo-card-content">
                                         <div class="demo-icon">🎨</div>
                                         <h3>Modern Demo</h3>
@@ -83,10 +97,12 @@
                                             <span class="badge">Clean UI</span>
                                         </div>
                                     </div>
-                                </a>
+                                </NavLink>
                             </div>
+
+                            <!-- RequestDataOptions Demo -->
                             <div class="col-md-4">
-                                <a href="/request-data-options-demo" class="demo-card">
+                                <NavLink href="request-data-options-demo" class="demo-card">
                                     <div class="demo-card-content">
                                         <div class="demo-icon">🔧</div>
                                         <h3>RequestDataOptions Demo</h3>
@@ -97,8 +113,9 @@
                                             <span class="badge">Debug Info</span>
                                         </div>
                                     </div>
-                                </a>
+                                </NavLink>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -113,9 +130,11 @@
         color: white;
         position: relative;
         overflow: hidden;
-        min-height: 100vh;
+        min-height: calc(100vh - 120px);
         display: flex;
         align-items: center;
+        padding: 4rem 0;
+        z-index: 1;
     }
     
     .hero-section::before {
@@ -186,7 +205,6 @@
     .demo-card-content {
         position: relative;
         z-index: 1;
-        text-align: center;
     }
     
     .demo-icon {
@@ -209,32 +227,26 @@
     
     .demo-badges {
         display: flex;
-        justify-content: center;
-        gap: 0.5rem;
         flex-wrap: wrap;
+        gap: 0.5rem;
     }
     
     .badge {
         background: rgba(255, 255, 255, 0.2);
         color: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
         font-size: 0.75rem;
         font-weight: 500;
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
-    .min-vh-75 { 
-        min-height: 75vh; 
-    }
-    
     @@media (max-width: 768px) {
-        .hero-section { 
-            min-height: 100vh; 
+        .hero-section {
+            min-height: auto;
+            padding: 2rem 0;
         }
-        .display-4 { 
-            font-size: 2.5rem; 
-        }
+        
         .demo-card {
             margin-bottom: 1rem;
         }
