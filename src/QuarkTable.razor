@@ -36,6 +36,8 @@
 
 @code {
 
+
+
     [Inject]
     private IQuarkTableInterop QuarkTableInterop { get; set; } = null!;
 
@@ -486,7 +488,8 @@
             _isLoading = false;
             _dataChanged = true;
             _isHandlingManualRequest = false;
-            await InvokeAsync(StateHasChanged).NoSync();
+
+            StateHasChanged();
         }
     }
 
