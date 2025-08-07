@@ -1,13 +1,11 @@
 @page "/topbar"
 @using System.Threading
-@using Microsoft.Extensions.Logging
 @using Soenneker.Dtos.Results.Paged
 @using Soenneker.Extensions.Task
 @using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 
-@inject ILogger<TopBarDemo> Logger
 @inject EmployeeService EmployeeService
 
 <PageTitle>TopBar Demo - QuarkTable</PageTitle>
@@ -258,19 +256,16 @@
 
     private async Task HandleInitialize()
     {
-        Logger.LogInformation("QuarkTable initialized");
         await LoadEmployees().NoSync();
     }
 
     private async Task OnInteraction()
     {
-        Logger.LogInformation("Manual request triggered");
         await LoadEmployees().NoSync();
     }
 
     private async Task HandleOrder()
     {
-        Logger.LogInformation("Order changed");
         await LoadEmployees().NoSync();
     }
 
@@ -328,7 +323,6 @@
     private async Task HandleDepartmentFilter(ChangeEventArgs e)
     {
         _selectedDepartment = e.Value?.ToString() ?? string.Empty;
-        Logger.LogInformation($"Department filter changed to: {_selectedDepartment}");
 
         if (_topbarTable != null)
         {
@@ -340,7 +334,7 @@
 
     private async Task HandleExport()
     {
-        Logger.LogInformation("Export button clicked");
+
         // Here you would implement your CSV export logic
         await Task.Delay(500); // Simulate export delay
         // For demo purposes, just log the action
@@ -348,7 +342,6 @@
 
     private async Task HandleRefresh()
     {
-        Logger.LogInformation("Refresh button clicked");
         await LoadEmployees().NoSync();
     }
 
