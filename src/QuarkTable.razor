@@ -7,7 +7,7 @@
 @using Soenneker.Quark.Table.Abstract
 @using Soenneker.Utils.Debounce
 
-@inherits ComponentBase
+@inherits Soenneker.Quark.Components.Cancellable.CancellableComponent
 @implements IQuarkTable
 
 <CascadingValue Value="this" IsFixed="true" >
@@ -35,7 +35,6 @@
 </CascadingValue>
 
 @code {
-
 
 
     [Inject]
@@ -106,7 +105,6 @@
     private readonly List<DataTableOrderRequest> _currentOrders = [];
     private readonly QuarkTableContinuationTokenPaging _continuationTokenPaging = new();
     private readonly List<QuarkTh> _registeredColumns = [];
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     private string _searchTerm = string.Empty;
     private string? _continuationToken;
@@ -124,7 +122,7 @@
     protected override async Task OnInitializedAsync()
     {
         PageSize = Options.DefaultPageSize;
-        await QuarkTableInterop.Initialize(_cancellationTokenSource.Token).NoSync();
+        await QuarkTableInterop.Initialize(CancellationToken).NoSync();
 
         _initialized = true;
         if (OnInitialize.HasDelegate)
@@ -442,7 +440,7 @@
         try
         {
             // Create a linked cancellation token source to combine the component's token with the passed token
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancellationTokenSource.Token);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken);
 
             // Calculate the actual start position based on current page
             int actualStart = (CurrentPage - 1) * PageSize;
@@ -537,7 +535,7 @@
     {
         if (Options.Debug)
             Logger.LogDebug("Cancelling ongoing operations");
-        await _cancellationTokenSource.CancelAsync().NoSync();
+        await Cancel().NoSync();
         _isLoading = false;
         _isHandlingManualRequest = false;
         _dataChanged = true;
@@ -574,12 +572,10 @@
             Logger.LogDebug("Updated continuation token paging: RecordCount={RecordCount}, Token='{Token}', TotalRecords={TotalRecords}, TotalPages={TotalPages} (was {OldTotalPages})", recordCount, continuationToken ?? "null", TotalRecordsCount, TotalPages, oldTotalPages);
     }
 
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await _debouncer.DisposeAsync().NoSync();
 
-        await _cancellationTokenSource.CancelAsync().NoSync();
-        _cancellationTokenSource.Dispose();
+        await base.DisposeAsync();
     }
-
 }
