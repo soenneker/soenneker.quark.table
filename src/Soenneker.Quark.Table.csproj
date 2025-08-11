@@ -47,12 +47,12 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
         <PackageReference Include="Soenneker.DataTables.Dtos.ServerResponse" Version="3.0.2" />
-        <PackageReference Include="Soenneker.DataTables.Dtos.ServerSideRequest" Version="3.0.3" />
-        <PackageReference Include="Soenneker.DataTables.Dtos.Column" Version="3.0.4" />
-        <PackageReference Include="Soenneker.Quark.Components.Cancellable" Version="3.0.1" />
+        <PackageReference Include="Soenneker.DataTables.Dtos.ServerSideRequest" Version="3.0.4" />
+        <PackageReference Include="Soenneker.DataTables.Dtos.Column" Version="3.0.5" />
+        <PackageReference Include="Soenneker.Quark.Components.Cancellable" Version="3.0.2" />
         <PackageReference Include="Soenneker.Utils.Debounce" Version="3.0.5" />
-        <PackageReference Include="Soenneker.Utils.Json" Version="3.0.2343" />
-        <PackageReference Include="Soenneker.Blazor.Utils.ResourceLoader" Version="3.0.1488" />
+        <PackageReference Include="Soenneker.Utils.Json" Version="3.0.2344" />
+        <PackageReference Include="Soenneker.Blazor.Utils.ResourceLoader" Version="3.0.1489" />
     </ItemGroup>
 
     <ItemGroup>

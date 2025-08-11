@@ -1,4 +1,3 @@
-@using System.Threading
 @using Microsoft.Extensions.Logging
 @using Soenneker.DataTables.Dtos.ServerSideRequest
 @using Soenneker.Extensions.Task
@@ -125,6 +124,7 @@
         await QuarkTableInterop.Initialize(CancellationToken).NoSync();
 
         _initialized = true;
+
         if (OnInitialize.HasDelegate)
             await OnInitialize.InvokeAsync().NoSync();
     }
@@ -136,6 +136,7 @@
         {
             if (Options.Debug)
                 Logger.LogDebug("OnParametersSetAsync called while already updating parameters - skipping");
+
             return;
         }
 
@@ -162,6 +163,7 @@
                 {
                     if (Options.Debug)
                         Logger.LogDebug("Calling OnInteractionInternal for initial data load");
+
                     await OnInteractionInternal().NoSync();
                 }
 
@@ -174,8 +176,10 @@
                 {
                     if (Options.Debug)
                         Logger.LogDebug("TotalRecords changed from {OldTotal} to {NewTotal}", TotalRecordsCount, TotalRecords);
+
                     TotalRecordsCount = TotalRecords;
                     TotalPages = (int) Math.Ceiling((double) TotalRecordsCount / PageSize);
+
                     if (Options.Debug)
                         Logger.LogDebug("TotalRecords updated to {TotalRecords}, TotalPages={TotalPages}", TotalRecordsCount, TotalPages);
                 }
@@ -191,6 +195,7 @@
                 // Clear continuation token when options change
                 _continuationToken = null;
                 _continuationTokenPaging.Reset();
+
                 if (OnInteraction.HasDelegate)
                 {
                     await OnInteractionInternal().NoSync();
@@ -207,25 +212,27 @@
         await base.OnParametersSetAsync().NoSync();
     }
 
-    public async ValueTask HandleGoToPage(int page, CancellationToken cancellationToken = default)
+    public async ValueTask HandleGoToPage(int page)
     {
-        if (page < 1 || page > TotalPages) return;
+        if (page < 1 || page > TotalPages)
+            return;
 
         CurrentPage = page;
         // Clear continuation token when changing pages
         _continuationToken = null;
-        await OnInteractionInternal(cancellationToken).NoSync();
+
+        await OnInteractionInternal().NoSync();
 
         if (OnGoToPage.HasDelegate)
             await OnGoToPage.InvokeAsync(page).NoSync();
     }
 
-    public async ValueTask GoToPage(int page, CancellationToken cancellationToken = default)
+    public ValueTask GoToPage(int page)
     {
-        await HandleGoToPage(page, cancellationToken).NoSync();
+        return HandleGoToPage(page);
     }
 
-    public async ValueTask HandleSearch(string searchTerm, CancellationToken cancellationToken = default)
+    public async ValueTask HandleSearch(string searchTerm)
     {
         if (Options.Debug)
             Logger.LogDebug("HandleSearch called with term: {SearchTerm}", searchTerm);
@@ -235,7 +242,8 @@
         _continuationTokenPaging.Reset(); // Reset continuation token paging when searching
         _continuationToken = null; // Clear continuation token when searching
 
-        await OnInteractionInternal(cancellationToken).NoSync();
+
+        await OnInteractionInternal().NoSync();
     }
 
     public List<DataTableOrderRequest> GetCurrentOrders()
@@ -243,9 +251,10 @@
         return _currentOrders.ToList();
     }
 
-    public async ValueTask SetOrders(List<DataTableOrderRequest> orders, CancellationToken cancellationToken = default)
+    public async ValueTask SetOrders(List<DataTableOrderRequest> orders)
     {
         _currentOrders.Clear();
+
         if (orders != null)
         {
             _currentOrders.AddRange(orders);
@@ -254,7 +263,9 @@
         CurrentPage = 1;
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await OnInteractionInternal(cancellationToken).NoSync();
+
+
+        await OnInteractionInternal().NoSync();
     }
 
     public string? GetSortDirection(int columnIndex)
@@ -293,9 +304,10 @@
         };
     }
 
-    public async ValueTask HandleColumnSort(int columnIndex, CancellationToken cancellationToken = default)
+    public async ValueTask HandleColumnSort(int columnIndex)
     {
-        if (!IsColumnSortable(columnIndex)) return;
+        if (!IsColumnSortable(columnIndex))
+            return;
 
         if (Options.Debug)
             Logger.LogDebug("HandleColumnSort called for column index: {ColumnIndex}", columnIndex);
@@ -327,7 +339,8 @@
         // Reset continuation token paging when sorting
         _continuationTokenPaging.Reset();
         _continuationToken = null;
-        await OnInteractionInternal(cancellationToken).NoSync();
+
+        await OnInteractionInternal().NoSync();
 
         if (OnOrder.HasDelegate)
         {
@@ -337,6 +350,7 @@
                 Direction = nextDirection ?? string.Empty,
                 Orders = _currentOrders.ToList()
             };
+
             await OnOrder.InvokeAsync(args).NoSync();
         }
     }
@@ -403,13 +417,14 @@
         return columns;
     }
 
-    private async ValueTask OnInteractionInternal(CancellationToken cancellationToken = default)
+    private async ValueTask OnInteractionInternal()
     {
         // Prevent multiple simultaneous calls to OnInteractionInternal
         if (_isHandlingManualRequest)
         {
             if (Options.Debug)
                 Logger.LogDebug("OnInteractionInternal called while already handling a request - skipping");
+
             return;
         }
 
@@ -418,10 +433,12 @@
         {
             if (Options.Debug)
                 Logger.LogWarning("OnInteractionInternal called too many times ({Count}) - possible infinite loop detected", _manualRequestCount);
+
             return;
         }
 
         _manualRequestCount++;
+
         if (Options.Debug)
             Logger.LogDebug("OnInteractionInternal called (count: {Count}): Page={Page}, PageSize={PageSize}, SearchTerm='{SearchTerm}'", _manualRequestCount, CurrentPage, PageSize, _searchTerm);
 
@@ -429,19 +446,17 @@
         {
             if (Options.Debug)
                 Logger.LogWarning("OnInteractionInternal: No OnInteraction delegate");
+
             return;
         }
 
         _isHandlingManualRequest = true;
         _isLoading = true;
         _dataChanged = true;
-        await InvokeAsync(StateHasChanged).NoSync();
+        StateHasChanged();
 
         try
         {
-            // Create a linked cancellation token source to combine the component's token with the passed token
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken);
-
             // Calculate the actual start position based on current page
             int actualStart = (CurrentPage - 1) * PageSize;
 
@@ -504,7 +519,7 @@
         return shouldRender;
     }
 
-    public async ValueTask ClearSorting(CancellationToken cancellationToken = default)
+    public async ValueTask ClearSorting()
     {
         _currentOrders.Clear();
         CurrentPage = 1;
@@ -514,10 +529,11 @@
         _registeredColumns.Clear(); // Reset column registration
         _hasLoadedOnce = false; // Reset the loaded flag
         HasLoadedOnce = false;
-        await OnInteractionInternal(cancellationToken).NoSync();
+
+        await OnInteractionInternal().NoSync();
     }
 
-    public async ValueTask Reset(CancellationToken cancellationToken = default)
+    public async ValueTask Reset()
     {
         _currentOrders.Clear();
         CurrentPage = 1;
@@ -528,18 +544,21 @@
         _hasLoadedOnce = false; // Reset the loaded flag
         HasLoadedOnce = false;
 
-        await OnInteractionInternal(cancellationToken).NoSync();
+        await OnInteractionInternal().NoSync();
     }
 
     public async ValueTask CancelOperations()
     {
         if (Options.Debug)
             Logger.LogDebug("Cancelling ongoing operations");
+
         await Cancel().NoSync();
+
         _isLoading = false;
         _isHandlingManualRequest = false;
         _dataChanged = true;
-        await InvokeAsync(StateHasChanged).NoSync();
+
+        StateHasChanged();
     }
 
     public void UpdateContinuationTokenPaging(int recordCount, string? continuationToken, string? tokenUsedForCurrentPage = null)
@@ -574,8 +593,9 @@
 
     public override async ValueTask DisposeAsync()
     {
-        await _debouncer.DisposeAsync().NoSync();
+        await base.DisposeAsync().NoSync();
 
-        await base.DisposeAsync();
+        await _debouncer.DisposeAsync().NoSync();
     }
+
 }

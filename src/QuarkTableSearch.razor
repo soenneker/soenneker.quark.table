@@ -4,8 +4,7 @@
 @using Soenneker.Utils.Debounce
 @using Soenneker.Quark.Table.Abstract
 
-@inherits ComponentBase
-@implements IAsyncDisposable
+@inherits Soenneker.Quark.Components.Cancellable.CancellableComponent
 
 <div class="quark-table-search">
     <input type="text"
@@ -43,18 +42,19 @@
     {
         string newSearchTerm = e.Value?.ToString() ?? string.Empty;
 
-        _debouncer.Debounce(DebounceMs, async ct =>
+        _debouncer.Debounce(DebounceMs, async _ =>
         {
             // First, notify the parent QuarkTable if available
             if (QuarkTable != null)
             {
-                await QuarkTable.HandleSearch(newSearchTerm, ct).NoSync();
+                await QuarkTable.HandleSearch(newSearchTerm).NoSync();
             }
 
             // Then, invoke the OnSearch callback if provided
             if (OnSearch.HasDelegate)
                 await OnSearch.InvokeAsync(newSearchTerm).NoSync();
-        });
+
+        }, false, CancellationToken);
 
         if (SearchTermChanged.HasDelegate)
             return SearchTermChanged.InvokeAsync(newSearchTerm);
@@ -62,8 +62,9 @@
         return Task.CompletedTask;
     }
 
-    public ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
-        return _debouncer.DisposeAsync();
+        await base.DisposeAsync().NoSync();
+        await _debouncer.DisposeAsync().NoSync();
     }
 } 
