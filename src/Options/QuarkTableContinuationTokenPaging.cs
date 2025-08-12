@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Soenneker.Extensions.String;
 
 namespace Soenneker.Quark.Table.Options;
 
@@ -52,7 +53,7 @@ public class QuarkTableContinuationTokenPaging
 
         if (_pageTokens.TryGetValue(pageNumber.ToString(), out string? token))
         {
-            return string.IsNullOrEmpty(token) ? null : token;
+            return token.IsNullOrEmpty() ? null : token;
         }
         return null;
     }
@@ -182,14 +183,14 @@ public class QuarkTableContinuationTokenPaging
 
         // First, check if we have a direct token for the requested page
         string? directToken = GetContinuationToken(requestedPage);
-        if (!string.IsNullOrEmpty(directToken))
+        if (directToken.HasContent())
         {
             return directToken;
         }
 
         // If we have a continuation token from the previous response and no direct token for the requested page,
         // use the previous token (this handles forward navigation)
-        if (!string.IsNullOrEmpty(continuationToken))
+        if (continuationToken.HasContent())
         {
             return continuationToken;
         }
@@ -221,12 +222,12 @@ public class QuarkTableContinuationTokenPaging
     {
         SetPageRecordCount(_currentVirtualPage, recordCount);
 
-        if (!string.IsNullOrEmpty(tokenUsedForCurrentPage))
+        if (tokenUsedForCurrentPage.HasContent())
         {
             SetContinuationToken(_currentVirtualPage, tokenUsedForCurrentPage);
         }
 
-        if (!string.IsNullOrEmpty(continuationToken))
+        if (continuationToken.HasContent())
         {
             SetContinuationToken(_currentVirtualPage + 1, continuationToken);
             _hasMorePages = true;
@@ -239,10 +240,12 @@ public class QuarkTableContinuationTokenPaging
         if (_hasMorePages)
         {
             var knownRecords = 0;
+
             foreach (int count in _pageCounts.Values)
             {
                 knownRecords += count;
             }
+
             _estimatedTotalRecords = Math.Max(_estimatedTotalRecords, knownRecords + pageSize);
         }
     }

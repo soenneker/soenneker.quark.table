@@ -1,15 +1,17 @@
 @using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Abstract
+@using Soenneker.Extensions.String
 
 @inherits ComponentBase
 
-<th @onclick="HandleClick" 
+<th @onclick="HandleClick"
     class="quark-table-sortable @(Sortable ? GetSortClass() : string.Empty)"
-    style="@(Sortable ? "cursor:pointer;" : string.Empty) @Style">
+    style="@(Sortable ? "cursor:pointer;" : string.Empty) @GetAlignStyle() @Style" >
     @ChildContent @(Sortable ? GetSortIndicator() : string.Empty)
 </th>
 
 @code {
+
     [CascadingParameter]
     private IQuarkTable? QuarkTable { get; set; }
 
@@ -24,6 +26,13 @@
 
     [Parameter]
     public string Style { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The text alignment for the column header content.
+    /// Valid values are "left", "center", or "right".
+    /// </summary>
+    [Parameter]
+    public string Align { get; set; } = string.Empty;
 
     /// <summary>
     /// The property name or field bound to the column's data in the source.
@@ -52,20 +61,42 @@
 
     private async Task HandleClick()
     {
-        if (!Sortable || QuarkTable == null) return;
+        if (!Sortable || QuarkTable == null)
+            return;
 
         await QuarkTable.HandleColumnSort(_columnIndex).NoSync();
     }
 
     private string GetSortClass()
     {
-        if (QuarkTable == null) return string.Empty;
+        if (QuarkTable == null)
+            return string.Empty;
+
         return QuarkTable.GetSortClassByIndex(_columnIndex);
     }
 
     private string GetSortIndicator()
     {
-        if (QuarkTable == null) return " ↕";
+        if (QuarkTable == null)
+            return " ↕";
+
         return QuarkTable.GetSortIndicatorByIndex(_columnIndex);
     }
-} 
+
+    private string GetAlignStyle()
+    {
+        if (Align.IsNullOrWhiteSpace())
+            return string.Empty;
+
+        string align = Align.ToLowerInvariantFast();
+
+        return align switch
+        {
+            "left" => "text-align: left;",
+            "center" => "text-align: center;",
+            "right" => "text-align: right;",
+            _ => string.Empty
+        };
+    }
+
+}
