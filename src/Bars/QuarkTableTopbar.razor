@@ -1,7 +1,7 @@
 @inherits ComponentBase
 
 <div class="quark-table-topbar-wrapper">
-    <div class="quark-table-topbar">
+    <div class="quark-table-topbar @LayoutClass">
         @ChildContent
     </div>
 </div>
@@ -9,4 +9,7 @@
 @code {
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string LayoutClass { get; set; } = string.Empty;
 }

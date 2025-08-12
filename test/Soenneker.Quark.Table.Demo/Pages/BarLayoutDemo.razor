@@ -1,0 +1,324 @@
+@page "/bar-layout-demo"
+@using Soenneker.Quark.Table.Demo.Services
+@using Soenneker.Quark.Table.Demo.Dtos
+
+<PageTitle>Bar Layout Demo - QuarkTable</PageTitle>
+
+<div class="container-fluid">
+    <div class="demo-hero">
+        <div class="hero-content text-center">
+            <i class="fas fa-columns demo-icon"></i>
+            <h1 class="demo-title">Bar Layout Options</h1>
+            <p class="demo-subtitle">Explore different positioning options for QuarkTable bars</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="demo-card">
+                <div class="card-header">
+                    <div class="card-header-content">
+                        <h3>Bottom Bar - Right Only (Fixed Positioning)</h3>
+                        <p>When only QuarkTableRight is specified, it now properly positions to the right</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <QuarkTable @ref="_table1"
+                        Options="_tableOptions"
+                        TotalRecords="@_totalRecords">
+
+                        <QuarkTableElement>
+                            <QuarkThead>
+                                <QuarkTr>
+                                    <QuarkTh Data="Name" Sortable="true">Name</QuarkTh>
+                                    <QuarkTh Data="Department" Sortable="true">Department</QuarkTh>
+                                    <QuarkTh Data="Email" Sortable="true">Email</QuarkTh>
+                                    <QuarkTh Data="Salary" Sortable="true">Salary</QuarkTh>
+                                    <QuarkTh Data="HireDate" Sortable="true">Hire Date</QuarkTh>
+                                    <QuarkTh Data="Status" Sortable="true">Status</QuarkTh>
+                                </QuarkTr>
+                            </QuarkThead>
+                            <QuarkTbody>
+                                @foreach (var employee in _employees)
+                                {
+                                    <QuarkTr>
+                                        <QuarkTd>@employee.Name</QuarkTd>
+                                        <QuarkTd>@employee.Department</QuarkTd>
+                                        <QuarkTd>@employee.Email</QuarkTd>
+                                        <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                        <QuarkTd>@employee.HireDate.ToString("MM/dd/yyyy")</QuarkTd>
+                                        <QuarkTd>@employee.Status</QuarkTd>
+                                    </QuarkTr>
+                                }
+                            </QuarkTbody>
+                        </QuarkTableElement>
+
+                        <QuarkTableBottomBar LayoutClass="only-right">
+                            <QuarkTableRight>
+                                <QuarkTableInfo />
+                                <QuarkTablePagination />
+                            </QuarkTableRight>
+                        </QuarkTableBottomBar>
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="demo-card">
+                <div class="card-header">
+                    <div class="card-header-content">
+                        <h3>Top Bar - Left Only (Right Anchored)</h3>
+                        <p>When only QuarkTableLeft is specified, it now anchors to the right</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <QuarkTable @ref="_table2"
+                        Options="_tableOptions"
+                        TotalRecords="@_totalRecords">
+
+                        <QuarkTableTopBar LayoutClass="only-left">
+                            <QuarkTableLeft>
+                                <QuarkTableSearch Placeholder="Search employees..." />
+                            </QuarkTableLeft>
+                        </QuarkTableTopBar>
+
+                        <QuarkTableElement>
+                            <QuarkThead>
+                                <QuarkTr>
+                                    <QuarkTh Data="Name" Sortable="true">Name</QuarkTh>
+                                    <QuarkTh Data="Department" Sortable="true">Department</QuarkTh>
+                                    <QuarkTh Data="Email" Sortable="true">Email</QuarkTh>
+                                    <QuarkTh Data="Salary" Sortable="true">Salary</QuarkTh>
+                                    <QuarkTh Data="HireDate" Sortable="true">Hire Date</QuarkTh>
+                                    <QuarkTh Data="Status" Sortable="true">Status</QuarkTh>
+                                </QuarkTr>
+                            </QuarkThead>
+                            <QuarkTbody>
+                                @foreach (var employee in _employees)
+                                {
+                                    <QuarkTr>
+                                        <QuarkTd>@employee.Name</QuarkTd>
+                                        <QuarkTd>@employee.Department</QuarkTd>
+                                        <QuarkTd>@employee.Email</QuarkTd>
+                                        <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                        <QuarkTd>@employee.HireDate.ToString("MM/dd/yyyy")</QuarkTd>
+                                        <QuarkTd>@employee.Status</QuarkTd>
+                                    </QuarkTr>
+                                }
+                            </QuarkTbody>
+                        </QuarkTableElement>
+
+                        <QuarkTableBottomBar>
+                            <QuarkTableLeft>
+                                <QuarkTableInfo />
+                            </QuarkTableLeft>
+                            <QuarkTableRight>
+                                <QuarkTablePagination />
+                            </QuarkTableRight>
+                        </QuarkTableBottomBar>
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="demo-card">
+                <div class="card-header">
+                    <div class="card-header-content">
+                        <h3>Standard Layout (Both Left and Right)</h3>
+                        <p>Traditional layout with both left and right sections</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <QuarkTable @ref="_table3"
+                        Options="_tableOptions"
+                        TotalRecords="@_totalRecords">
+
+                        <QuarkTableTopBar>
+                            <QuarkTableLeft>
+                                <QuarkTableSearch Placeholder="Search employees..." />
+                            </QuarkTableLeft>
+                            <QuarkTableRight>
+                                <button class="custom-btn export-btn">
+                                    <i class="fas fa-download me-1"></i>Export
+                                </button>
+                                <button class="custom-btn refresh-btn">
+                                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                                </button>
+                            </QuarkTableRight>
+                        </QuarkTableTopBar>
+
+                        <QuarkTableElement>
+                            <QuarkThead>
+                                <QuarkTr>
+                                    <QuarkTh Data="Name" Sortable="true">Name</QuarkTh>
+                                    <QuarkTh Data="Department" Sortable="true">Department</QuarkTh>
+                                    <QuarkTh Data="Email" Sortable="true">Email</QuarkTh>
+                                    <QuarkTh Data="Salary" Sortable="true">Salary</QuarkTh>
+                                    <QuarkTh Data="HireDate" Sortable="true">Hire Date</QuarkTh>
+                                    <QuarkTh Data="Status" Sortable="true">Status</QuarkTh>
+                                </QuarkTr>
+                            </QuarkThead>
+                            <QuarkTbody>
+                                @foreach (var employee in _employees)
+                                {
+                                    <QuarkTr>
+                                        <QuarkTd>@employee.Name</QuarkTd>
+                                        <QuarkTd>@employee.Department</QuarkTd>
+                                        <QuarkTd>@employee.Email</QuarkTd>
+                                        <QuarkTd>@employee.Salary.ToString("C")</QuarkTd>
+                                        <QuarkTd>@employee.HireDate.ToString("MM/dd/yyyy")</QuarkTd>
+                                        <QuarkTd>@employee.Status</QuarkTd>
+                                    </QuarkTr>
+                                }
+                            </QuarkTbody>
+                        </QuarkTableElement>
+
+                        <QuarkTableBottomBar>
+                            <QuarkTableLeft>
+                                <QuarkTableInfo />
+                            </QuarkTableLeft>
+                            <QuarkTableRight>
+                                <QuarkTablePagination />
+                            </QuarkTableRight>
+                        </QuarkTableBottomBar>
+                    </QuarkTable>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .demo-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .demo-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .demo-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .demo-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #fff, #f8f9fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .demo-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .demo-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: none;
+        margin-bottom: 3rem;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 1px solid #dee2e6;
+        padding: 2rem;
+    }
+
+    .card-header-content h3 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .custom-btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .custom-btn:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+    }
+
+    .export-btn {
+        background: #28a745;
+    }
+
+    .export-btn:hover {
+        background: #1e7e34;
+    }
+
+    .refresh-btn {
+        background: #17a2b8;
+    }
+
+    .refresh-btn:hover {
+        background: #117a8b;
+    }
+</style>
+
+@code {
+    private QuarkTable? _table1;
+    private QuarkTable? _table2;
+    private QuarkTable? _table3;
+    private QuarkTableOptions _tableOptions = new();
+    private List<Employee> _employees = new();
+    private int _totalRecords = 0;
+
+    [Inject]
+    private EmployeeService EmployeeService { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {       
+        // Use the EmployeeService to get data
+        _employees = EmployeeService.GetAllEmployees();
+        _totalRecords = EmployeeService.GetTotalCount();
+    }
+}

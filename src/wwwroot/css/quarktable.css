@@ -509,6 +509,34 @@
     max-width: 400px;
 }
 
+/*------------------------------------------------*
+  Left and Right positioning for bars
+*------------------------------------------------*/
+.quark-table-left {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.quark-table-right {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-left: auto;
+}
+
+/* When only right is present in bottom bar, position it to the right */
+.quark-table-bottombar.only-right {
+    justify-content: flex-end;
+}
+
+/* When only left is present in top bar, position it to the right */
+.quark-table-topbar.only-left {
+    justify-content: flex-end;
+}
+
 @media(max-width:640px) {
     .quark-table-topbar,
     .quark-table-bottombar {

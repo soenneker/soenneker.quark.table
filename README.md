@@ -98,6 +98,48 @@ Display table information independently of pagination:
 <!-- or with custom content -->
 <QuarkTableInfo>
     <span>Showing @start-@end of @total records</span>
+```
+
+### Bar Layout Positioning
+
+The `QuarkTableBottomBar` and `QuarkTableTopBar` components support layout classes to control positioning when only one section is present:
+
+#### Bottom Bar - Right Only
+When only `QuarkTableRight` is specified in the bottom bar, use the `only-right` layout class to position it to the right:
+
+```razor
+<QuarkTableBottomBar LayoutClass="only-right">
+    <QuarkTableRight>
+        <QuarkTableInfo />
+        <QuarkTablePagination />
+    </QuarkTableRight>
+</QuarkTableBottomBar>
+```
+
+#### Top Bar - Left Only
+When only `QuarkTableLeft` is specified in the top bar, use the `only-left` layout class to anchor it to the right:
+
+```razor
+<QuarkTableTopBar LayoutClass="only-left">
+    <QuarkTableLeft>
+        <QuarkTableSearch Placeholder="Search..." />
+    </QuarkTableLeft>
+</QuarkTableTopBar>
+```
+
+#### Standard Layout
+When both left and right sections are present, no layout class is needed:
+
+```razor
+<QuarkTableBottomBar>
+    <QuarkTableLeft>
+        <QuarkTableInfo />
+    </QuarkTableLeft>
+    <QuarkTableRight>
+        <QuarkTablePagination />
+    </QuarkTableRight>
+</QuarkTableBottomBar>
+```
 </QuarkTableInfo>
 ```
 
