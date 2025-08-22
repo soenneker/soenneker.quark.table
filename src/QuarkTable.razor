@@ -506,18 +506,7 @@
         }
     }
 
-    protected override bool ShouldRender()
-    {
-        bool shouldRender = _dataChanged;
-        if (shouldRender)
-        {
-            if (Options.Debug)
-                Logger.LogDebug("ShouldRender returning true - _dataChanged was true");
-        }
-
-        _dataChanged = false;
-        return shouldRender;
-    }
+    protected override bool ShouldRender() => true;
 
     public async ValueTask ClearSorting()
     {
