@@ -48,7 +48,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
         <PackageReference Include="Soenneker.DataTables.Dtos.ServerResponse" Version="3.0.2" />
         <PackageReference Include="Soenneker.DataTables.Dtos.ServerSideRequest" Version="3.0.5" />
-        <PackageReference Include="Soenneker.DataTables.Dtos.Column" Version="3.0.5" />
+        <PackageReference Include="Soenneker.DataTables.Dtos.Column" Version="3.0.6" />
         <PackageReference Include="Soenneker.Extensions.String" Version="3.0.549" />
         <PackageReference Include="Soenneker.Quark.Components.Cancellable" Version="3.0.4" />
         <PackageReference Include="Soenneker.Utils.Debounce" Version="3.0.7" />
