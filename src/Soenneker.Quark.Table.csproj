@@ -53,7 +53,7 @@
         <PackageReference Include="Soenneker.Quark.Components.Cancellable" Version="3.0.4" />
         <PackageReference Include="Soenneker.Utils.Debounce" Version="3.0.7" />
         <PackageReference Include="Soenneker.Utils.Json" Version="3.0.2345" />
-        <PackageReference Include="Soenneker.Blazor.Utils.ResourceLoader" Version="3.0.1495" />
+        <PackageReference Include="Soenneker.Blazor.Utils.ResourceLoader" Version="3.0.1496" />
     </ItemGroup>
 
     <ItemGroup>
