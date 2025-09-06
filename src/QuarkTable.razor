@@ -1,7 +1,5 @@
 @using Microsoft.Extensions.Logging
 @using Soenneker.DataTables.Dtos.ServerSideRequest
-@using Soenneker.Extensions.Task
-@using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Options
 @using Soenneker.Quark.Table.Abstract
 @using Soenneker.Utils.Debounce
@@ -121,12 +119,12 @@
     protected override async Task OnInitializedAsync()
     {
         PageSize = Options.DefaultPageSize;
-        await QuarkTableInterop.Initialize(CancellationToken).NoSync();
+        await QuarkTableInterop.Initialize(CancellationToken);
 
         _initialized = true;
 
         if (OnInitialize.HasDelegate)
-            await OnInitialize.InvokeAsync().NoSync();
+            await OnInitialize.InvokeAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -164,7 +162,7 @@
                     if (Options.Debug)
                         Logger.LogDebug("Calling OnInteractionInternal for initial data load");
 
-                    await OnInteractionInternal().NoSync();
+                    await OnInteractionInternal();
                 }
 
                 _dataLoaded = true;
@@ -198,7 +196,7 @@
 
                 if (OnInteraction.HasDelegate)
                 {
-                    await OnInteractionInternal().NoSync();
+                    await OnInteractionInternal();
                 }
             }
 
@@ -209,7 +207,7 @@
             _isUpdatingParameters = false;
         }
 
-        await base.OnParametersSetAsync().NoSync();
+        await base.OnParametersSetAsync();
     }
 
     public async ValueTask HandleGoToPage(int page)
@@ -221,10 +219,10 @@
         // Clear continuation token when changing pages
         _continuationToken = null;
 
-        await OnInteractionInternal().NoSync();
+        await OnInteractionInternal();
 
         if (OnGoToPage.HasDelegate)
-            await OnGoToPage.InvokeAsync(page).NoSync();
+            await OnGoToPage.InvokeAsync(page);
     }
 
     public ValueTask GoToPage(int page)
@@ -243,7 +241,7 @@
         _continuationToken = null; // Clear continuation token when searching
 
 
-        await OnInteractionInternal().NoSync();
+        await OnInteractionInternal();
     }
 
     public List<DataTableOrderRequest> GetCurrentOrders()
@@ -265,7 +263,7 @@
         _continuationToken = null;
 
 
-        await OnInteractionInternal().NoSync();
+        await OnInteractionInternal();
     }
 
     public string? GetSortDirection(int columnIndex)
@@ -340,7 +338,7 @@
         _continuationTokenPaging.Reset();
         _continuationToken = null;
 
-        await OnInteractionInternal().NoSync();
+        await OnInteractionInternal();
 
         if (OnOrder.HasDelegate)
         {
@@ -351,7 +349,7 @@
                 Orders = _currentOrders.ToList()
             };
 
-            await OnOrder.InvokeAsync(args).NoSync();
+            await OnOrder.InvokeAsync(args);
         }
     }
 
@@ -476,7 +474,7 @@
             if (Options.Debug)
                 Logger.LogDebug("Sending request: Start={Start}, Length={Length}, Search='{Search}', ContinuationToken='{Token}'", request.Start, request.Length, request.Search?.Value ?? "null", request.ContinuationToken ?? "null");
 
-            await OnInteraction.InvokeAsync(request).NoSync();
+            await OnInteraction.InvokeAsync(request);
 
             // Mark that we've loaded data at least once after a successful request
             if (!_hasLoadedOnce)
@@ -517,7 +515,7 @@
         _hasLoadedOnce = false; // Reset the loaded flag
         HasLoadedOnce = false;
 
-        await OnInteractionInternal().NoSync();
+        await OnInteractionInternal();
     }
 
     public async ValueTask Reset()
@@ -531,7 +529,7 @@
         _hasLoadedOnce = false; // Reset the loaded flag
         HasLoadedOnce = false;
 
-        await OnInteractionInternal().NoSync();
+        await OnInteractionInternal();
     }
 
     public async ValueTask CancelOperations()
@@ -539,7 +537,7 @@
         if (Options.Debug)
             Logger.LogDebug("Cancelling ongoing operations");
 
-        await Cancel().NoSync();
+        await Cancel();
 
         _isLoading = false;
         _isHandlingManualRequest = false;
@@ -580,9 +578,9 @@
 
     public override async ValueTask DisposeAsync()
     {
-        await base.DisposeAsync().NoSync();
+        await base.DisposeAsync();
 
-        await _debouncer.DisposeAsync().NoSync();
+        await _debouncer.DisposeAsync();
     }
 
 }

@@ -1,8 +1,6 @@
 @page "/topbar"
 @using System.Threading
 @using Soenneker.Dtos.Results.Paged
-@using Soenneker.Extensions.Task
-@using Soenneker.Extensions.ValueTask
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 
@@ -256,17 +254,17 @@
 
     private async Task HandleInitialize()
     {
-        await LoadEmployees().NoSync();
+        await LoadEmployees();
     }
 
     private async Task OnInteraction()
     {
-        await LoadEmployees().NoSync();
+        await LoadEmployees();
     }
 
     private async Task HandleOrder()
     {
-        await LoadEmployees().NoSync();
+        await LoadEmployees();
     }
 
     private async Task LoadEmployees()
@@ -293,7 +291,7 @@
             }
         }
 
-        PagedResult<Employee> pagedResult = await EmployeeService.GetEmployeesPaged(serverRequest, CancellationToken.None).NoSync();
+        PagedResult<Employee> pagedResult = await EmployeeService.GetEmployeesPaged(serverRequest, CancellationToken.None);
 
         // Apply department filter if selected
         _employees = pagedResult.Items;
@@ -304,7 +302,7 @@
 
         _totalRecords = pagedResult.TotalCount ?? 0;
 
-        await InvokeAsync(StateHasChanged).NoSync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private static int GetColumnIndex(string sortBy)
@@ -326,10 +324,10 @@
 
         if (_topbarTable != null)
         {
-            await _topbarTable.GoToPage(1).NoSync(); // Reset to first page when filtering
+            await _topbarTable.GoToPage(1); // Reset to first page when filtering
         }
 
-        await LoadEmployees().NoSync();
+        await LoadEmployees();
     }
 
     private async Task HandleExport()
@@ -342,7 +340,7 @@
 
     private async Task HandleRefresh()
     {
-        await LoadEmployees().NoSync();
+        await LoadEmployees();
     }
 
 }

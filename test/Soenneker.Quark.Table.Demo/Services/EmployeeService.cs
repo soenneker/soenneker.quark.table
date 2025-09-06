@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Soenneker.Extensions.Task;
 
 namespace Soenneker.Quark.Table.Demo.Services;
 
@@ -118,7 +117,7 @@ public class EmployeeService
             ]);
         }
 
-        await DelayUtil.Delay(500, _logger, cancellationToken).NoSync();
+        await DelayUtil.Delay(500, _logger, cancellationToken);
 
         return DataTableServerResponse.Success(serverSideRequest.Draw, totalRecords, totalRecords, tableData);
     }
@@ -246,7 +245,7 @@ public class EmployeeService
             continuationToken = $"page_{serverSideRequest.Start + serverSideRequest.Length}_{serverSideRequest.Length}";
         }
 
-        await DelayUtil.Delay(500, _logger, cancellationToken).NoSync();
+        await DelayUtil.Delay(500, _logger, cancellationToken);
 
         return new PagedResult<Employee>
         {

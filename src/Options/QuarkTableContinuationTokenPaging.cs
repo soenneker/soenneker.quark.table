@@ -8,7 +8,7 @@ namespace Soenneker.Quark.Table.Options;
 /// Helper class to manage continuation token pagination for QuarkTable.
 /// This allows QuarkTable to handle continuation tokens internally.
 /// </summary>
-public class QuarkTableContinuationTokenPaging
+public sealed class QuarkTableContinuationTokenPaging
 {
     private readonly Dictionary<string, string> _pageTokens = new();
     private readonly Dictionary<string, int> _pageCounts = new();

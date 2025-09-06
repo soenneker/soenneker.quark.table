@@ -2,7 +2,6 @@
 @using Microsoft.Extensions.Logging
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
-@using Soenneker.Extensions.Task
 
 @inject ILogger<ModernDemo> Logger
 @inject EmployeeService EmployeeService
@@ -305,7 +304,7 @@
         try
         {
             // Get filtered employees using the EmployeeService
-            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest).NoSync();
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
 
             Logger.LogInformation("ModernDemo: Returned {Count} employees", employees.Count);
 

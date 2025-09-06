@@ -4,7 +4,6 @@
 @using Soenneker.Quark.Table.Demo.Services
 @using Soenneker.Quark.Table.Demo.Dtos
 @using Soenneker.Dtos.Results.Paged
-@using Soenneker.Extensions.Task
 
 @inject ILogger<PagedResultDemo> Logger
 @inject EmployeeService EmployeeService
@@ -317,7 +316,7 @@
 
         try
         {
-            PagedResult<Employee> pagedResult = await EmployeeService.GetEmployeesPaged(serverSideRequest, CancellationToken.None).NoSync();
+            PagedResult<Employee> pagedResult = await EmployeeService.GetEmployeesPaged(serverSideRequest, CancellationToken.None);
 
             Logger.LogInformation("PagedResultDemo: EmployeeService returned {Count} employees, TotalCount={TotalCount}, ContinuationToken='{Token}'", 
                 pagedResult.Items.Count, pagedResult.TotalCount, pagedResult.ContinuationToken ?? "null");

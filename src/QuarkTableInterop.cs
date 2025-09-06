@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.Blazor.Utils.ResourceLoader.Abstract;
-using Soenneker.Extensions.ValueTask;
 using Soenneker.Quark.Table.Abstract;
 using Soenneker.Utils.AsyncSingleton;
 
@@ -18,7 +17,7 @@ public sealed class QuarkTableInterop : IQuarkTableInterop
 
         _styleInitializer = new AsyncSingleton(async (token, _) =>
         {
-            await resourceLoader1.LoadStyle("_content/Soenneker.Quark.Table/css/quarktable.css", cancellationToken: token).NoSync();
+            await resourceLoader1.LoadStyle("_content/Soenneker.Quark.Table/css/quarktable.css", cancellationToken: token);
 
             return new object();
         });
@@ -29,8 +28,8 @@ public sealed class QuarkTableInterop : IQuarkTableInterop
         return _styleInitializer.Init(cancellationToken);
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        await _styleInitializer.DisposeAsync().NoSync();
+        return _styleInitializer.DisposeAsync();
     }
 }

@@ -4,7 +4,6 @@
 @using Soenneker.Quark.Table.Demo.Dtos
 @using Soenneker.Quark.Table.Demo.Services
 @using Microsoft.Extensions.Logging
-@using Soenneker.Extensions.Task
 
 @inject EmployeeService EmployeeService
 @inject ILogger<RequestDataOptionsDemo> Logger
@@ -279,7 +278,7 @@
             Logger.LogInformation("RequestDataOptionsDemo: Converted to RequestDataOptions: PageSize={PageSize}, Search='{Search}', SearchFields={SearchFieldsCount}, Filters={FiltersCount}, OrderBy={OrderByCount}", requestDataOptions.PageSize, requestDataOptions.Search, requestDataOptions.SearchFields?.Count ?? 0, requestDataOptions.Filters?.Count ?? 0, requestDataOptions.OrderBy?.Count ?? 0);
 
             // Get filtered employees using the EmployeeService
-            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest).NoSync();
+            List<Employee> employees = await EmployeeService.GetFilteredEmployees(serverSideRequest);
 
             Logger.LogInformation("RequestDataOptionsDemo: Returned {Count} employees", employees.Count);
 
