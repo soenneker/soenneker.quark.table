@@ -9,25 +9,25 @@
 
 <CascadingValue Value="this" IsFixed="true" >
     <CascadingValue Value="@_isLoading" Name="IsLoading" >
-        <div id="@ElementId" class="quark-table-wrapper" style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")" >
-            <div class="quark-table-container" >
+        <Div id="@ElementId" class="quark-table-wrapper" style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")" >
+            <Div class="quark-table-container" >
                 @if (!_isLoading && ChildContent == null)
                 {
-                    <div class="text-center p-4" >
+                    <Div class="text-center p-4" >
                         <p>No content available</p>
-                    </div>
+                    </Div>
                 }
                 else
                 {
-                    <div class="quark-table-with-search" >
+                    <Div class="quark-table-with-search" >
                         @if (ChildContent != null)
                         {
                             @ChildContent
                         }
-                    </div>
+                    </Div>
                 }
-            </div>
-        </div>
+            </Div>
+        </Div>
     </CascadingValue>
 </CascadingValue>
 

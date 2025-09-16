@@ -2,7 +2,7 @@
 
 @inherits ComponentBase
 
-<div class="quark-table-page-size">
+<Div class="quark-table-page-size">
     <label>Show:</label>
     <select value="@PageSize" @onchange="OnPageSizeChangedHandler">
         @for (var i = 0; i < PageSizeOptions.Length; i++)
@@ -11,8 +11,8 @@
             <option value="@size" selected="@(size == PageSize)">@size</option>
         }
     </select>
-    <span>entries per page</span>
-</div>
+    <Span>entries per page</Span>
+</Div>
 
 @code {
     [CascadingParameter]

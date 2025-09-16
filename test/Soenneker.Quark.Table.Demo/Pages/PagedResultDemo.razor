@@ -10,29 +10,29 @@
 
 <PageTitle>PagedResult Demo - QuarkTable</PageTitle>
 
-<div class="demo-hero">
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <div class="hero-content">
-                    <div class="demo-icon">✨</div>
+<Div class="demo-hero">
+    <Div class="container">
+        <Div class="row">
+            <Div class="col-12 text-center">
+                <Div class="hero-content">
+                    <Div class="demo-icon">✨</Div>
                     <h1 class="demo-title">PagedResult Demo</h1>
                     <p class="demo-subtitle">Advanced pagination with continuation tokens and comprehensive debug information.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </Div>
+            </Div>
+        </Div>
+    </Div>
+</Div>
 
-<div class="container">
-    <div class="demo-card">
-        <div class="card-header">
-            <div class="card-header-content">
+<Div class="container">
+    <Div class="demo-card">
+        <Div class="card-header">
+            <Div class="card-header-content">
                 <h3><i class="fas fa-layer-group me-2"></i>Advanced Employee Directory</h3>
                 <p class="text-muted mb-0">This demo shows how QuarkTable works with PagedResult and handles continuation tokens internally.</p>
-            </div>
-        </div>
-        <div class="card-body">
+            </Div>
+        </Div>
+        <Div class="card-body">
             <QuarkTable @ref="_quarkTable"
                         OnInteraction="OnInteraction"
                         OnOrder="HandleOrder"
@@ -79,76 +79,76 @@
                 </QuarkTableBottomBar>
 
             </QuarkTable>
-        </div>
-    </div>
+        </Div>
+    </Div>
 
     <!-- Debug Information -->
     @if (_quarkTable != null)
     {
-        <div class="debug-card">
-            <div class="card-header">
-                <div class="card-header-content">
+        <Div class="debug-card">
+            <Div class="card-header">
+                <Div class="card-header-content">
                     <h3><i class="fas fa-bug me-2"></i>Debug Information</h3>
                     <p class="text-muted mb-0">Real-time information about table state and PagedResult handling</p>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="debug-section">
+                </Div>
+            </Div>
+            <Div class="card-body">
+                <Div class="row">
+                    <Div class="col-md-6">
+                        <Div class="debug-section">
                             <h4><i class="fas fa-table me-2"></i>Table State</h4>
-                            <div class="debug-grid">
-                                <div class="debug-item">
+                            <Div class="debug-grid">
+                                <Div class="debug-item">
                                     <span class="debug-label">Current Page:</span>
                                     <span class="debug-value">@_quarkTable.CurrentPage</span>
-                                </div>
-                                <div class="debug-item">
+                                </Div>
+                                <Div class="debug-item">
                                     <span class="debug-label">Page Size:</span>
                                     <span class="debug-value">@_quarkTable.PageSize</span>
-                                </div>
-                                <div class="debug-item">
+                                </Div>
+                                <Div class="debug-item">
                                     <span class="debug-label">Total Pages:</span>
                                     <span class="debug-value">@_quarkTable.TotalPages</span>
-                                </div>
-                                <div class="debug-item">
+                                </Div>
+                                <Div class="debug-item">
                                     <span class="debug-label">Total Records:</span>
                                     <span class="debug-value">@_quarkTable.TotalRecordsCount</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="debug-section">
+                                </Div>
+                            </Div>
+                        </Div>
+                    </Div>
+                    <Div class="col-md-6">
+                        <Div class="debug-section">
                             <h4><i class="fas fa-info-circle me-2"></i>PagedResult Info</h4>
-                            <div class="debug-grid">
-                                <div class="debug-item">
+                            <Div class="debug-grid">
+                                <Div class="debug-item">
                                     <span class="debug-label">Current Token:</span>
                                     <span class="debug-value">@(_currentContinuationToken ?? "null")</span>
-                                </div>
-                                <div class="debug-item">
+                                </Div>
+                                <Div class="debug-item">
                                     <span class="debug-label">Records Loaded:</span>
                                     <span class="debug-value">@(_currentEmployees?.Count ?? 0)</span>
-                                </div>
-                                <div class="debug-item">
+                                </Div>
+                                <Div class="debug-item">
                                     <span class="debug-label">Last Request Start:</span>
                                     <span class="debug-value">@_lastRequestStart</span>
-                                </div>
-                                <div class="debug-item">
+                                </Div>
+                                <Div class="debug-item">
                                     <span class="debug-label">Last Request Length:</span>
                                     <span class="debug-value">@_lastRequestLength</span>
-                                </div>
-                                <div class="debug-item">
+                                </Div>
+                                <Div class="debug-item">
                                     <span class="debug-label">PagedResult TotalCount:</span>
                                     <span class="debug-value">@(_lastPagedResult?.TotalCount ?? 0)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                </Div>
+                            </Div>
+                        </Div>
+                    </Div>
+                </Div>
+            </Div>
+        </Div>
     }
-</div>
+</Div>
 
 <style>
     .demo-hero {

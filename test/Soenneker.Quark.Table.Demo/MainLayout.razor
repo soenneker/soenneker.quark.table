@@ -1,9 +1,9 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="app-container">
+<Div class="app-container">
     <!-- Navigation Header -->
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
+        <Div class="container">
             <NavLink class="navbar-brand" href="/">
                 <span class="brand-text">QuarkTable</span>
             </NavLink>
@@ -12,7 +12,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <Div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
@@ -55,15 +55,15 @@
                         </NavLink>
                     </li>
                 </ul>
-            </div>
-        </div>
+            </Div>
+        </Div>
     </nav>
 
     <!-- Main Content -->
     <main class="main-content">
         @Body
     </main>
-</div>
+</Div>
 
 <style>
     .app-container {

@@ -8,29 +8,29 @@
 
 <PageTitle>Modern Demo - QuarkTable</PageTitle>
 
-<div class="demo-hero">
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <div class="hero-content">
-                    <div class="demo-icon">🎨</div>
+<Div class="demo-hero">
+    <Div class="container">
+        <Div class="row">
+            <Div class="col-12 text-center">
+                <Div class="hero-content">
+                    <Div class="demo-icon">🎨</Div>
                     <h1 class="demo-title">Modern QuarkTable Demo</h1>
                     <p class="demo-subtitle">Clean, minimalist table design with modern aesthetics and smooth interactions.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </Div>
+            </Div>
+        </Div>
+    </Div>
+</Div>
 
-<div class="container">
-    <div class="demo-card">
-        <div class="card-header">
-            <div class="card-header-content">
+<Div class="container">
+    <Div class="demo-card">
+        <Div class="card-header">
+            <Div class="card-header-content">
                 <h3><i class="fas fa-palette me-2"></i>Modern Employee Directory</h3>
                 <p class="text-muted mb-0">Experience the clean, minimalist design with enhanced visual hierarchy</p>
-            </div>
-        </div>
-        <div class="card-body">
+            </Div>
+        </Div>
+        <Div class="card-body">
             <QuarkTable @ref="_tableRef"
                         OnInteraction="OnInteraction"
                         OnOrder="HandleOrder"
@@ -70,11 +70,11 @@
                         else if (_tableRef.HasLoadedOnce)
                         {
                             <QuarkTableNoData>
-                                <div class="no-data-content">
-                                    <div class="no-data-icon">🎨</div>
+                                <Div class="no-data-content">
+                                    <Div class="no-data-icon">🎨</Div>
                                     <h4>No employees found</h4>
                                     <p>Try adjusting your search criteria.</p>
-                                </div>
+                                </Div>
                             </QuarkTableNoData>
                         }
                     </QuarkTbody>
@@ -84,9 +84,9 @@
                     <QuarkTablePagination />
                 </QuarkTableBottomBar>
             </QuarkTable>
-        </div>
-    </div>
-</div>
+        </Div>
+    </Div>
+</Div>
 
 <style>
     :root {

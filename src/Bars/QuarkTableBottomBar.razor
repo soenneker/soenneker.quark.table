@@ -1,11 +1,10 @@
-
 @inherits ComponentBase
 
-<div class="quark-table-bottombar-wrapper">
-    <div class="quark-table-bottombar @LayoutClass">
+<Div Class="quark-table-bottombar-wrapper">
+    <Div Class="@($"quark-table-bottombar {LayoutClass}")">
         @ChildContent
-    </div>
-</div>
+    </Div>
+</Div>
 
 @code {
     [Parameter]

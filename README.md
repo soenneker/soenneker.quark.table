@@ -83,10 +83,10 @@ Display a custom "no data" state when there are no records to show:
 
 ```razor
 <QuarkTableNoData>
-    <div style="text-align: center; padding: 2rem;">
+    <Div style="text-align: center; padding: 2rem;">
         <h4>No records found</h4>
         <p>Try adjusting your search criteria.</p>
-    </div>
+    </Div>
 </QuarkTableNoData>
 ```
 

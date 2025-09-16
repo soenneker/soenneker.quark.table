@@ -4,13 +4,13 @@
 
 @inherits Soenneker.Quark.Components.Cancellable.CancellableComponent
 
-<div class="quark-table-search">
+<Div Class="quark-table-search">
     <input type="text"
            value="@SearchTerm"
            @oninput="OnSearchInputHandler"
            placeholder="@Placeholder"
            class="quark-table-search-input" />
-</div>
+</Div>
 
 @code {
     [Inject]
@@ -63,6 +63,7 @@
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
+
         await _debouncer.DisposeAsync();
     }
 } 

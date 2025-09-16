@@ -4,16 +4,16 @@
 
 @if (ShowInfo)
 {
-    <div class="quark-table-info">
+    <Div class="quark-table-info">
         @if (ChildContent != null)
         {
             @ChildContent
         }
         else
         {
-            <span>@StartRecord-@EndRecord of @TotalRecords</span>
+            <Span>@StartRecord-@EndRecord of @TotalRecords</Span>
         }
-    </div>
+    </Div>
 }
 
 @code {

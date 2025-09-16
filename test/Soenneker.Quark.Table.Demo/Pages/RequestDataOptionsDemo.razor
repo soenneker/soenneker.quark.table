@@ -10,29 +10,29 @@
 
 <PageTitle>RequestDataOptions Demo - QuarkTable</PageTitle>
 
-<div class="demo-hero">
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <div class="hero-content">
-                    <div class="demo-icon">🔧</div>
+<Div class="demo-hero">
+    <Div class="container">
+        <Div class="row">
+            <Div class="col-12 text-center">
+                <Div class="hero-content">
+                    <Div class="demo-icon">🔧</Div>
                     <h1 class="demo-title">RequestDataOptions Demo</h1>
                     <p class="demo-subtitle">Using the ToRequestDataOptions extension method for seamless data transformation.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </Div>
+            </Div>
+        </Div>
+    </Div>
+</Div>
 
-<div class="container">
-    <div class="demo-card">
-        <div class="card-header">
-            <div class="card-header-content">
+<Div class="container">
+    <Div class="demo-card">
+        <Div class="card-header">
+            <Div class="card-header-content">
                 <h3><i class="fas fa-cogs me-2"></i>Extension Method Demo</h3>
                 <p class="text-muted mb-0">This demo shows how to use the ToRequestDataOptions extension method with QuarkTable.</p>
-            </div>
-        </div>
-        <div class="card-body">
+            </Div>
+        </Div>
+        <Div class="card-body">
             <QuarkTable @ref="_table"
                         Options="_tableOptions"
                         TotalRecords="_totalRecords"
@@ -71,11 +71,11 @@
                         else
                         {
                             <QuarkTableNoData>
-                                <div class="no-data-content">
-                                    <div class="no-data-icon">🔧</div>
+                                <Div class="no-data-content">
+                                    <Div class="no-data-icon">🔧</Div>
                                     <h4>No employees found</h4>
                                     <p>Try adjusting your search criteria.</p>
-                                </div>
+                                </Div>
                             </QuarkTableNoData>
                         }
                     </QuarkTbody>
@@ -85,26 +85,26 @@
                     <QuarkTablePagination />
                 </QuarkTableBottomBar>
             </QuarkTable>
-        </div>
-    </div>
+        </Div>
+    </Div>
 
     @if (_lastRequestDataOptions != null)
     {
-        <div class="debug-card">
-            <div class="card-header">
-                <div class="card-header-content">
+        <Div class="debug-card">
+            <Div class="card-header">
+                <Div class="card-header-content">
                     <h3><i class="fas fa-code me-2"></i>Last RequestDataOptions</h3>
                     <p class="text-muted mb-0">JSON representation of the converted RequestDataOptions object</p>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="json-display">
+                </Div>
+            </Div>
+            <Div class="card-body">
+                <Div class="json-display">
                     <pre class="json-content">@_lastRequestDataOptionsJson</pre>
-                </div>
-            </div>
-        </div>
+                </Div>
+            </Div>
+        </Div>
     }
-</div>
+</Div>
 
 <style>
     .demo-hero {

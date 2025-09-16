@@ -4,8 +4,8 @@
 
 @if (ShowPagination)
 {
-    <div class="quark-table-pagination">
-        <div class="quark-table-pagination-controls">
+    <Div class="quark-table-pagination">
+        <Div class="quark-table-pagination-controls">
             <button class="quark-table-pagination-btn" @onclick="HandleFirstPage" disabled="@(CurrentPage == 1)" title="First">«</button>
             <button class="quark-table-pagination-btn" @onclick="HandlePreviousPage" disabled="@(CurrentPage == 1)" title="Previous">‹</button>
 
@@ -29,8 +29,8 @@
 
             <button class="quark-table-pagination-btn" @onclick="HandleNextPage" disabled="@(CurrentPage == TotalPages)" title="Next">›</button>
             <button class="quark-table-pagination-btn" @onclick="HandleLastPage" disabled="@(CurrentPage == TotalPages)" title="Last">»</button>
-        </div>
-    </div>
+        </Div>
+    </Div>
 }
 
 @code {

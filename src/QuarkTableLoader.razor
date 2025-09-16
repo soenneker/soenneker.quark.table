@@ -1,30 +1,30 @@
-<div class="quark-table-loader @(IsLoading ? "quark-table-loader-active" : "")" >
-    @if (IsLoading)
-    {
-        @if (ChildContent != null)
-        {
-            @ChildContent
-        }
-        else
-        {
-            <div class="quark-table-loader-overlay" >
-                <div class="quark-table-loader-content" >
-                    <div class="quark-table-loader-default" >
-                        <div class="quark-table-spinner" ></div>
-                        <span>Loading...</span>
-                    </div>
-                </div>
-            </div>
-        }
-    }
-</div>
+<Div class="@($"quark-table-loader {(IsLoading ? "quark-table-loader-active" : "")}")" >
+	@if (IsLoading)
+	{
+		@if (ChildContent != null)
+		{
+			@ChildContent
+		}
+		else
+		{
+			<Div class="quark-table-loader-overlay" >
+				<Div class="quark-table-loader-content" >
+					<Div class="quark-table-loader-default" >
+						<Div class="quark-table-spinner" ></Div>
+						<span>Loading...</span>
+					</Div>
+				</Div>
+			</Div>
+		}
+	}
+</Div>
 
 @code {
 
-    [CascadingParameter(Name = "IsLoading")]
-    public bool IsLoading { get; set; }
+	[CascadingParameter(Name = "IsLoading")]
+	public bool IsLoading { get; set; }
 
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
 
 }
