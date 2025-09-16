@@ -1,16 +1,10 @@
-@inherits ComponentBase
+@inherits Element
 
-<td style="@Style" colspan="@Colspan">
+<td colspan="@Colspan" @attributes="BuildAttributes()">
     @ChildContent
 </td>
 
 @code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
-    [Parameter]
-    public string Style { get; set; } = string.Empty;
-
     [Parameter]
     public int Colspan { get; set; } = 1;
 } 

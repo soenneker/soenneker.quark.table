@@ -1,179 +1,181 @@
 @using Soenneker.Quark.Table.Abstract
 
-@inherits ComponentBase
+@inherits Element
 
 @if (ShowPagination)
 {
-    <Div class="quark-table-pagination">
-        <Div class="quark-table-pagination-controls">
-            <button class="quark-table-pagination-btn" @onclick="HandleFirstPage" disabled="@(CurrentPage == 1)" title="First">«</button>
-            <button class="quark-table-pagination-btn" @onclick="HandlePreviousPage" disabled="@(CurrentPage == 1)" title="Previous">‹</button>
+	<Div Class="quark-table-pagination" @attributes="BuildAttributes()">
+		<Div Class="quark-table-pagination-controls" >
+			<Button Class="quark-table-pagination-btn" OnClick="HandleFirstPage" disabled="@(CurrentPage == 1)" title="First" >«</Button>
+			<Button Class="quark-table-pagination-btn" OnClick="HandlePreviousPage" disabled="@(CurrentPage == 1)" title="Previous" >‹</Button>
 
-            @if (ComputedTotalPages <= 1)
-            {
-                <button class="quark-table-pagination-btn active">
-                    1
-                </button>
-            }
-            else
-            {
-                @for (int p = StartPage; p <= EndPage; p++)
-                {
-                    int pageNumber = p;
-                    <button class="quark-table-pagination-btn @(pageNumber == CurrentPage ? "active" : string.Empty)"
-                            @onclick="@(() => HandleGoToPage(pageNumber))">
-                        @pageNumber
-                    </button>
-                }
-            }
+			@if (ComputedTotalPages <= 1)
+			{
+				<Button Class="quark-table-pagination-btn active" >
+					1
+				</Button>
+			}
+			else
+			{
+				@for (int p = StartPage; p <= EndPage; p++)
+				{
+					int pageNumber = p;
+					<Button Class="@($"quark-table-pagination-btn {(pageNumber == CurrentPage ? "active" : string.Empty)}")"
+					        OnClick="@(() => HandleGoToPage(pageNumber))" >
+						@pageNumber
+					</Button>
+				}
+			}
 
-            <button class="quark-table-pagination-btn" @onclick="HandleNextPage" disabled="@(CurrentPage == TotalPages)" title="Next">›</button>
-            <button class="quark-table-pagination-btn" @onclick="HandleLastPage" disabled="@(CurrentPage == TotalPages)" title="Last">»</button>
-        </Div>
-    </Div>
+			<Button Class="quark-table-pagination-btn" OnClick="HandleNextPage" disabled="@(CurrentPage == TotalPages)" title="Next" >›</Button>
+			<Button Class="quark-table-pagination-btn" OnClick="HandleLastPage" disabled="@(CurrentPage == TotalPages)" title="Last" >»</Button>
+		</Div>
+	</Div>
 }
 
 @code {
-    [CascadingParameter]
-    private IQuarkTable? QuarkTable { get; set; }
 
-    [Parameter]
-    public bool ShowPagination { get; set; } = true;
+	[CascadingParameter]
+	private IQuarkTable? QuarkTable { get; set; }
 
-    [Parameter]
-    public int CurrentPage { get; set; } = 1;
+	[Parameter]
+	public bool ShowPagination { get; set; } = true;
 
-    [Parameter]
-    public int TotalPages { get; set; } = 1;
+	[Parameter]
+	public int CurrentPage { get; set; } = 1;
 
-    [Parameter]
-    public int TotalRecords { get; set; }
+	[Parameter]
+	public int TotalPages { get; set; } = 1;
 
-    [Parameter]
-    public int PageSize { get; set; } = 10;
+	[Parameter]
+	public int TotalRecords { get; set; }
 
-    [Parameter]
-    public int MaxPageButtons { get; set; } = 5;
+	[Parameter]
+	public int PageSize { get; set; } = 10;
 
-    [Parameter]
-    public EventCallback<int> OnGoToPage { get; set; }
+	[Parameter]
+	public int MaxPageButtons { get; set; } = 5;
 
-    [Parameter]
-    public EventCallback OnFirstPage { get; set; }
+	[Parameter]
+	public EventCallback<int> OnGoToPage { get; set; }
 
-    [Parameter]
-    public EventCallback OnPreviousPage { get; set; }
+	[Parameter]
+	public EventCallback OnFirstPage { get; set; }
 
-    [Parameter]
-    public EventCallback OnNextPage { get; set; }
+	[Parameter]
+	public EventCallback OnPreviousPage { get; set; }
 
-    [Parameter]
-    public EventCallback OnLastPage { get; set; }
+	[Parameter]
+	public EventCallback OnNextPage { get; set; }
 
-    // Computed properties that use QuarkTable values when available
-    private int ComputedCurrentPage => QuarkTable?.CurrentPage ?? CurrentPage;
-    private int ComputedTotalPages => QuarkTable?.TotalPages ?? TotalPages;
-    private int ComputedTotalRecords => QuarkTable?.TotalRecordsCount ?? TotalRecords;
-    private int ComputedPageSize => QuarkTable?.PageSize ?? PageSize;
-    private int ComputedMaxPageButtons => MaxPageButtons;
+	[Parameter]
+	public EventCallback OnLastPage { get; set; }
 
-    public int StartPage
-    {
-        get
-        {
-            if (ComputedTotalPages <= 0) return 1;
-            if (ComputedCurrentPage <= 0) return 1;
+	// Computed properties that use QuarkTable values when available
+	private int ComputedCurrentPage => QuarkTable?.CurrentPage ?? CurrentPage;
+	private int ComputedTotalPages => QuarkTable?.TotalPages ?? TotalPages;
+	private int ComputedTotalRecords => QuarkTable?.TotalRecordsCount ?? TotalRecords;
+	private int ComputedPageSize => QuarkTable?.PageSize ?? PageSize;
+	private int ComputedMaxPageButtons => MaxPageButtons;
 
-            int halfButtons = ComputedMaxPageButtons / 2;
-            int start = ComputedCurrentPage - halfButtons;
-            start = Math.Max(1, start);
+	public int StartPage
+	{
+		get
+		{
+			if (ComputedTotalPages <= 0) return 1;
+			if (ComputedCurrentPage <= 0) return 1;
 
-            if (start + ComputedMaxPageButtons - 1 > ComputedTotalPages)
-            {
-                start = Math.Max(1, ComputedTotalPages - ComputedMaxPageButtons + 1);
-            }
+			int halfButtons = ComputedMaxPageButtons / 2;
+			int start = ComputedCurrentPage - halfButtons;
+			start = Math.Max(1, start);
 
-            if (start > ComputedTotalPages) start = ComputedTotalPages;
+			if (start + ComputedMaxPageButtons - 1 > ComputedTotalPages)
+			{
+				start = Math.Max(1, ComputedTotalPages - ComputedMaxPageButtons + 1);
+			}
 
-            return start;
-        }
-    }
+			if (start > ComputedTotalPages) start = ComputedTotalPages;
 
-    public int EndPage => Math.Min(ComputedTotalPages, StartPage + ComputedMaxPageButtons - 1);
+			return start;
+		}
+	}
 
-    private async Task HandleFirstPage()
-    {
-        if (QuarkTable != null)
-        {
-            await QuarkTable.HandleGoToPage(1);
-        }
-        else if (OnFirstPage.HasDelegate)
-        {
-            await OnFirstPage.InvokeAsync();
-        }
-        else if (OnGoToPage.HasDelegate)
-        {
-            await OnGoToPage.InvokeAsync(1);
-        }
-    }
+	public int EndPage => Math.Min(ComputedTotalPages, StartPage + ComputedMaxPageButtons - 1);
 
-    private async Task HandlePreviousPage()
-    {
-        if (QuarkTable != null && ComputedCurrentPage > 1)
-        {
-            await QuarkTable.HandleGoToPage(ComputedCurrentPage - 1);
-        }
-        else if (OnPreviousPage.HasDelegate)
-        {
-            await OnPreviousPage.InvokeAsync();
-        }
-        else if (OnGoToPage.HasDelegate && ComputedCurrentPage > 1)
-        {
-            await OnGoToPage.InvokeAsync(ComputedCurrentPage - 1);
-        }
-    }
+	private async Task HandleFirstPage()
+	{
+		if (QuarkTable != null)
+		{
+			await QuarkTable.HandleGoToPage(1);
+		}
+		else if (OnFirstPage.HasDelegate)
+		{
+			await OnFirstPage.InvokeAsync();
+		}
+		else if (OnGoToPage.HasDelegate)
+		{
+			await OnGoToPage.InvokeAsync(1);
+		}
+	}
 
-    private async Task HandleNextPage()
-    {
-        if (QuarkTable != null && ComputedCurrentPage < ComputedTotalPages)
-        {
-            await QuarkTable.HandleGoToPage(ComputedCurrentPage + 1);
-        }
-        else if (OnNextPage.HasDelegate)
-        {
-            await OnNextPage.InvokeAsync();
-        }
-        else if (OnGoToPage.HasDelegate && ComputedCurrentPage < ComputedTotalPages)
-        {
-            await OnGoToPage.InvokeAsync(ComputedCurrentPage + 1);
-        }
-    }
+	private async Task HandlePreviousPage()
+	{
+		if (QuarkTable != null && ComputedCurrentPage > 1)
+		{
+			await QuarkTable.HandleGoToPage(ComputedCurrentPage - 1);
+		}
+		else if (OnPreviousPage.HasDelegate)
+		{
+			await OnPreviousPage.InvokeAsync();
+		}
+		else if (OnGoToPage.HasDelegate && ComputedCurrentPage > 1)
+		{
+			await OnGoToPage.InvokeAsync(ComputedCurrentPage - 1);
+		}
+	}
 
-    private async Task HandleLastPage()
-    {
-        if (QuarkTable != null)
-        {
-            await QuarkTable.HandleGoToPage(ComputedTotalPages);
-        }
-        else if (OnLastPage.HasDelegate)
-        {
-            await OnLastPage.InvokeAsync();
-        }
-        else if (OnGoToPage.HasDelegate)
-        {
-            await OnGoToPage.InvokeAsync(ComputedTotalPages);
-        }
-    }
+	private async Task HandleNextPage()
+	{
+		if (QuarkTable != null && ComputedCurrentPage < ComputedTotalPages)
+		{
+			await QuarkTable.HandleGoToPage(ComputedCurrentPage + 1);
+		}
+		else if (OnNextPage.HasDelegate)
+		{
+			await OnNextPage.InvokeAsync();
+		}
+		else if (OnGoToPage.HasDelegate && ComputedCurrentPage < ComputedTotalPages)
+		{
+			await OnGoToPage.InvokeAsync(ComputedCurrentPage + 1);
+		}
+	}
 
-    private async Task HandleGoToPage(int page)
-    {
-        if (QuarkTable != null)
-        {
-            await QuarkTable.HandleGoToPage(page);
-        }
-        else if (OnGoToPage.HasDelegate)
-        {
-            await OnGoToPage.InvokeAsync(page);
-        }
-    }
-} 
+	private async Task HandleLastPage()
+	{
+		if (QuarkTable != null)
+		{
+			await QuarkTable.HandleGoToPage(ComputedTotalPages);
+		}
+		else if (OnLastPage.HasDelegate)
+		{
+			await OnLastPage.InvokeAsync();
+		}
+		else if (OnGoToPage.HasDelegate)
+		{
+			await OnGoToPage.InvokeAsync(ComputedTotalPages);
+		}
+	}
+
+	private async Task HandleGoToPage(int page)
+	{
+		if (QuarkTable != null)
+		{
+			await QuarkTable.HandleGoToPage(page);
+		}
+		else if (OnGoToPage.HasDelegate)
+		{
+			await OnGoToPage.InvokeAsync(page);
+		}
+	}
+
+}

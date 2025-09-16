@@ -2,68 +2,69 @@
 @using Soenneker.Utils.Debounce
 @using Soenneker.Quark.Table.Abstract
 
-@inherits Soenneker.Quark.Components.Cancellable.CancellableComponent
+@inherits Soenneker.Quark.Components.Cancellable.CancellableElement
 
-<Div Class="quark-table-search">
-    <input type="text"
-           value="@SearchTerm"
-           @oninput="OnSearchInputHandler"
-           placeholder="@Placeholder"
-           class="quark-table-search-input" />
+<Div Class="quark-table-search" @attributes="BuildAttributes()">
+	<input type="text"
+	       value="@SearchTerm"
+	       @oninput="OnSearchInputHandler"
+	       placeholder="@Placeholder"
+	       class="quark-table-search-input" />
 </Div>
 
 @code {
-    [Inject]
-    private ILogger<QuarkTableSearch> Logger { get; set; } = null!;
 
-    [CascadingParameter]
-    private IQuarkTable? QuarkTable { get; set; }
+	[Inject]
+	private ILogger<QuarkTableSearch> Logger { get; set; } = null!;
 
-    [Parameter]
-    public string SearchTerm { get; set; } = string.Empty;
+	[CascadingParameter]
+	private IQuarkTable? QuarkTable { get; set; }
 
-    [Parameter]
-    public EventCallback<string> SearchTermChanged { get; set; }
+	[Parameter]
+	public string SearchTerm { get; set; } = string.Empty;
 
-    [Parameter]
-    public EventCallback<string> OnSearch { get; set; }
+	[Parameter]
+	public EventCallback<string> SearchTermChanged { get; set; }
 
-    [Parameter]
-    public string Placeholder { get; set; } = "Search...";
+	[Parameter]
+	public EventCallback<string> OnSearch { get; set; }
 
-    [Parameter]
-    public int DebounceMs { get; set; } = 300;
+	[Parameter]
+	public string Placeholder { get; set; } = "Search...";
 
-    private readonly Debouncer _debouncer = new();
+	[Parameter]
+	public int DebounceMs { get; set; } = 300;
 
-    private Task OnSearchInputHandler(ChangeEventArgs e)
-    {
-        string newSearchTerm = e.Value?.ToString() ?? string.Empty;
+	private readonly Debouncer _debouncer = new();
 
-        _debouncer.Debounce(DebounceMs, async _ =>
-        {
-            // First, notify the parent QuarkTable if available
-            if (QuarkTable != null)
-            {
-                await QuarkTable.HandleSearch(newSearchTerm);
-            }
+	private Task OnSearchInputHandler(ChangeEventArgs e)
+	{
+		string newSearchTerm = e.Value?.ToString() ?? string.Empty;
 
-            // Then, invoke the OnSearch callback if provided
-            if (OnSearch.HasDelegate)
-                await OnSearch.InvokeAsync(newSearchTerm);
+		_debouncer.Debounce(DebounceMs, async _ =>
+		{
+			// First, notify the parent QuarkTable if available
+			if (QuarkTable != null)
+			{
+				await QuarkTable.HandleSearch(newSearchTerm);
+			}
 
-        }, false, CancellationToken);
+			// Then, invoke the OnSearch callback if provided
+			if (OnSearch.HasDelegate)
+				await OnSearch.InvokeAsync(newSearchTerm);
+		}, false, CancellationToken);
 
-        if (SearchTermChanged.HasDelegate)
-            return SearchTermChanged.InvokeAsync(newSearchTerm);
+		if (SearchTermChanged.HasDelegate)
+			return SearchTermChanged.InvokeAsync(newSearchTerm);
 
-        return Task.CompletedTask;
-    }
+		return Task.CompletedTask;
+	}
 
-    public override async ValueTask DisposeAsync()
-    {
-        await base.DisposeAsync();
+	public override async ValueTask DisposeAsync()
+	{
+		await base.DisposeAsync();
 
-        await _debouncer.DisposeAsync();
-    }
-} 
+		await _debouncer.DisposeAsync();
+	}
+
+}

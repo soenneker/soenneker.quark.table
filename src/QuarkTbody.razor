@@ -1,13 +1,8 @@
-@inherits ComponentBase
+@inherits Element
 
-<tbody style="@Style">
+<tbody @attributes="BuildAttributes()">
     @ChildContent
 </tbody>
 
 @code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
-    [Parameter]
-    public string Style { get; set; } = string.Empty;
 } 

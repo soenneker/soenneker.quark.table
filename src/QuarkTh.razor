@@ -1,101 +1,95 @@
 @using Soenneker.Quark.Table.Abstract
 @using Soenneker.Extensions.String
 
-@inherits ComponentBase
+@inherits Element
 
-<th @onclick="HandleClick"
+<th @onclick="HandleClick" 
     class="quark-table-sortable @(Sortable ? GetSortClass() : string.Empty)"
-    style="@(Sortable ? "cursor:pointer;" : string.Empty) @GetAlignStyle() @Style" >
-    @ChildContent @(Sortable ? GetSortIndicator() : string.Empty)
+	style="@(Sortable ? "cursor:pointer;" : string.Empty) @GetAlignStyle() @Style" @attributes="BuildAttributes()">
+	@ChildContent @(Sortable ? GetSortIndicator() : string.Empty)
 </th>
 
 @code {
 
-    [CascadingParameter]
-    private IQuarkTable? QuarkTable { get; set; }
+	[CascadingParameter]
+	private IQuarkTable? QuarkTable { get; set; }
 
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+	[Parameter]
+	public bool Sortable { get; set; } = true;
 
-    [Parameter]
-    public bool Sortable { get; set; } = true;
+	[Parameter]
+	public bool Searchable { get; set; } = true;
 
-    [Parameter]
-    public bool Searchable { get; set; } = true;
+	/// <summary>
+	/// The text alignment for the column header content.
+	/// Valid values are "left", "center", or "right".
+	/// </summary>
+	[Parameter]
+	public string Align { get; set; } = string.Empty;
 
-    [Parameter]
-    public string Style { get; set; } = string.Empty;
+	/// <summary>
+	/// The property name or field bound to the column's data in the source.
+	/// This is used when building DataTableServerSideRequest to specify the column's data locator.
+	/// </summary>
+	[Parameter]
+	public string? Data { get; set; }
 
-    /// <summary>
-    /// The text alignment for the column header content.
-    /// Valid values are "left", "center", or "right".
-    /// </summary>
-    [Parameter]
-    public string Align { get; set; } = string.Empty;
+	/// <summary>
+	/// The human-readable name/identifier for the column.
+	/// This is used as the column's content/display name in the DataTableServerSideRequest.
+	/// </summary>
+	[Parameter]
+	public string? Name { get; set; }
 
-    /// <summary>
-    /// The property name or field bound to the column's data in the source.
-    /// This is used when building DataTableServerSideRequest to specify the column's data locator.
-    /// </summary>
-    [Parameter]
-    public string? Data { get; set; }
+	private int _columnIndex = -1;
 
-    /// <summary>
-    /// The human-readable name/identifier for the column.
-    /// This is used as the column's content/display name in the DataTableServerSideRequest.
-    /// </summary>
-    [Parameter]
-    public string? Name { get; set; }
+	protected override void OnInitialized()
+	{
+		// Register this column with the parent table to get its position
+		if (QuarkTable != null)
+		{
+			_columnIndex = QuarkTable.RegisterColumn(this);
+		}
+	}
 
-    private int _columnIndex = -1;
+	protected override async Task HandleClick(MouseEventArgs e)
+	{
+		if (!Sortable || QuarkTable == null)
+			return;
 
-    protected override void OnInitialized()
-    {
-        // Register this column with the parent table to get its position
-        if (QuarkTable != null)
-        {
-            _columnIndex = QuarkTable.RegisterColumn(this);
-        }
-    }
+		await QuarkTable.HandleColumnSort(_columnIndex);
+	}
 
-    private async Task HandleClick()
-    {
-        if (!Sortable || QuarkTable == null)
-            return;
+	private string GetSortClass()
+	{
+		if (QuarkTable == null)
+			return string.Empty;
 
-        await QuarkTable.HandleColumnSort(_columnIndex);
-    }
+		return QuarkTable.GetSortClassByIndex(_columnIndex);
+	}
 
-    private string GetSortClass()
-    {
-        if (QuarkTable == null)
-            return string.Empty;
+	private string GetSortIndicator()
+	{
+		if (QuarkTable == null)
+			return " ↕";
 
-        return QuarkTable.GetSortClassByIndex(_columnIndex);
-    }
+		return QuarkTable.GetSortIndicatorByIndex(_columnIndex);
+	}
 
-    private string GetSortIndicator()
-    {
-        if (QuarkTable == null)
-            return " ↕";
+	private string GetAlignStyle()
+	{
+		if (Align.IsNullOrWhiteSpace())
+			return string.Empty;
 
-        return QuarkTable.GetSortIndicatorByIndex(_columnIndex);
-    }
+		string align = Align.ToLowerInvariantFast();
 
-    private string GetAlignStyle()
-    {
-        if (Align.IsNullOrWhiteSpace())
-            return string.Empty;
-
-        string align = Align.ToLowerInvariantFast();
-
-        return align switch
-        {
-            "left" => "text-align: left;",
-            "center" => "text-align: center;",
-            "right" => "text-align: right;",
-            _ => string.Empty
-        };
-    }
+		return align switch
+		{
+			"left" => "text-align: left;",
+			"center" => "text-align: center;",
+			"right" => "text-align: right;",
+			_ => string.Empty
+		};
+	}
 
 }

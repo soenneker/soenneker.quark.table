@@ -1,10 +1,9 @@
-@inherits ComponentBase
+@inherits Element
 
-<thead class="qt-thead">
+<thead class="qt-thead" @attributes="BuildAttributes()">
     @ChildContent
 </thead>
 
 @code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+
 } 

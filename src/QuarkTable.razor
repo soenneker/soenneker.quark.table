@@ -4,22 +4,22 @@
 @using Soenneker.Quark.Table.Abstract
 @using Soenneker.Utils.Debounce
 
-@inherits Soenneker.Quark.Components.Cancellable.CancellableComponent
+@inherits Soenneker.Quark.Components.Cancellable.CancellableElement
 @implements IQuarkTable
 
 <CascadingValue Value="this" IsFixed="true" >
     <CascadingValue Value="@_isLoading" Name="IsLoading" >
-        <Div id="@ElementId" class="quark-table-wrapper" style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")" >
+		<Div id="@ElementId" Class="quark-table-wrapper" Style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")">
             <Div class="quark-table-container" >
                 @if (!_isLoading && ChildContent == null)
                 {
-                    <Div class="text-center p-4" >
+                    <Div Class="text-center p-4">
                         <p>No content available</p>
                     </Div>
                 }
                 else
                 {
-                    <Div class="quark-table-with-search" >
+                    <Div Class="quark-table-with-search">
                         @if (ChildContent != null)
                         {
                             @ChildContent
@@ -32,7 +32,6 @@
 </CascadingValue>
 
 @code {
-
 
     [Inject]
     private IQuarkTableInterop QuarkTableInterop { get; set; } = null!;
@@ -63,9 +62,6 @@
 
     [Parameter]
     public EventCallback<DataTableServerSideRequest> OnInteraction { get; set; }
-
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
 
     public readonly string ElementId = $"quark-table-{Guid.NewGuid():N}";
 

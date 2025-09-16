@@ -1,13 +1,10 @@
-@inherits ComponentBase
+@inherits Element
 
-<tr @key="@Key">
+<tr @key="@Key" @attributes="BuildAttributes()">
     @ChildContent
 </tr>
 
 @code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
     [Parameter]
     public object? Key { get; set; }
 } 

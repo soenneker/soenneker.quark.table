@@ -1,4 +1,6 @@
-<Div class="@($"quark-table-loader {(IsLoading ? "quark-table-loader-active" : "")}")" >
+@inherits Element
+
+<Div Class="@($"quark-table-loader {(IsLoading ? "quark-table-loader-active" : "")}")" @attributes="BuildAttributes()">
 	@if (IsLoading)
 	{
 		@if (ChildContent != null)
@@ -7,9 +9,9 @@
 		}
 		else
 		{
-			<Div class="quark-table-loader-overlay" >
-				<Div class="quark-table-loader-content" >
-					<Div class="quark-table-loader-default" >
+			<Div Class="quark-table-loader-overlay" >
+				<Div Class="quark-table-loader-content">
+					<Div Class="quark-table-loader-default">
 						<Div class="quark-table-spinner" ></Div>
 						<span>Loading...</span>
 					</Div>
@@ -23,8 +25,5 @@
 
 	[CascadingParameter(Name = "IsLoading")]
 	public bool IsLoading { get; set; }
-
-	[Parameter]
-	public RenderFragment? ChildContent { get; set; }
 
 }

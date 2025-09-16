@@ -1,15 +1,12 @@
-@inherits ComponentBase
+@inherits Element
 
-<Div Class="quark-table-topbar-wrapper">
+<Div Class="quark-table-topbar-wrapper" @attributes="BuildAttributes()">
     <Div Class="@($"quark-table-topbar {LayoutClass}")">
         @ChildContent
     </Div>
 </Div>
 
 @code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
     [Parameter]
     public string LayoutClass { get; set; } = string.Empty;
 }

@@ -1,10 +1,9 @@
-@inherits ComponentBase
+@inherits Element
 
-<Div class="quark-table-left">
+<Div Class="quark-table-left" @attributes="BuildAttributes()">
     @ChildContent
 </Div>
 
 @code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+
 }

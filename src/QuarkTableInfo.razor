@@ -1,10 +1,10 @@
 @using Soenneker.Quark.Table.Abstract
 
-@inherits ComponentBase
+@inherits Element
 
 @if (ShowInfo)
 {
-    <Div class="quark-table-info">
+    <Div Class="quark-table-info" @attributes="BuildAttributes()">
         @if (ChildContent != null)
         {
             @ChildContent
@@ -31,9 +31,6 @@
 
     [Parameter]
     public int PageSize { get; set; } = 10;
-
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
 
     // Computed properties that use QuarkTable values when available
     private int ComputedCurrentPage => QuarkTable?.CurrentPage ?? CurrentPage;
