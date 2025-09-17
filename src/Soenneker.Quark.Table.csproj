@@ -56,7 +56,7 @@
         <PackageReference Include="Soenneker.Quark.Paragraphs" Version="3.0.8" />
         <PackageReference Include="Soenneker.Quark.Spans" Version="3.0.7" />
         <PackageReference Include="Soenneker.Utils.Debounce" Version="3.0.10" />
-        <PackageReference Include="Soenneker.Utils.Json" Version="3.0.2354" />
+        <PackageReference Include="Soenneker.Utils.Json" Version="3.0.2355" />
         <PackageReference Include="Soenneker.Blazor.Utils.ResourceLoader" Version="3.0.1503" />
     </ItemGroup>
 
