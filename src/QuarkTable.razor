@@ -9,8 +9,8 @@
 
 <CascadingValue Value="this" IsFixed="true" >
     <CascadingValue Value="@_isLoading" Name="IsLoading" >
-		<Div id="@ElementId" Class="quark-table-wrapper" Style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")">
-            <Div class="quark-table-container" >
+		<Div Id="@ElementId" Class="quark-table-wrapper" Style="@(Visible ? string.Empty : "visibility:hidden;position:absolute;left:-9999px")">
+            <Div Class="quark-table-container" >
                 @if (!_isLoading && ChildContent == null)
                 {
                     <Div Class="text-center p-4">
