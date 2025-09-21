@@ -51,7 +51,7 @@
         <PackageReference Include="Soenneker.Quark.Buttons" Version="3.0.27" />
         <PackageReference Include="Soenneker.Quark.Components.Cancellable" Version="3.0.29" />
         <PackageReference Include="Soenneker.Quark.Divs" Version="3.0.13" />
-        <PackageReference Include="Soenneker.Quark.Headings" Version="3.0.8" />
+        <PackageReference Include="Soenneker.Quark.Headings" Version="3.0.10" />
         <PackageReference Include="Soenneker.Quark.Paragraphs" Version="3.0.16" />
         <PackageReference Include="Soenneker.Quark.Spans" Version="3.0.17" />
         <PackageReference Include="Soenneker.Utils.Debounce" Version="3.0.10" />
