@@ -1,8 +1,7 @@
 @using Microsoft.Extensions.Logging
 @using Soenneker.Utils.Debounce
-@using Soenneker.Quark.Table.Abstract
 
-@inherits Soenneker.Quark.Cancellable.CancellableElement
+@inherits Soenneker.Quark.CancellableElement
 
 <Div Class="quark-table-search" @attributes="BuildAttributes()">
 	<input type="text"

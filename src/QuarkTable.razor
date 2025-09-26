@@ -1,10 +1,8 @@
 @using Microsoft.Extensions.Logging
 @using Soenneker.DataTables.Dtos.ServerSideRequest
-@using Soenneker.Quark.Table.Options
-@using Soenneker.Quark.Table.Abstract
 @using Soenneker.Utils.Debounce
 
-@inherits Soenneker.Quark.Cancellable.CancellableElement
+@inherits Soenneker.Quark.CancellableElement
 @implements IQuarkTable
 
 <CascadingValue Value="this" IsFixed="true" >
@@ -32,6 +30,7 @@
 </CascadingValue>
 
 @code {
+	public override string? Name { get; set; } = "QuarkTable";
 
     [Inject]
     private IQuarkTableInterop QuarkTableInterop { get; set; } = null!;
