@@ -6,7 +6,9 @@
         <TargetFrameworks>net9.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <Platforms>AnyCPU</Platforms>
-        <NoWarn>$(NoWarn);1591</NoWarn>
+        <RootNamespace>Soenneker.Quark</RootNamespace>
+        <GenerateDefaultNamespace>false</GenerateDefaultNamespace>
+        <NoWarn>$(NoWarn);1591;IDE0130</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup>
