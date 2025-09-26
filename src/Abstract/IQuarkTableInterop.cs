@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Soenneker.Quark.Table.Abstract;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// A Blazor interop library for the Quark Table component

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Soenneker.DataTables.Dtos.ServerSideRequest;
 
-namespace Soenneker.Quark.Table.Options;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// Event arguments for QuarkTable filter change events

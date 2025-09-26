@@ -1,7 +1,7 @@
 using Soenneker.DataTables.Dtos.ServerSideRequest;
 using System.Collections.Generic;
 
-namespace Soenneker.Quark.Table.Options;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// Event arguments for QuarkTable order events

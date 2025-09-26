@@ -4,7 +4,7 @@ using Soenneker.Blazor.Utils.ResourceLoader.Abstract;
 using Soenneker.Quark.Table.Abstract;
 using Soenneker.Utils.AsyncSingleton;
 
-namespace Soenneker.Quark.Table;
+namespace Soenneker.Quark;
 
 /// <inheritdoc cref="IQuarkTableInterop"/>
 public sealed class QuarkTableInterop : IQuarkTableInterop

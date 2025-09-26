@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Soenneker.DataTables.Dtos.ServerSideRequest;
 using Soenneker.Quark.Table.Options;
 
-namespace Soenneker.Quark.Table.Abstract;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// Interface for the QuarkTable component

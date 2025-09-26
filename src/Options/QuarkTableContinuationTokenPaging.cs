@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Soenneker.Extensions.String;
 
-namespace Soenneker.Quark.Table.Options;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// Helper class to manage continuation token pagination for QuarkTable.

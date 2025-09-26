@@ -4,7 +4,7 @@ using Soenneker.Blazor.Utils.ResourceLoader.Registrars;
 using Soenneker.Quark.Table.Abstract;
 
 
-namespace Soenneker.Quark.Table.Registrars;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// Service registrar for Quark.Table

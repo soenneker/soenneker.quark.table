@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Soenneker.Quark.Table.Options;
+namespace Soenneker.Quark;
 
 /// <summary>
 /// Configuration options for QuarkTable
