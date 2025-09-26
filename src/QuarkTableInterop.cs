@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.Blazor.Utils.ResourceLoader.Abstract;
-using Soenneker.Quark.Table.Abstract;
 using Soenneker.Utils.AsyncSingleton;
 
 namespace Soenneker.Quark;
