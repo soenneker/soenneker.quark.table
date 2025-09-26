@@ -9,7 +9,7 @@ using Microsoft.JSInterop;
 using Serilog;
 using Serilog.Debugging;
 using Soenneker.Serilog.Sinks.Browser.Blazor.Registrars;
-using Soenneker.Quark.Themes.Registrars;
+using Soenneker.Quark;
 using Soenneker.Quark.Table.Registrars;
 using Soenneker.Quark.Table.Demo.Services;
 
