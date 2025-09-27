@@ -51,7 +51,7 @@
         <PackageReference Include="Soenneker.DataTables.Dtos.Column" Version="3.0.6" />
         <PackageReference Include="Soenneker.Extensions.String" Version="3.0.557" />
         <PackageReference Include="Soenneker.Quark.Buttons" Version="3.0.38" />
-        <PackageReference Include="Soenneker.Quark.Components.Cancellable" Version="3.0.37" />
+        <PackageReference Include="Soenneker.Quark.Components.Cancellable" Version="3.0.38" />
         <PackageReference Include="Soenneker.Quark.Divs" Version="3.0.21" />
         <PackageReference Include="Soenneker.Quark.Headings" Version="3.0.17" />
         <PackageReference Include="Soenneker.Quark.Paragraphs" Version="3.0.24" />
